@@ -1,4 +1,4 @@
-from LogManager import LogManager
+from classes.utils.LogManager import LogManager
 
 log_manager = LogManager()
 
