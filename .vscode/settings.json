@@ -1,0 +1,10 @@
+{
+    "python.testing.pytestArgs": [
+        "testes"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.analysis.extraPaths": [
+        "./testes/testes_desktop/FC/modules"
+    ]
+}
