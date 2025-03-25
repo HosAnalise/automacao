@@ -15,36 +15,7 @@ class FuncoesUteis:
     Classe contendo funções utilitárias para automação de testes.
     """
 
-    @staticmethod
-    def has_alert(init):
-        """
-        Verifica se há um alerta de erro na página.
-        
-        Parâmetros:
-            init (tuple): Tupla contendo os objetos necessários para a execução do teste.
-        
-        Retorna:
-            bool: True se o alerta for encontrado, False caso contrário.
-        """
-        browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
-
-        try:
-            alert = WebDriverWait(browser, 10).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, "#t_Alert_Notification"))
-            )
-            if alert:
-                content = alert.text
-                Log_manager.add_log(
-                    application_type="Web", level="ERROR", 
-                    message=f"Erro encontrado: {content}", routine="ContaPagar", error_details=""
-                )
-                return True
-        except (TimeoutException, NoSuchElementException) as e:
-            Log_manager.add_log(
-                application_type="Web", level="INFO", 
-                message="Alerta não encontrado", routine="ContaPagar", error_details=str(e)
-            )
-            return False
+   
 
     @staticmethod
     def stringToFloat(element):
@@ -85,68 +56,7 @@ class FuncoesUteis:
         locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")  
         return locale.currency(value, grouping=True, symbol=False)  
 
-    @staticmethod
-    def has_alert_sucess(init):
-        """
-        Verifica se há um alerta de sucesso na página.
-        
-        Parâmetros:
-            init (tuple): Tupla contendo os objetos necessários para a execução do teste.
-        
-        Retorna:
-            bool: True se o alerta de sucesso for encontrado, False caso contrário.
-        """
-        browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
-
-        try:
-            alert = WebDriverWait(browser, 10).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, "#t_Alert_Success"))
-            )
-            if alert:
-                content = alert.text    
-                Log_manager.add_log(
-                    application_type="Web", level="INFO", 
-                    message=f"Alerta de sucesso encontrado: {content}", routine="ContaPagar", error_details=""
-                )
-                return True
-        except (TimeoutException, NoSuchElementException) as e:
-            Log_manager.add_log(
-                application_type="Web", level="INFO", 
-                message="Alerta de sucesso não encontrado", routine="ContaPagar", error_details=str(e)
-            )
-            return False
-
-    @staticmethod
-    def has_form(init):
-        """
-        Verifica se há um erro de formulário na página.
-        
-        Parâmetros:
-            init (tuple): Tupla contendo os objetos necessários para a execução do teste.
-        
-        Retorna:
-            bool: True se um erro de formulário for encontrado, False caso contrário.
-        """
-        browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
-
-        try:
-            formError = WebDriverWait(browser, 10).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, ".a-Form-error"))
-            )
-            if formError:
-                content = formError.text
-                Log_manager.add_log(
-                    application_type='Web', level="ERROR", 
-                    message=f"Erro de formulário encontrado: {content}", routine="ContaPagar", error_details=""
-                )
-                return True
-        except (TimeoutException, NoSuchElementException) as e:
-            Log_manager.add_log(
-                application_type='Web', level="INFO", 
-                message="Erro de formulário não encontrado", routine="ContaPagar", error_details=str(e)
-            )  
-            return False 
-
+    
 # Realiza as queries necessarias para preencher as lovs com valor aleatorio recebe um dicinario py. Exemplo: 'queries  = {"nomeDaQuery":"""Select * from dual"""}'    
     @staticmethod
     def getQueryResults(init, queries, limit=10, random_choice=True):

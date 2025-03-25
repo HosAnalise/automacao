@@ -14,7 +14,7 @@ from classes.utils.Components import Components
 
 class ContaReceber:
     url="contas-a-receber"
-    filterSelector="P84_SELETOR_LOJA"
+    filterSelector="#P84_SELETOR_LOJA"
     queries = {
         "queryModelodocumentoFiscal":   """
                                                 SELECT 
@@ -145,34 +145,40 @@ class ContaReceber:
         
 
         try:
+
             browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
             randomQueries =  query
-            
-            btnNovaContaReceber = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B392477272658547904")))
-            btnText = btnNovaContaReceber.text
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Botão {btnText} encontrado",
-                    routine="",
-                    error_details=''
-                )
-            btnNovaContaReceber.click()
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Botão {btnText} clicado",
-                    routine="",
-                    error_details=''
-                )
-            
-
-
             getEnv = env_vars
             env_application_type = getEnv.get("WEB")
             
+            urlContain = "conta-a-receber"
+            has_contaReceber = Components.url_contains(init,urlContain)
+           
+
+            if not has_contaReceber:
+            
+                btnNovaContaReceber = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B392477272658547904")))
+                btnText = btnNovaContaReceber.text
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} encontrado",
+                        routine="",
+                        error_details=''
+                    )
+                btnNovaContaReceber.click()
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} clicado",
+                        routine="",
+                        error_details=''
+                    )
+                
+            has_receipt = Apex.getValue(browser,"P85_RECEBIDO") 
+                        
             randomValue = round(random.uniform(1, 999999), 2)
-            randomText = GeradorDados.gerar_texto(100)
+            randomText = GeradorDados.gerar_texto(20)
             randomNumber = GeradorDados.randomNumberDinamic(0,4)
 
 
@@ -187,7 +193,9 @@ class ContaReceber:
             zeroOrOne = GeradorDados.randomNumberDinamic(0,1)
             bigText500 = GeradorDados.gerar_texto(500)
 
-            recebidovalue = zeroOrOne if randomNumber != 0 else randomText
+
+
+            recebidovalue = has_receipt if has_contaReceber  else 0 if randomNumber != 0 else zeroOrOne if randomNumber == 4 else 1
             valorValue = randomValue if randomNumber != 0 else randomText
             contaIdValue = randomQueries["Query_queryContaId"] if randomNumber != 0 else randomText
             pessoaClienteId = randomQueries["Query_queryCliente"] if randomNumber != 0 else randomText
@@ -341,6 +349,9 @@ class ContaReceber:
                     routine="Login",application_type='WEB', 
                     error_details=str(e)
                 )
+
+        finally:
+            return recebidovalue        
 #END insereContaReceber(init,query)
 
 
@@ -355,7 +366,7 @@ class ContaReceber:
         
         Query_value = round(random.uniform(1, 999999), 2)
         randomValue = FuncoesUteis.formatBrCurrency(Query_value)
-        randomText = GeradorDados.gerar_texto(100)
+        randomText = GeradorDados.gerar_texto(20)
         randomNumber = GeradorDados.randomNumberDinamic(0,4)
         randomDay = GeradorDados.randomNumberDinamic(1,30)
     
@@ -389,7 +400,7 @@ class ContaReceber:
             chaveNfe = GeradorDados.gerar_chave_nfe() if randomNumber != 0 else bigText500
             tipoCobranca = GeradorDados.randomNumberDinamic(1,2) if randomNumber != 0 else randomText
             cobrador = randomQueries["Query_queryCobradorId"] if randomNumber != 0 else randomText
-            observacao = bigText500 if randomNumber != 0 else bigText700
+            observacao = randomText if randomNumber != 0 else bigText700
 
 
             apexValues = {
@@ -558,8 +569,8 @@ class ContaReceber:
                     btnRepeticao.click()
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao clicado", routine="ContaReceber", error_details ="" )
                     
-                    FuncoesUteis.has_alert(init)
-                    FuncoesUteis.has_alert_sucess(init)
+                    Components.has_alert(init)
+                    Components.has_alert_sucess(init)
 
                     seletor = "#contaReceberRepeticao"
                     has_frame = Components.has_frame(init,seletor)
@@ -690,7 +701,8 @@ class ContaReceber:
                             btnNovaSimulacao.click()
                             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine="ContaReceber", error_details ="" )
 
-                            FuncoesUteis.has_form(init)           
+                        Components.has_spin(init)
+                        Components.has_form(init)           
 
 
                         WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#simulacao")))
@@ -710,7 +722,7 @@ class ContaReceber:
                     Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: btnRepeticao não encontrado", routine="ContaReceber", error_details ="" )
                     
 
-                FuncoesUteis.has_alert(init)
+                Components.has_alert(init)
             
         except TimeoutException as e:
             Log_manager.add_log(
@@ -823,46 +835,54 @@ class ContaReceber:
             clienteOriginalValue  = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P85_PESSOA_CLIENTE_ID"))
             numeroDocumentoOriginalValue = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P85_NUMERO_DOCUMENTO"))
 
-            # Aguarda a aba estar visível
-            abaRecebimento = WebDriverWait(browser, 30).until(
-                EC.visibility_of_element_located((By.ID, "recebimento_tab"))
-            )
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento encontrada", routine="ContaReceber", error_details ="" )
+            seletor = "#contaReceberRecebimento"
+            has_frame = Components.has_frame(init,seletor)
+
+            if not has_frame:               
+
+                # Aguarda a aba estar visível
+                abaRecebimento = WebDriverWait(browser, 30).until(
+                    EC.visibility_of_element_located((By.ID, "recebimento_tab"))
+                )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento encontrada", routine="ContaReceber", error_details ="" )
 
 
-            # Garante que o elemento está na tela
-            browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", abaRecebimento)
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de Recebimento ", routine="ContaReceber", error_details ="" )
+                # Garante que o elemento está na tela
+                browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", abaRecebimento)
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de Recebimento ", routine="ContaReceber", error_details ="" )
 
 
-            # Aguarda até que o elemento esteja clicável
-            WebDriverWait(browser, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#recebimento_tab")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicavel", routine="ContaReceber", error_details ="" )
+                # Aguarda até que o elemento esteja clicável
+                WebDriverWait(browser, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#recebimento_tab")))
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicavel", routine="ContaReceber", error_details ="" )
 
 
-            abaRecebimento.click()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicada", routine="ContaReceber", error_details ="" )
-        
-            try:
-                novoRecebimento = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B118674634687784523")))    
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo Recebimento encontrado", routine="ContaReceber", error_details ="" )
+                abaRecebimento.click()
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicada", routine="ContaReceber", error_details ="" )
+            
+                try:
+                    novoRecebimento = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B118674634687784523")))    
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo Recebimento encontrado", routine="ContaReceber", error_details ="" )
 
-                novoRecebimento.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo Recebimento clicado", routine="ContaReceber", error_details ="" )
-                has_repeat = True
-            except  (TimeoutException, NoSuchElementException, Exception) as e:
-                has_repeat = False
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="ERROR",
-                    message="Botão novo recebimento não encontrado",
-                    routine="ContaReceber",
-                    error_details=str(e)
-                )  
+                    novoRecebimento.click()
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo Recebimento clicado", routine="ContaReceber", error_details ="" )
+                    has_repeat = True
+                except  (TimeoutException, NoSuchElementException, Exception) as e:
+                    has_repeat = False
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="ERROR",
+                        message="Botão novo recebimento não encontrado",
+                        routine="ContaReceber",
+                        error_details=str(e)
+                    )  
+            else:
+                has_repeat = True        
 
             if has_repeat:
-                seletor = "#contaReceberRecebimento"
-                has_frame = Components.has_frame(init,seletor)
+                if not has_frame:
+                    seletor = "#contaReceberRecebimento"
+                    has_frame = Components.has_frame(init,seletor)
 
 
                 if has_frame:         
@@ -956,10 +976,8 @@ class ContaReceber:
                     btnSaveIframeRecebimentos.click()
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão save do iframe Recebimentos clicado", routine="ContaReceber", error_details ="" )
 
-                    FuncoesUteis.has_alert(init)            
+                    Components.has_alert(init)            
                 
-                    browser.switch_to.default_content()
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaReceber", error_details ="" )
                     
 
         except TimeoutException as e:
@@ -1045,6 +1063,10 @@ class ContaReceber:
                     routine="Login",application_type='WEB', 
                     error_details=str(e)
                 )
+        finally:
+            browser.switch_to.default_content()
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaReceber", error_details ="" )
+                            
 #END recebimentoContaReceber(init,query) 
 
     @staticmethod
@@ -1055,7 +1077,7 @@ class ContaReceber:
 
         try:
 
-            abaJurosMultas = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"R55917550016747726_tab")))
+            abaJurosMultas = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"[aria-controls='R55917550016747726']")))
             Log_manager.add_log(application_type =env_application_type,
                                 level= "INFO",
                                 message = "Aba de Juros e multas encontrada",
@@ -1096,9 +1118,9 @@ class ContaReceber:
                                                 routine="ContaReceber", error_details="")
                 
             itens = {
-                "JurosDia" : (jurosDiaValor,apexGetValue["P85_JUROS_CONTA_RECEBER"].replace('%','').strip()),
-                "Multa" : (multaValor,apexGetValue["P85_MULTA_CONTA_RECEBER"].replace('%','').strip()),
-                "JurosMes":(jurosMesValor,apexGetValue["P85_JUROS_MES_CONTA_RECEBER"].replace('%','').strip())
+                "JurosDia" : (jurosDiaValor,FuncoesUteis.stringToFloat(apexGetValue["P85_JUROS_CONTA_RECEBER"].replace('%','').strip())),
+                "Multa" : (multaValor,FuncoesUteis.stringToFloat(apexGetValue["P85_MULTA_CONTA_RECEBER"].replace('%','').strip())),
+                "JurosMes":(jurosMesValor,FuncoesUteis.stringToFloat(apexGetValue["P85_JUROS_MES_CONTA_RECEBER"].replace('%','').strip()))
             }
 
             FuncoesUteis.compareValues(init,itens)
@@ -1202,98 +1224,21 @@ class ContaReceber:
             Log_manager.add_log(
                     application_type=env_application_type,
                     level="INFO",
-                    message=f"Botão {btnText} encontrado",
+                    message=f"Botão editar encontrado",
                     routine="",
                     error_details=''
                 )
             
-            row = btnEdit.find_element(By.CSS_SELECTOR,"tr")
-            
-            cellValues = [td.text.strip() for td in row.find_elements(By.CSS_SELECTOR,"td")]
-
-            # Log dos valores da linha
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="INFO",
-                message=f"Valores da linha antes de clicar: {cellValues}",
-                routine="",
-                error_details=''
-            )
-
-
-
-
+        
             btnEdit.click()
             Log_manager.add_log(
                     application_type=env_application_type,
                     level="INFO",
-                    message=f"Botão {btnText} clicado",
+                    message=f"Botão editar clicado",
                     routine="",
                     error_details=''
                 )
             
-            apexValues = {
-                "P85_RECEBIDO": 0,  
-                "P85_SALDO_RECEBER": 1,
-                "P85_VALOR": 2,
-                "P85_CONTA_ID": 3,
-                "P85_PESSOA_CLIENTE_ID": 4,
-                "P85_DATA_VENCIMENTO": 5,
-                "P85_DATA_PREVISAO_RECEBIMENTO": 6,
-                "P85_CATEGORIA_FINANCEIRA": 7,
-                "P85_LOJA": 8,
-                "P85_DESCRICAO": 9
-            }
-
-            apexGetValues = {}
-            apexTextValues = {}
-
-            for key,value in apexValues.items():
-               
-                apexGetValues[key] = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,f"#{key}")))
-                apexTextValues[key] = apexGetValues[key].text
-                
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Campo {key} teve o valor {apexGetValues[key]} inserido",
-                    routine="",
-                    error_details=''
-                )   
-
-
-            erros = []
-            for campo_apex, indice_coluna in apexValues.items():
-                valor_tabela = cellValues[indice_coluna] if indice_coluna < len(cellValues) else "N/A"
-                valor_apex = apexTextValues.get(campo_apex, "N/A")
-
-                if valor_tabela != valor_apex:
-                    erros.append(f"❌ Diferença no campo {campo_apex}: Tabela = '{valor_tabela}', Apex = '{valor_apex}'")
-                else:
-                    Log_manager.add_log(
-                        application_type=env_application_type,
-                        level="INFO",
-                        message=f"✅ Campo {campo_apex} validado com sucesso. Valor: {valor_apex}",
-                        routine="",
-                        error_details=''
-                    )
-
-            # Log das diferenças encontradas
-            if erros:
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="ERROR",
-                    message="\n".join(erros),
-                    routine="",
-                    error_details=''
-                )
-    
-
-           
-
-            
-
-
         
         except TimeoutException as e:
             Log_manager.add_log(
@@ -1474,4 +1419,139 @@ class ContaReceber:
                     routine="Login",application_type='WEB', 
                     error_details=str(e)
                 )
-#END totalizadoresContaReceber(init,query)                
+#END totalizadoresContaReceber(init,query)        
+
+
+    @staticmethod
+    def salvaContaReceber(init):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB") 
+
+        try:
+
+            btnSaveContaReceber = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B118650201045784509"))) 
+            btnText = btnSaveContaReceber.text
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+
+            browser.execute_script("arguments[0].scrollIntoView(true);", btnSaveContaReceber)
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
+
+            btnSaveContaReceber.click()
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')
+
+            Components.has_spin(init)
+            Components.has_alert(init)
+            Components.has_alert_sucess(init)
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))    
+
+
+
+#END salvaContaReceber(init)
+
+    @staticmethod
+    def excluiContaReceber(init):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB") 
+
+        try:
+
+            # Aguarda a aba estar visível
+            abaRecebimento = WebDriverWait(browser, 30).until(
+                EC.visibility_of_element_located((By.ID, "recebimento_tab"))
+            )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento encontrada", routine="ContaReceber", error_details ="" )
+
+
+            # Garante que o elemento está na tela
+            browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", abaRecebimento)
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de Recebimento ", routine="ContaReceber", error_details ="" )
+
+
+            # Aguarda até que o elemento esteja clicável
+            WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#recebimento_tab")))
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicavel", routine="ContaReceber", error_details ="" )
+
+
+            abaRecebimento.click()
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicada", routine="ContaReceber", error_details ="" )
+            
+            try:
+                has_receipt = WebDriverWait(browser,30).until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR,".fa.fa-trash-o")))
+            except (TimeoutException, NoSuchElementException, Exception) as e:
+                Log_manager.add_log(application_type=env_application_type, level="ERROR", message="Não há recebimento atrelado a conta", routine="", error_details=str(e))
+               
+                has_receipt = False
+
+            if has_receipt:
+                while len(has_receipt) > 0:  # Continuar enquanto houver botões de exclusão na lista
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Botão de exclusão de recebimentos encontrado", routine="ContaReceber", error_details="")
+                    
+                    # Clicar no primeiro botão de exclusão encontrado
+                    has_receipt[0].click()
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Botão de exclusão de recebimentos clicado", routine="ContaReceber", error_details="")
+                    
+                    # Esperar um pouco para garantir que o item seja removido ou que a página seja atualizada
+                    WebDriverWait(browser, 10).until(EC.staleness_of(has_receipt[0]))  # Espera até o botão se tornar obsoleto
+                    
+                    # Recarregar a lista de botões de exclusão (pois a página pode ter mudado após a exclusão)
+                    has_receipt = WebDriverWait(browser, 30).until(
+                        EC.visibility_of_all_elements_located((By.CSS_SELECTOR, ".fa.fa-trash-o"))
+                    )
+
+                btnDeleteRecebimentoConfirm = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot"))) 
+                btnText = btnDeleteRecebimentoConfirm.text
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+
+                browser.execute_script("arguments[0].scrollIntoView(true);", btnDeleteRecebimentoConfirm)
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
+
+                btnDeleteRecebimentoConfirm.click()
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')    
+            else:
+                btnDeleteContaReceber = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B118650674994784509"))) 
+                btnText = btnDeleteContaReceber.text
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+
+                browser.execute_script("arguments[0].scrollIntoView(true);", btnDeleteContaReceber)
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
+
+                btnDeleteContaReceber.click()
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')
+
+                has_alert = Components.has_alert(init)
+                
+                if not has_alert:
+
+                    btnDeleteContaReceberConfirm = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot"))) 
+                    btnText = btnDeleteContaReceberConfirm.text
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+
+                    browser.execute_script("arguments[0].scrollIntoView(true);", btnDeleteContaReceberConfirm)
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
+
+                    btnDeleteContaReceberConfirm.click()
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')
+                    
+                    Components.url_contains(init,ContaReceber.url)
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))    
+        

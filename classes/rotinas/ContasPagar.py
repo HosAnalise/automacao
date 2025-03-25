@@ -14,7 +14,7 @@ from classes.utils.Components import Components
 class ContasPagar:
 
     url="contas-a-pagar"
-    filterSelector ="P46_SELETOR_LOJA"
+    filterSelector ="#P46_SELETOR_LOJA"
     queries ={
         "queryContaId" : """
                 SELECT CONTA.CONTA_ID  
@@ -97,7 +97,7 @@ class ContasPagar:
 
     @staticmethod
     def insereContaPagar(init,query):
-        randomContaId,randomFornecedorId,randomCategoriaFinanceiraId,randomEmpresaId,randomPagamentoId,randomChavePixId,randomBancoId,randomCentroCustoId,randomModeloDocumentoID = query
+        queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -116,9 +116,13 @@ class ContasPagar:
 
         
         try:
+            urlContain = "conta-a-pagar"
+            has_contaPagar = Components.url_contains(init,urlContain)
+
+            if not has_contaPagar:
            
-            btnNovaContaPagar = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B129961237978758786")))
-            btnNovaContaPagar.click()
+                btnNovaContaPagar = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B129961237978758786")))
+                btnNovaContaPagar.click()
 
             WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_VALOR")))
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: valorOriginal encontrado", routine="ContaPagar", error_details ="" )
@@ -139,9 +143,9 @@ class ContasPagar:
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: naConta encontrado", routine="ContaPagar", error_details ="" )
 
             if randomNumber != 0:
-                Apex.setValue(browser,"P47_CONTA_ID",randomContaId)
+                Apex.setValue(browser,"P47_CONTA_ID",queries['Query_queryContaId'])
                 naContaValue = Apex.getValue(browser,"P47_CONTA_ID")
-                if naContaValue == randomContaId:
+                if naContaValue == queries['Query_queryContaId']:
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: naConta teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
             else:
                 Apex.setValue(browser,"P47_CONTA_ID",randomText)
@@ -156,9 +160,9 @@ class ContasPagar:
 
 
             if randomNumber != 0:
-                Apex.setValue(browser,"P47_PESSOA_FAVORECIDO_ID",randomFornecedorId)
+                Apex.setValue(browser,"P47_PESSOA_FAVORECIDO_ID",queries["Query_queryFornecedorId"])
                 pessoaFavorecidoValue = Apex.getValue(browser,"P47_PESSOA_FAVORECIDO_ID")
-                if pessoaFavorecidoValue == randomFornecedorId:
+                if pessoaFavorecidoValue == queries["Query_queryFornecedorId"]:
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: pessoaFavorecido teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
             else:
                 Apex.setValue(browser,"P47_PESSOA_FAVORECIDO_ID",randomText)
@@ -215,9 +219,9 @@ class ContasPagar:
             time.sleep(3)
 
             if randomNumber != 0:
-                Apex.setValue(browser,"P47_CATEGORIA_FINANCEIRA",randomCategoriaFinanceiraId)
+                Apex.setValue(browser,"P47_CATEGORIA_FINANCEIRA",queries["Query_queryCategoriaFinanceira"])
                 categoriaFinanceiraValue = Apex.getValue(browser,"P47_CATEGORIA_FINANCEIRA")
-                if categoriaFinanceiraValue == randomCategoriaFinanceiraId:
+                if categoriaFinanceiraValue == queries["Query_queryCategoriaFinanceira"]:
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: categoriaFinanceira teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
 
             else:
@@ -234,9 +238,9 @@ class ContasPagar:
 
 
             if randomNumber != 0:
-                Apex.setValue(browser,"P47_LOJA",randomEmpresaId)
+                Apex.setValue(browser,"P47_LOJA",queries["Query_queryEmpresa"])
                 empresaValue = Apex.getValue(browser,"P47_LOJA")
-                if empresaValue ==randomEmpresaId:
+                if empresaValue ==queries["Query_queryEmpresa"]:
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: empresa teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
             else:
                 Apex.setValue(browser,"P47_LOJA",randomText)
@@ -280,7 +284,7 @@ class ContasPagar:
 
     @staticmethod
     def detalhesContaPagar(init,query):
-        randomContaId,randomFornecedorId,randomCategoriaFinanceiraId,randomEmpresaId,randomPagamentoId,randomChavePixId,randomBancoId,randomCentroCustoId,randomModeloDocumentoID = query
+        queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -288,7 +292,7 @@ class ContasPagar:
         random_value = round(random.uniform(1, 999999), 2)
         randomValue = FuncoesUteis.formatBrCurrency(random_value)
         randomText = GeradorDados.gerar_texto(50)
-        randomNumber = GeradorDados.randomNumberDinamic(0,1)
+        randomNumber = GeradorDados.randomNumberDinamic(0,4)
         randomDay = GeradorDados.randomNumberDinamic(1,30)
     
         today = datetime.today()
@@ -300,6 +304,7 @@ class ContasPagar:
         bigText500 = GeradorDados.gerar_texto(700)
 
         try:
+
             dataEmissao = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_DATA_EMISSAO")))
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: dataEmissao encontrado", routine="ContaPagar", error_details ="" )
 
@@ -341,9 +346,9 @@ class ContasPagar:
 
             
             if randomNumber == 0:
-                Apex.setValue(browser,"P47_CENTRO_DE_CUSTO",randomCentroCustoId)
+                Apex.setValue(browser,"P47_CENTRO_DE_CUSTO",queries["Query_queryCentroCusto"])
                 centroCustoValue = Apex.getValue(browser,"P47_CENTRO_DE_CUSTO")
-                if centroCustoValue == randomCentroCustoId:
+                if centroCustoValue == queries["Query_queryCentroCusto"]:
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: centroCusto teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
             else:
                 Apex.setValue(browser,"P47_CENTRO_DE_CUSTO",randomValue)
@@ -375,9 +380,9 @@ class ContasPagar:
 
 
             if randomNumber == 0:
-                Apex.setValue(browser,"P47_DOCUMENTO_FISCAL_MODELO_ID",randomModeloDocumentoID)
+                Apex.setValue(browser,"P47_DOCUMENTO_FISCAL_MODELO_ID",queries["Query_queryModelodocumentoFiscal"])
                 tipoDocumentoValue = Apex.getValue(browser,"P47_DOCUMENTO_FISCAL_MODELO_ID")
-                if tipoDocumentoValue == randomModeloDocumentoID:
+                if tipoDocumentoValue == queries["Query_queryModelodocumentoFiscal"]:
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: tipoDocumento teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
 
             else:
@@ -558,7 +563,7 @@ class ContasPagar:
                 btnRepeticao.click()
                 Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao clicado", routine="ContaPagar", error_details ="" )
 
-                FuncoesUteis.has_alert(init)
+                Components.has_alert(init)
 
                 
                 seletor = "[title='Geração de Repetições']"
@@ -713,7 +718,7 @@ class ContasPagar:
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão salvar da aba geração de repetições clicado", routine="ContaPagar", error_details ="" )
 
 
-                    FuncoesUteis.has_alert(init)
+                    Components.has_alert(init)
 
                 
 
@@ -734,7 +739,7 @@ class ContasPagar:
 #END repeticaoContaPagar(init)
 
     def pagamentosContaPagar(init,query):
-        randomContaId,randomFornecedorId,randomCategoriaFinanceiraId,randomEmpresaId,randomPagamentoId,randomChavePixId,randomBancoId,randomCentroCustoId,randomModeloDocumentoID = query
+        queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -831,7 +836,7 @@ class ContasPagar:
                 valorOriginalFormatado = FuncoesUteis.stringToFloat(valorOriginalValue)
                 novoValor = abs(valorOriginalFormatado - descontoCondicional)
 
-                has_alert = FuncoesUteis.has_alert(init)
+                has_alert = Components.has_alert(init)
                 if has_alert:
 
                     
@@ -863,8 +868,8 @@ class ContasPagar:
 
 
                 if randomNumber == 0:
-                    Apex.setValue(browser,"P70_CONTA_ID",randomContaId)
-                    Apex.setValue(browser,"P70_FORMA_PAGAMENTO",randomPagamentoId)
+                    Apex.setValue(browser,"P70_CONTA_ID",queries["Query_queryContaId"])
+                    Apex.setValue(browser,"P70_FORMA_PAGAMENTO",queries["Query_queryContaId"])
                     Apex.setValue(browser,"P70_DATA_PAGAMENTO",finalDate)
                     Apex.setValue(browser,"P70_VALOR_PAGAMENTO",valorPagamentoDividido)
                     Apex.setValue(browser,"P70_DESCONTO",valorDescontoDividido)
@@ -886,9 +891,7 @@ class ContasPagar:
                     
 
                 descontoEditavel  = Apex.getValue(browser,"P70_DESCONTO")
-                print(f"Valor desconto apos ser inserido {descontoEditavel}")
                 descontoEditavelFloat = FuncoesUteis.stringToFloat(descontoEditavel)  
-                print(f"Valor desconto apos ser inserido Float {descontoEditavelFloat}")
 
                 time.sleep(1)
 
@@ -994,7 +997,7 @@ class ContasPagar:
             browser.switch_to.default_content()
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaPagar", error_details ="" )
             
-            has_alert = FuncoesUteis.has_alert(init)
+            has_alert = Components.has_alert(init)
                 
 
             
@@ -1013,7 +1016,7 @@ class ContasPagar:
 
     @staticmethod
     def instrucaoPagamentoContaPagar(init,query):
-        randomContaId,randomFornecedorId,randomCategoriaFinanceiraId,randomEmpresaId,randomPagamentoId,randomChavePixId,randomBancoId,randomCentroCustoId,randomModeloDocumentoID = query
+        queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -1023,6 +1026,7 @@ class ContasPagar:
         randomText = GeradorDados.gerar_texto(20)
 
         bigText700 = GeradorDados.gerar_texto(700)
+        randomChavePixId = GeradorDados.randomNumberDinamic(1,6)
 
 
         try:
@@ -1100,7 +1104,7 @@ class ContasPagar:
                 textOrNumber = GeradorDados.randomNumberDinamic(0, 1)
 
                 if textOrNumber == 0:
-                    Apex.setValue(browser, "P47_TED_BANCO_ID", randomBancoId)
+                    Apex.setValue(browser, "P47_TED_BANCO_ID", queries["Query_queryBanco"])
                     Apex.setValue(browser, "P47_TED_AGENCIA", numeroAgencia)
                     Apex.setValue(browser, "P47_TED_CONTA", numeroConta)
                     Apex.setValue(browser, "P47_TED_CONTA_DIGITO", digitoConta)
@@ -1108,7 +1112,7 @@ class ContasPagar:
                     Apex.setValue(browser, "P47_INSTRUCAO_OBSERVACAO", randomText)
                     Log_manager.add_log(application_type=env_application_type, level="INFO", message="Informações da conta TED preenchidas corretamente", routine="ContaPagar", error_details="")
                 else:
-                    Apex.setValue(browser, "P47_TED_BANCO_ID", randomBancoId)
+                    Apex.setValue(browser, "P47_TED_BANCO_ID", queries["Query_queryBanco"])
                     Apex.setValue(browser, "P47_TED_AGENCIA", randomText)
                     Apex.setValue(browser, "P47_TED_CONTA", randomText)
                     Apex.setValue(browser, "P47_TED_CONTA_DIGITO", randomText)
@@ -1262,7 +1266,7 @@ class ContasPagar:
                     error_details=''
                 )
             
-            has_alert = FuncoesUteis.has_alert(init)
+            has_alert = Components.has_alert(init)
 
 
             browser.switch_to.default_content()
@@ -1411,7 +1415,7 @@ class ContasPagar:
             btnConfirmDelete.click()
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão confirmar exclusão Conta Pagar clicado", routine="ContaPagar", error_details ="" )
 
-            FuncoesUteis.has_alert(init)
+            Components.has_alert(init)
 
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Conta a pagar {dataId} foi excluida", routine="ContaPagar", error_details ="" )
 
@@ -1466,8 +1470,8 @@ class ContasPagar:
                 error_details=''
             ) 
 
-            FuncoesUteis.has_alert(init)
-            has_alert_sucess = FuncoesUteis.has_alert_sucess(init)       
+            Components.has_alert(init)
+            has_alert_sucess = Components.has_alert_sucess(init)       
 
             if has_alert_sucess:
                 # Captura o botão de Voltar a Contas a Pagar e clica

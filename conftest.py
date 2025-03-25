@@ -15,7 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import pytest
-from scripts.LogManager import LogManager
+from classes.utils.LogManager import LogManager
 from dotenv import dotenv_values
 import oracledb
 from PIL import Image

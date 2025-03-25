@@ -96,3 +96,41 @@ class Components:
         except (TimeoutException, NoSuchElementException, Exception) as e :
             Log_manager.add_log(application_type ="Web",level= "INFO", message = "Alert não encontrado", routine="ContaPagar", error_details =f"{e}" )   
             return False
+        
+
+    @staticmethod
+    def has_spin(init):
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        env_application_type = env_vars.get("WEB")  
+
+
+        try:
+
+            spin = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".u-Processing-spinner")))
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message="Loading...", routine="", error_details='')
+
+
+            WebDriverWait(browser,30).until(EC.staleness_of(spin))
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message="fim do Loading...", routine="", error_details='')
+            return True
+    
+
+        except (TimeoutException, NoSuchElementException, Exception) as e :
+            Log_manager.add_log(application_type ="Web",level= "INFO", message = "Alert não encontrado", routine="ContaPagar", error_details =f"{e}" )   
+            return False
+        
+
+    @staticmethod
+    def url_contains(init,url):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        env_application_type = env_vars.get("WEB")  
+            
+        try:
+            WebDriverWait(browser,10).until(EC.url_contains(url))
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"O trecho {url} esta presente na url da pagina atual", routine="", error_details='')
+            return True
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            return False
+
