@@ -1026,7 +1026,7 @@ class ContasPagar:
         randomText = GeradorDados.gerar_texto(20)
 
         bigText700 = GeradorDados.gerar_texto(700)
-        randomChavePixId = GeradorDados.randomNumberDinamic(1,6)
+        randomChavePixId = queries["Query_queryTipoChave"]
 
 
         try:
@@ -1206,9 +1206,9 @@ class ContasPagar:
                 error_details=''
             )
 
-            smallOrbig = GeradorDados.randomNumberDinamic(0,1)
+            smallOrbig = GeradorDados.randomNumberDinamic(0,4)
 
-            if smallOrbig == 0:
+            if smallOrbig != 0:
                 Apex.setValue(browser,"P139_MOTIVO",randomText) 
                 Log_manager.add_log(
                     application_type=env_application_type,
@@ -1229,8 +1229,7 @@ class ContasPagar:
 
             
 
-            textOrNumber = GeradorDados.randomNumberDinamic(0,1)
-            if textOrNumber == 0:
+            if smallOrbig != 0:
                 Apex.setValue(browser,"P139_DESPESA",randomValue)
                 Log_manager.add_log(
                     application_type=env_application_type,
@@ -1491,8 +1490,96 @@ class ContasPagar:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 
+#END finalizaInsertContaPagar(init)
 
-            
+    @staticmethod
+    def excluiDespesa(init,deleteAllOrOnlyOne):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")    
+        dataId = "data id não encontrado"  
+       
+
+        try:                  
+            abaDespesas = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#despesas_tab")))
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Aba despesas encontrada",
+                routine="ContaPagar",
+                error_details=''
+            )
+            browser.execute_script("arguments[0].scrollIntoView(true);", abaDespesas)
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Scroll até a aba de despesas",
+                routine="ContaPagar",
+                error_details=''
+            )
+
+            abaDespesas.click()
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Aba de despesas clicada",
+                routine="ContaPagar",
+                error_details=''
+            )
+          
+            trashicon = WebDriverWait(browser, 10).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".fa.fa-trash-o.icon-red.remove"))
+            )
+
+
+            if not trashicon:
+                Log_manager.add_log(application_type=env_application_type, level ="ERROR", message="Nenhuma despesa encontrada para excluir", routine ="ContaPagar", TypeError= '')
+                return
+
+            if deleteAllOrOnlyOne is True:
+                while trashicon:
+                    try:
+                        trashicon[0].click()
+                        confirm_btn = WebDriverWait(browser, 10).until(
+                            EC.element_to_be_clickable((By.CSS_SELECTOR, ".js-confirmBtn"))
+                        )
+                        confirm_btn.click()
+
+                        Components.has_spin(init)
+                        
+                        trashicon = WebDriverWait(browser, 10).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, ".fa-trash-o.icon-red.remove"))
+                        )
+
+                    except TimeoutException:
+                        Log_manager.add_log(env_application_type, "ERROR", "Botão de confirmação não encontrado", "ContaPagar", '')
+                        break  
+            else:
+                try:
+                    index = int(deleteAllOrOnlyOne) if isinstance(deleteAllOrOnlyOne, int) else 0
+                    if 0 <= index < len(trashicon):
+                        trashicon[index].click()
+                        confirm_btn = WebDriverWait(browser, 10).until(
+                            EC.element_to_be_clickable((By.CSS_SELECTOR, ".js-confirmBtn"))
+                        )
+                        confirm_btn.click()
+                    else:
+                        Log_manager.add_log(env_application_type, "ERROR", "Índice fora do intervalo", "ContaPagar", '')
+
+                except ValueError:
+                    Log_manager.add_log(env_application_type, "ERROR", "Parâmetro inválido para deleteAllOrOnlyOne", "ContaPagar", '')
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+
+#END excluiDespesa(init)            
 
 
             

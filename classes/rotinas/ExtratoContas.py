@@ -184,10 +184,7 @@ class ExtratoContas:
             if has_frame:
                 WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#P199_CONTA_ID")))
                 Log_manager.add_log(application_type=env_application_type, level="INFO", message="Elemento no iframe encontrado", routine="", error_details='')
-
-                
-
-
+               
                 descricaoText500 = GeradorDados.gerar_texto(500)
                 descricaoText700 = GeradorDados.gerar_texto(700)
 

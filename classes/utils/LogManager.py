@@ -20,6 +20,7 @@ class LogManager:
         mongodb_uri = os.getenv("MONGODB_URI")
         db_name = os.getenv("DB_NAME")
         collection_name = os.getenv("COLLECTION_NAME")
+        dev = os.getenv("DEV")
         
         if not mongodb_uri or not db_name or not collection_name:
             raise ValueError("Faltando variáveis de ambiente: MONGODB_URI, DB_NAME ou COLLECTION_NAME")
@@ -31,6 +32,8 @@ class LogManager:
 
         # Inicializa um array para armazenar logs durante a execução
         self.logs = []
+
+        self.dev = dev
 
     def _generate_execution_id(self):
         """
@@ -70,6 +73,7 @@ class LogManager:
 
         execution_entry = {
             "execution_id": execution_id,  # ID da execução
+            "dev": self.dev,
             "logs": self.logs,  # Lista de logs
             "timestamp": timestamp
         }

@@ -1,5 +1,4 @@
-from datetime import datetime,timedelta
-import time
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -14,7 +13,7 @@ from classes.rotinas.ExtratoContas import ExtratoContas
 
 class ConciliacaoBancaria:
     url="conciliacao-bancaria"
-    filterSelector = "P154_FILTRO_CONTA"
+    filterSelector = "#P154_FILTRO_CONTA"
 
     @staticmethod
     def insereConciliacao(init):
@@ -24,12 +23,13 @@ class ConciliacaoBancaria:
         env_application_type = getEnv.get("WEB")
            
         try:
-            
+
             btnNovaConciliacao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B43105716282300150")))
+            btnText = btnNovaConciliacao.text
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
-                message="Botão btnNovaConciliacao encontrado ",
+                message=f"Botão {btnText} encontrado ",
                 routine="ConciliacaoBancaria",
                 error_details=''
             )
@@ -37,7 +37,7 @@ class ConciliacaoBancaria:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
-                message="Botão btnNovaConciliacao clicado ",
+                message=f"Botão {btnText} clicado ",
                 routine="ConciliacaoBancaria",
                 error_details=''
             )
@@ -46,8 +46,8 @@ class ConciliacaoBancaria:
             has_frame = Components.has_frame(init,seletor)
 
             if has_frame:
-                filePath = (r"C:\Users\Hos_Gabriel\Desktop\Automatização web\config\teste.ofx")
-                WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".apex-item-filedrop-action.a-Button a-Button--hot")))
+                filePath = (r"C:\Users\Hos_Gabriel\Desktop\Automatização web\assets\teste0,50.ofx")
+                WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".apex-item-filedrop-action.a-Button.a-Button--hot")))
                 dropZone = WebDriverWait(browser,30).until(EC.presence_of_element_located((By.CSS_SELECTOR,"#P156_ARQUIVO_OFX")))
                 Log_manager.add_log(
                     application_type=env_application_type,
@@ -67,11 +67,11 @@ class ConciliacaoBancaria:
 
                 btnImportaExtrato = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#importarExtrato")))
                 Log_manager.add_log(
-                application_type=env_application_type,
-                level="INFO",
-                message="Botão btnImportaExtrato encontrado ",
-                routine="ConciliacaoBancaria",
-                error_details=''
+                    application_type=env_application_type,
+                    level="INFO",
+                    message="Botão btnImportaExtrato encontrado ",
+                    routine="ConciliacaoBancaria",
+                    error_details=''
                 )
                 btnImportaExtrato.click()
                 Log_manager.add_log(
@@ -86,12 +86,13 @@ class ConciliacaoBancaria:
 
                     btnConfirm = WebDriverWait(browser,20).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".js-confirmBtn")))
                     Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message="Botão btnConfirm encontrado ",
-                    routine="ConciliacaoBancaria",
-                    error_details=''
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Botão btnConfirm encontrado ",
+                        routine="ConciliacaoBancaria",
+                        error_details=''
                     )
+
                     btnConfirm.click()
                     Log_manager.add_log(
                         application_type=env_application_type,
@@ -109,36 +110,10 @@ class ConciliacaoBancaria:
                         routine="ConciliacaoBancaria",
                         error_details=str(e)
                     )
-                    screenshot_path = screenshots
-                    
-                    # Verifica se o screenshot foi tirado corretamente
-                    if screenshot_path:
-                        sucess  = browser.save_screenshot(screenshot_path)
-                        if sucess:            
-                            Log_manager.add_log(
-                                level="INFO", 
-                                message=f"Screenshot salvo em: {screenshot_path}", 
-                                routine="Login",application_type='WEB', 
-                                error_details=str(e)
-                        )
-                    else:
-                        Log_manager.add_log(
-                            level="ERROR", 
-                            message="Falha ao salvar screenshot", 
-                            routine="Login",application_type='WEB', 
-                            error_details=str(e)
-                        )    
+                   
 
-                if not FuncoesUteis.has_alert(init) and FuncoesUteis.has_alert_sucess(init):
-                    browser.switch_to.default_content()
-                else:
-                    Log_manager.add_log(
-                        application_type=env_application_type,
-                        level="Erro",
-                        message="Alert encontrado",
-                        routine="ExtratoDeContas",
-                        error_details=''  
-                    ) 
+               
+                    
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -150,6 +125,8 @@ class ConciliacaoBancaria:
                     Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        finally:
+                browser.switch_to.default_content()
 
 #END insereConciliacao(init)
 
@@ -337,3 +314,336 @@ class ConciliacaoBancaria:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 #END criarNovaTransferencia(init)
+
+
+
+    @staticmethod
+    def associarRecebimentoExistente(init,filters,contaReceber):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        contaReceber = contaReceber if contaReceber else False
+           
+        try:       
+            btnAssociarRecebimento = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"[acao='associarLancamento']")))
+            btnText = btnAssociarRecebimento.text
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Botão {btnText} encontrado",
+                    routine="",
+                    error_details=''
+                )
+            
+            btnAssociarRecebimento.click()
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Botão {btnText} clicado",
+                    routine="",
+                    error_details=''
+                )
+            
+            seletor = "[title='Associar a Lançamento Existente']"
+            Components.has_frame(init,seletor)
+
+            if isinstance(filters,dict):
+                btnFilter = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#SR_filtros_tab")))
+                btnText = btnFilter.text
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} encontrado",
+                        routine="",
+                        error_details=''
+                    )
+                
+                btnFilter.click()
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} clicado",
+                        routine="",
+                        error_details=''
+                    )
+                FuncoesUteis.aplyFilter(init,filters)
+
+
+                Components.has_spin(init)
+                has_report = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#reportContasReceber")))
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Report encontrado com com filtros aplicados",
+                        routine="",
+                        error_details=''
+                    )
+
+
+            else:
+                has_report = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#reportContasReceber")))
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Report encontrado sem filtros aplicados",
+                        routine="",
+                        error_details=''
+                    )
+
+            
+            if has_report:
+                seletorCheckbox = f"[value='{contaReceber}']" if contaReceber and isinstance(filters,dict) else ".selecaoConta.form-check-input"
+                checkBox = WebDriverWait(browser,30).until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR,seletorCheckbox)))
+                checkBox[0].click()
+            else:
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="ERROR",
+                        message="Report não encontrado",
+                        routine="",
+                        error_details=''
+                    )
+             
+
+            btnConciliar = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#conciliarButton")))
+            btnText = btnConciliar.text
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Botão {btnText} encontrado",
+                    routine="",
+                    error_details=''
+                )
+            
+            btnConciliar.click()
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Botão {btnText} clicado",
+                    routine="",
+                    error_details=''
+                )
+                            
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        finally:
+            browser.switch_to.default_content()
+#END associarRecebimentoExistente(init,filters,contaReceber)
+    
+    
+    @staticmethod
+    def associarTransferenciaExistente(init,filters,contaReceber):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+           
+        try: 
+            seletor = "[acao='associarLancamentoTransferencia']"
+            Components.btnClick(init,seletor)
+
+            seletor = "[title='Associar a uma Transferência Existente']"
+            Components.has_frame(init,seletor)
+
+            if isinstance(filters,dict):
+                seletor = "#SR_filtros_tab"
+                Components.btnClick(init,seletor)
+                FuncoesUteis.aplyFilter(init,filters)
+
+                Components.has_spin(init)
+                has_check = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".selecaoConta.form-check-input")))
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Resultados encontrado com filtros aplicados",
+                        routine="",
+                        error_details=''
+                )
+
+            else:
+                has_check = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".selecaoConta.form-check-input")))
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Resultados encontrado sem filtros aplicados",
+                        routine="",
+                        error_details=''
+                )
+
+            
+            if has_check:
+                seletorCheckbox = f"[value='{contaReceber}']" if contaReceber and isinstance(filters,dict) else ".selecaoConta.form-check-input"
+                checkBox = WebDriverWait(browser,30).until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR,seletorCheckbox)))
+                checkBox[0].click()
+            else:
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="ERROR",
+                        message="Report não encontrado",
+                        routine="",
+                        error_details=''
+                    )
+             
+
+            btnConciliar = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#conciliarButton")))
+            btnText = btnConciliar.text
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Botão {btnText} encontrado",
+                    routine="",
+                    error_details=''
+                )
+            
+            btnConciliar.click()
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Botão {btnText} clicado",
+                    routine="",
+                    error_details=''
+                )
+
+
+
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        finally:
+            browser.switch_to.default_content()          
+
+
+    @staticmethod
+    def processaConciliacaoAutomatica(init,yesNot):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+           
+        try:       
+            if yesNot:
+                btnConciliarAutomatico = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot")))
+                btnText = btnConciliarAutomatico.text
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} encontrado",
+                        routine="",
+                        error_details=''
+                    )
+                
+                btnConciliarAutomatico.click()
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} clicado",
+                        routine="",
+                        error_details=''
+                    )
+                
+                Components.has_spin(init)
+
+                btnConciliados = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#SR_R217176266746131119_tab")))
+                btnText = btnConciliados.text
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} encontrado",
+                        routine="",
+                        error_details=''
+                    )
+                
+                btnConciliados.click()
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} clicado",
+                        routine="",
+                        error_details=''
+                    )
+                
+                btnConciliadosAutomaticamente = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#SR_R217176266746131119_tab")))
+                btnText = btnConciliadosAutomaticamente.text
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} encontrado",
+                        routine="",
+                        error_details=''
+                    )
+                
+                btnConciliadosAutomaticamente.click()
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} clicado",
+                        routine="",
+                        error_details=''
+                    )
+                
+                has_notResults = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".a-Icon.icon-irr-no-results")))
+
+                if has_notResults:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Não há conciliações automaticas disponiveis na aba de conciliações automaticas",
+                        routine="",
+                        error_details=''
+                    )
+                else:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Há conciliações automaticas disponiveis na aba de conciliações automaticas",
+                        routine="",
+                        error_details=''
+                    )
+            else:
+                btnNaoConciliarAutomatico = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".ui-button.ui-corner-all.ui-widget")))
+                btnText = btnNaoConciliarAutomatico.text
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} encontrado",
+                        routine="",
+                        error_details=''
+                    )
+                
+                btnNaoConciliarAutomatico.click()
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} clicado",
+                        routine="",
+                        error_details=''
+                    )
+                            
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+
+#END processaConciliacaoAutomatica(init,yesNot) 
+

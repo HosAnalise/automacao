@@ -134,3 +134,31 @@ class Components:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
             return False
 
+    @staticmethod
+    def btnClick(init,seletor):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        env_application_type = env_vars.get("WEB")  
+            
+        try:
+            btnClick = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
+            btnText = btnClick.text
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Botão {btnText} encontrado",
+                    routine="",
+                    error_details=''
+                )
+            
+            btnClick.click()
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Botão {btnText} clicado",
+                    routine="",
+                    error_details=''
+                )
+            return True
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            return False
