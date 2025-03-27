@@ -251,7 +251,7 @@ class ExtratoContas:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 
-#END ExtratoContas()   
+#END contaReceberResumido()   
 
 
 
@@ -1090,3 +1090,4 @@ class ExtratoContas:
                     application_type=env_application_type, 
                     error_details=str(e)
                 )
+                

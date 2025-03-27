@@ -97,6 +97,64 @@ class ContasPagar:
 
     @staticmethod
     def insereContaPagar(init,query):
+        """
+        Insere dados em diversos campos da tela de "conta a pagar" .
+        Preenche os campos do formulário com valores dinâmicos gerados aleatoriamente ou obtidos de uma consulta (`query`).
+        Realiza logs detalhados do processo e captura uma screenshot em caso de erro.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo objetos e variáveis necessários para a execução da função. Inclui:
+            - browser: Instância do navegador controlado pelo Selenium.
+            - login: Dados de login (não utilizados diretamente na função).
+            - Log_manager: Gerenciador de logs para registrar eventos e erros.
+            - get_ambiente: Função que pode obter o ambiente de execução (não utilizada diretamente aqui).
+            - env_vars: Variáveis de ambiente que contêm informações sobre o ambiente de execução, como o tipo de aplicação web.
+            - seletor_ambiente: Possível seletor de ambiente (não utilizado diretamente).
+            - screenshots: Caminho para salvar screenshots em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente na função).
+            
+        - query (dict): Dicionário contendo dados necessários para preencher os campos da conta a pagar, como IDs de conta, fornecedor, categoria financeira, etc.
+        
+        Processos:
+        1. Geração de valores aleatórios para preencher os campos:
+        - Valor (no formato de moeda brasileira).
+        - Texto aleatório.
+        - Número aleatório para determinar a inserção correta ou incorreta.
+        - Data aleatória baseada na data atual.
+        
+        2. Preenchimento dos campos da tela com os valores gerados:
+        - Valor original.
+        - Conta.
+        - Pessoa favorecida.
+        - Data de vencimento.
+        - Data de previsão de pagamento.
+        - Categoria financeira.
+        - Empresa.
+        - Descrição.
+
+        3. Verificação se os valores inseridos correspondem aos valores esperados, com logs para sucesso e erro.
+
+        4. Caso ocorra uma falha (exceções como TimeoutException, NoSuchElementException, ou outros erros), um log de erro é registrado e uma captura de tela é salva no caminho especificado.
+
+        Exceções:
+        - Em caso de falha ao interagir com os elementos (TimeoutException, NoSuchElementException, ou qualquer outra exceção genérica), a função registra um log de erro e tenta salvar uma captura de tela.
+
+        Logs:
+        - Logs de sucesso são gerados quando os campos são preenchidos corretamente.
+        - Logs de erro são gerados quando os valores inseridos não correspondem aos valores esperados ou quando ocorrem exceções.
+        - O caminho da screenshot é registrado em caso de falha.
+
+        Exemplo de uso:
+        init = (browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection)
+        query = {
+            'Query_queryContaId': '123',
+            'Query_queryFornecedorId': '456',
+            'Query_queryCategoriaFinanceira': '789',
+            'Query_queryEmpresa': '001'
+        }
+
+        insereContaPagar(init, query)
+        """
         queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -284,6 +342,42 @@ class ContasPagar:
 
     @staticmethod
     def detalhesContaPagar(init,query):
+        """
+        Preenche os campos aba detalhes de contas a pagar e realiza validações. 
+
+        Parâmetros:
+        init (tuple): Tupla contendo os seguintes itens:
+            - browser: objeto Selenium WebDriver para interação com o navegador.
+            - login: informações de login (não utilizado diretamente na função).
+            - Log_manager: gerenciador de logs para registrar informações e erros.
+            - get_ambiente: função para obter o ambiente (não utilizada diretamente).
+            - env_vars: variáveis de ambiente.
+            - seletor_ambiente: seletor de ambiente (não utilizado diretamente).
+            - screenshots: caminho onde as capturas de tela podem ser salvas.
+            - oracle_db_connection: conexão com o banco de dados Oracle (não utilizada diretamente).
+        
+        query (dict): Dicionário contendo os seguintes valores:
+            - Query_queryCentroCusto: valor para o campo "Centro de Custo".
+            - Query_queryModelodocumentoFiscal: valor para o campo "Modelo do Documento Fiscal".
+
+        Retorno:
+        Nenhum. A função preenche campos na interface e gera logs conforme o andamento do processo.
+
+        Fluxo:
+        1. A função preenche os campos de data, centro de custo, modelo do documento fiscal, chave NFe, número do pedido, 
+        número do documento, título e código de barras.
+        2. Para cada campo, a função valida se o valor foi inserido corretamente e registra logs.
+        3. Caso haja erro durante o preenchimento, uma captura de tela é tirada e o erro é registrado no log.
+
+        Exceções Tratadas:
+        - TimeoutException: Quando o tempo para encontrar um elemento expira.
+        - NoSuchElementException: Quando o elemento não é encontrado no DOM.
+        - Exception: Qualquer outra exceção que ocorrer.
+
+        Logs:
+        - INFO: Registrado quando um campo é preenchido corretamente.
+        - ERROR: Registrado quando ocorre um erro no preenchimento.
+        """
         queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
@@ -522,6 +616,40 @@ class ContasPagar:
 
     @staticmethod
     def repeticaoContaPagar(init):
+        """
+        Função responsável por automatizar a aba repetição de uma conta a pagar.
+        
+        A função realiza as seguintes ações:
+        1. Navega até a aba de repetição de conta a pagar.
+        2. Verifica se já existem repetições cadastradas. Caso não existam, cria uma nova repetição.
+        3. Configura as opções de repetição, como feriados, competência, período e dias de repetição.
+        4. Realiza a simulação das repetições e salva a configuração.
+        5. Captura logs de sucesso e erro durante o processo e tira screenshots em caso de falha.
+
+        Parâmetros:
+        - init (tuple): Parâmetro que contém a seguinte estrutura:
+            1. browser: Instância do navegador WebDriver do Selenium.
+            2. login: Informações de login para autenticação.
+            3. Log_manager: Instância do gerenciador de logs para registrar mensagens.
+            4. get_ambiente: Função que retorna o ambiente de configuração.
+            5. env_vars: Variáveis de ambiente contendo configurações do sistema.
+            6. seletor_ambiente: Seletor utilizado para identificar o ambiente de execução.
+            7. screenshots: Caminho para salvar screenshots de erro.
+            8. oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente aqui, mas pode ser usada em outras partes do código).
+        
+        Fluxo:
+        1. A função navega até a aba de repetição de contas a pagar no sistema.
+        2. Verifica se já existem repetições cadastradas. Se não, cria uma nova repetição.
+        3. A função configura os campos de feriados, competência, período e dias de repetição com valores aleatórios, usando a classe `GeradorDados`.
+        4. Simula a configuração da repetição e salva a configuração.
+        5. Se ocorrer um erro (como elementos não encontrados ou falha na execução), a função captura a exceção, registra no log e salva uma captura de tela.
+        6. Por fim, a função retorna o controle ao conteúdo principal da página.
+
+        Exceções:
+        - TimeoutException: Lançada quando um elemento não é encontrado dentro do tempo limite.
+        - NoSuchElementException: Lançada quando um elemento não existe na página.
+        - Exception: Captura qualquer outra exceção que ocorra durante o processo.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -737,8 +865,47 @@ class ContasPagar:
             browser.switch_to.default_content()
 
 #END repeticaoContaPagar(init)
-
+    @staticmethod
     def pagamentosContaPagar(init,query):
+      
+        """
+        Função para realizar o pagamento de uma conta a pagar, aplicando possíveis descontos condicionais, juros, multas e verificando se os valores inseridos estão corretos.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo as seguintes variáveis:
+            - browser: Instância do navegador WebDriver.
+            - login: Objeto responsável pelo login no sistema.
+            - Log_manager: Gerenciador de logs para armazenar e exibir informações.
+            - get_ambiente: Função para obter variáveis de ambiente.
+            - env_vars: Variáveis de ambiente da aplicação.
+            - seletor_ambiente: Função para identificar o ambiente atual da aplicação.
+            - screenshots: Caminho para salvar capturas de tela de erros.
+            - oracle_db_connection: Conexão com o banco de dados Oracle.
+        
+        - query (dict): Dicionário contendo as consultas SQL ou variáveis que precisam ser usadas, como:
+            - "Query_queryContaId": ID da conta a ser paga.
+        
+        Fluxo de operação:
+        1. Obtém o valor original da conta a pagar.
+        2. Acessa a aba de pagamento no sistema, esperando que ela seja visível e clicando nela.
+        3. Se o número aleatório for 0 ou 2, realiza o lançamento de um desconto condicional, inserindo o valor e a observação, e clicando para salvar.
+        4. Se o número aleatório for 1 ou 2, realiza o pagamento da conta, inserindo valores como desconto, juros, multa, acréscimos e despesas. Também valida se os valores inseridos correspondem aos esperados.
+        5. Verifica se há alertas ou erros no processo e salva as informações no log.
+        6. No final, o botão de salvar do iframe de pagamento é clicado para confirmar o pagamento.
+
+        Exceções tratadas:
+        - TimeoutException: Caso o tempo de espera por um elemento seja excedido.
+        - NoSuchElementException: Caso um elemento não seja encontrado.
+        - Exception: Para capturar outras exceções gerais.
+
+        Logs:
+        - A função gera logs detalhados durante cada etapa do processo, informando o que está sendo realizado e os valores manipulados.
+        - Se houver erros durante a execução, um log de erro será gerado, junto com uma captura de tela do erro (se configurado).
+
+        Retorno:
+        - Não retorna nenhum valor diretamente. A função realiza a interação com a interface do usuário e gera logs.
+
+        """
         queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
@@ -1016,6 +1183,54 @@ class ContasPagar:
 
     @staticmethod
     def instrucaoPagamentoContaPagar(init,query):
+        """
+        Função responsável por preencher e submeter os dados de uma instrução de pagamento no sistema de conta a pagar.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo as seguintes variáveis de inicialização:
+            - browser: O driver do Selenium para interagir com o navegador.
+            - login: Informações de login do sistema (não utilizado diretamente na função).
+            - Log_manager: Objeto responsável por gerenciar logs durante a execução do script.
+            - get_ambiente: Função para obter o ambiente de execução.
+            - env_vars: Dicionário de variáveis de ambiente contendo configurações do sistema.
+            - seletor_ambiente: Função para selecionar o ambiente de execução (não utilizado diretamente na função).
+            - screenshots: Caminho onde as capturas de tela podem ser salvas em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizado diretamente na função).
+
+        - query (dict): Dicionário contendo consultas pré-definidas que serão usadas para preencher campos no formulário:
+            - "Query_queryTipoChave": Tipo de chave para o PIX.
+            - "Query_queryBanco": Banco para a conta TED.
+
+        Fluxo da função:
+        1. Aguarda até que a aba de instrução de pagamento esteja clicável.
+        2. Realiza a rolagem da página para tornar a aba visível e clica nela.
+        3. Gera valores aleatórios para preencher campos, como forma de pagamento, chave PIX, banco, entre outros.
+        4. Preenche os campos do formulário conforme a forma de pagamento selecionada:
+            - Boleto (2)
+            - PIX (3)
+            - TED (4)
+        5. Registra logs durante todo o processo, indicando o status das ações realizadas.
+        6. Em caso de erro (TimeoutException, NoSuchElementException, ou outros), a função captura o erro, registra o log e, se possível, salva uma captura de tela.
+
+        Exceções Tratadas:
+        - TimeoutException: Quando um elemento não está disponível no tempo estipulado.
+        - NoSuchElementException: Quando um elemento não é encontrado.
+        - Exception: Exceções gerais que podem ocorrer durante a execução do processo.
+
+        Logs:
+        - A função gera logs detalhados para cada etapa do processo, incluindo o sucesso ou falha de cada ação e as informações geradas.
+
+        Parâmetros internos usados:
+        - `env_application_type`: Tipo de ambiente de execução (WEB).
+        - `random_value`: Valor aleatório gerado para ser utilizado como número monetário.
+        - `randomText`: Texto aleatório gerado para ser usado em observações.
+        - `bigText700`: Texto aleatório de tamanho grande gerado para observações.
+
+        A função também realiza ações específicas para cada forma de pagamento, como preencher o campo para DDA, escolher uma chave para PIX ou fornecer informações para TED.
+
+        Exemplo de uso:
+        - `instrucaoPagamentoContaPagar(init, query)`: Onde `init` é a tupla com os dados de inicialização e `query` é o dicionário com as consultas necessárias.
+        """
         queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
@@ -1142,6 +1357,59 @@ class ContasPagar:
 
     @staticmethod
     def despesasContaPagar(init):
+        """
+        Função responsável por automatizar o processo de inserção de despesas em uma conta a pagar. Ela navega pela aba de despesas,
+        preenche campos com valores aleatórios e, em seguida, salva a nova despesa. Durante todo o processo, logs detalhados são 
+        registrados e, em caso de erro, uma captura de tela é gerada para análise.
+
+        Parâmetros:
+            init (tuple): Tupla contendo as variáveis de inicialização necessárias:
+                - browser: Instância do navegador controlado pelo Selenium.
+                - login: Informações de login (não utilizadas diretamente nesta função).
+                - Log_manager: Objeto responsável pela gestão de logs.
+                - get_ambiente: Função ou objeto para recuperar o ambiente de execução.
+                - env_vars: Variáveis de ambiente, incluindo o tipo de aplicação (WEB).
+                - seletor_ambiente: Seletor para identificar o ambiente.
+                - screenshots: Caminho ou diretório para salvar capturas de tela.
+                - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente nesta função).
+
+        Fluxo:
+            1. A função aguarda até que a aba de despesas esteja visível e clicável.
+            2. Realiza o scroll até a aba de despesas e clica nela.
+            3. Espera até que o botão para adicionar uma nova despesa seja clicável e, então, clica nele.
+            4. Alterna para o iframe específico de "Conta Pagar X Despesas".
+            5. Preenche os campos de "Motivo" e "Despesa" com valores aleatórios gerados.
+            6. Clica no botão "Save" para salvar a despesa.
+            7. Retorna para o contexto principal da página.
+
+        Valores Aleatórios Gerados:
+            - `random_value`: Valor numérico aleatório para o campo "Despesa".
+            - `randomValue`: Valor formatado em moeda brasileira (para o campo "Despesa").
+            - `randomText`: Texto aleatório com 30 caracteres (para o campo "Motivo").
+            - `bigText700`: Texto aleatório com 700 caracteres (para o campo "Motivo", caso uma condição aleatória seja atendida).
+
+        Exceções tratadas:
+            - TimeoutException: Caso o tempo de espera para encontrar um elemento expire.
+            - NoSuchElementException: Caso um elemento não seja encontrado na página.
+            - Exception: Qualquer outro erro inesperado durante a execução.
+
+        Ações de Log:
+            - O Log_manager é utilizado para registrar os seguintes eventos:
+                - "Aba despesas encontrada"
+                - "Scroll até a aba de despesas"
+                - "Aba de despesas clicada"
+                - "Botão nova despesa encontrado"
+                - "Mudando para o iframe Conta Pagar X Despesas"
+                - Logs de erro e sucesso, conforme o andamento da execução.
+
+        Captura de Tela:
+            - Caso ocorra uma exceção durante a execução, uma captura de tela é salva no diretório configurado, 
+            caso a opção de salvar screenshots esteja ativada.
+
+        Finalização:
+            - Após a tentativa de inserir a despesa, a função retorna para o contexto principal da página e registra um log de sucesso ou erro.
+        """
+    
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -1294,15 +1562,52 @@ class ContasPagar:
 
     @staticmethod
     def editaContaPagar(init):
+        """
+        Função responsável por automatizar a edição de uma conta a pagar em uma aplicação web. Ela localiza o ícone de edição
+        da conta, captura o `data-id` associado a essa conta, e inicia o processo de edição, enquanto gera logs detalhados 
+        para monitoramento e captura de erros.
+
+        Parâmetros:
+            init (tuple): Tupla contendo as variáveis de inicialização necessárias:
+                - browser: Instância do navegador controlado pelo Selenium.
+                - login: Informações de login (não utilizadas diretamente nesta função).
+                - Log_manager: Objeto responsável pela gestão de logs.
+                - get_ambiente: Função ou objeto para recuperar o ambiente de execução.
+                - env_vars: Variáveis de ambiente, incluindo o tipo de aplicação (WEB).
+                - seletor_ambiente: Seletor para identificar o ambiente.
+                - screenshots: Caminho ou diretório para salvar capturas de tela.
+                - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente nesta função).
+
+        Fluxo:
+            1. A função aguarda até que o ícone de edição da conta a pagar esteja visível e clicável.
+            2. Quando o ícone é encontrado, o `data-id` do elemento é capturado.
+            3. A função clica no ícone de edição para iniciar o processo de edição da conta a pagar.
+            4. Durante a execução, eventos importantes são registrados no log.
+
+        Exceções tratadas:
+            - TimeoutException: Caso o tempo de espera para encontrar o ícone de edição expire.
+            - NoSuchElementException: Caso o ícone de edição não seja encontrado na página.
+            - Exception: Qualquer outro erro inesperado durante a execução.
+
+        Ações de Log:
+            - O Log_manager é utilizado para registrar os seguintes eventos:
+                - "Conta a pagar editável encontrada"
+                - "Conta a pagar data-id capturado"
+                - "Conta a pagar editável clicada. Início da edição da conta"
+                - Logs de erro e sucesso, conforme o andamento da execução.
+
+        Captura de Tela:
+            - Caso ocorra uma exceção durante a execução, uma captura de tela é salva no diretório configurado, 
+            caso a opção de salvar screenshots esteja ativada.
+
+        Finalização:
+            - Após a tentativa de edição, um log final é gerado, indicando se a conta foi editada com sucesso ou se ocorreu algum erro.
+        """
+
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")    
         dataId = "data id não encontrado"  
-
-
-
-
-
         try:
            
             edit = WebDriverWait(browser,120).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit")))
@@ -1356,11 +1661,41 @@ class ContasPagar:
 
     @staticmethod
     def excluiContaPagar(init):
+        """
+        Realiza a exclusão de uma conta a pagar na aplicação web.
+
+        Parâmetros:
+            init (tuple): Variáveis de inicialização contendo:
+                - browser: A instância do Selenium WebDriver para controle do navegador.
+                - login: Detalhes do login para a aplicação.
+                - Log_manager: Gerenciador de logs para registrar as ações e erros.
+                - get_ambiente: Função para obter o ambiente de execução.
+                - env_vars: Variáveis de ambiente, como o tipo de aplicação (WEB).
+                - seletor_ambiente: Informações sobre o ambiente de execução.
+                - screenshots: Caminho para salvar screenshots em caso de erro.
+                - oracle_db_connection: Conexão com o banco de dados Oracle.
+
+        Fluxo da Função:
+            1. A função localiza e clica na aba de pagamento.
+            2. Em seguida, busca e clica nos ícones de exclusão de pagamento, confirmando a exclusão.
+            3. Depois, a função localiza e clica no botão para excluir a conta a pagar e confirma a exclusão.
+            4. Registra logs para todas as ações, incluindo sucesso e erros.
+            5. Caso algum erro ocorra, registra o erro e tenta salvar uma screenshot.
+
+        Logs:
+            - INFO: Mensagens que indicam progresso ou sucesso nas etapas.
+            - ERROR: Mensagens que indicam erros ou falhas durante a execução.
+
+        Exceções tratadas:
+            - TimeoutException: Caso algum elemento não seja encontrado dentro do tempo esperado.
+            - NoSuchElementException: Caso um elemento não seja encontrado.
+            - Exception: Para qualquer outro erro inesperado.
+        """
+       
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")    
         dataId = "data id não encontrado"  
-       
 
         try:                  
 
@@ -1433,6 +1768,36 @@ class ContasPagar:
 
     @staticmethod
     def finalizaInsertContaPagar(init):
+        """
+        Finaliza o processo de inserção de uma nova conta a pagar.
+
+        Parâmetros:
+            init (tuple): Variáveis de inicialização contendo:
+                - browser: A instância do Selenium WebDriver para controle do navegador.
+                - login: Detalhes do login para a aplicação.
+                - Log_manager: Gerenciador de logs para registrar as ações e erros.
+                - get_ambiente: Função para obter o ambiente de execução.
+                - env_vars: Variáveis de ambiente, como o tipo de aplicação (WEB).
+                - seletor_ambiente: Informações sobre o ambiente de execução.
+                - screenshots: Caminho para salvar screenshots em caso de erro.
+                - oracle_db_connection: Conexão com o banco de dados Oracle.
+
+        Fluxo da Função:
+            1. Localiza e clica no botão de salvar a nova conta a pagar.
+            2. Aguarda por alertas de sucesso e trata caso haja um.
+            3. Localiza e clica no botão para voltar para a tela de contas a pagar.
+            4. Registra logs para todas as ações e erros durante o processo.
+            5. Caso algum erro ocorra, registra o erro e tenta salvar uma screenshot.
+
+        Logs:
+            - INFO: Mensagens que indicam progresso ou sucesso nas etapas.
+            - ERROR: Mensagens que indicam erros ou falhas durante a execução.
+
+        Exceções tratadas:
+            - TimeoutException: Caso algum elemento não seja encontrado dentro do tempo esperado.
+            - NoSuchElementException: Caso um elemento não seja encontrado.
+            - Exception: Para qualquer outro erro inesperado.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -1494,6 +1859,41 @@ class ContasPagar:
 
     @staticmethod
     def excluiDespesa(init,deleteAllOrOnlyOne):
+        """
+        Exclui despesas da aplicação, com a possibilidade de excluir todas ou apenas uma despesa específica.
+
+        Parâmetros:
+            init (tuple): Variáveis de inicialização contendo:
+                - browser: A instância do Selenium WebDriver para controle do navegador.
+                - login: Detalhes do login para a aplicação.
+                - Log_manager: Gerenciador de logs para registrar as ações e erros.
+                - get_ambiente: Função para obter o ambiente de execução.
+                - env_vars: Variáveis de ambiente, como o tipo de aplicação (WEB).
+                - seletor_ambiente: Informações sobre o ambiente de execução.
+                - screenshots: Caminho para salvar screenshots em caso de erro.
+                - oracle_db_connection: Conexão com o banco de dados Oracle.
+
+            deleteAllOrOnlyOne (bool or int): Determina se todas as despesas serão excluídas ou apenas uma.
+                - Se `True`, todas as despesas serão excluídas.
+                - Se `False`, apenas a primeira despesa será excluída.
+                - Se um inteiro for passado, ele define o índice da despesa a ser excluída (índice baseado em zero).
+
+        Fluxo da Função:
+            1. Localiza e clica na aba de despesas.
+            2. Aguarda até que os ícones de exclusão de despesa estejam presentes.
+            3. Dependendo do valor de `deleteAllOrOnlyOne`, executa a exclusão de todas ou uma despesa específica.
+            4. Registra logs para todas as ações e erros durante o processo.
+            5. Caso algum erro ocorra, registra o erro e tenta salvar uma screenshot.
+
+        Logs:
+            - INFO: Mensagens que indicam progresso ou sucesso nas etapas.
+            - ERROR: Mensagens que indicam erros ou falhas durante a execução.
+
+        Exceções tratadas:
+            - TimeoutException: Caso algum elemento não seja encontrado dentro do tempo esperado.
+            - NoSuchElementException: Caso um elemento não seja encontrado.
+            - Exception: Para qualquer outro erro inesperado.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")    

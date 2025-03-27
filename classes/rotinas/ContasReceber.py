@@ -142,7 +142,20 @@ class ContaReceber:
     
     @staticmethod
     def insereContaReceber(init,query):
+        """
+        Função para inserir uma conta a receber no sistema.
+
+        Parâmetros:
+        init: Uma lista contendo objetos necessários para a execução da automação. 
+            Os itens desta lista incluem o navegador (browser), o login, o gerenciador de logs (Log_manager), 
+            a função para obter ambiente (get_ambiente), variáveis de ambiente (env_vars), 
+            seletor de ambiente, caminho para screenshots e conexão com o banco de dados Oracle.
         
+        query: Dicionário contendo consultas aleatórias utilizadas para preencher campos da conta a receber.
+
+        Retorna:
+        recebidovalue: O valor do recebimento inserido ou calculado durante a execução.
+        """
 
         try:
 
@@ -359,6 +372,19 @@ class ContaReceber:
 
     @staticmethod
     def detalhesContaReceber(init,query):
+        """
+        Função para preencher os detalhes de uma conta a receber no sistema.
+
+        Parâmetros:
+        init: Lista contendo objetos necessários para a execução da automação. 
+            Os itens dessa lista incluem o navegador (browser), login, gerenciador de logs (Log_manager), 
+            função para obter o ambiente (get_ambiente), variáveis de ambiente (env_vars), 
+            seletor de ambiente, caminho para salvar screenshots e conexão com o banco de dados Oracle.
+        
+        query: Dicionário contendo consultas aleatórias que são usadas para preencher os campos da conta a receber.
+
+       
+        """
         randomQueries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
@@ -522,6 +548,33 @@ class ContaReceber:
 
     @staticmethod
     def repeticaoContaReceber(init):
+        """
+        Função para automatizar a criação de uma repetição de conta a receber em uma aplicação web utilizando Selenium.
+
+        Esta função realiza as seguintes ações:
+        1. Acessa a aba de repetição de nova conta a pagar e a interage.
+        2. Verifica se já existe uma repetição cadastrada.
+        3. Caso não exista, preenche os campos para gerar uma nova repetição, escolhendo valores aleatórios para a periodicidade e outras configurações.
+        4. Realiza validações para garantir que os valores inseridos nos campos estão corretos.
+        5. Caso ocorra algum erro (ex: tempo de espera excedido ou elemento não encontrado), a função captura e registra o erro, além de salvar uma captura de tela do erro.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo os seguintes objetos necessários para o funcionamento da função:
+            1. browser (WebDriver): Instância do Selenium WebDriver.
+            2. login (str): Credenciais de login (não utilizado diretamente na função).
+            3. Log_manager (LogManager): Instância para registrar logs.
+            4. get_ambiente (function): Função para obter o ambiente.
+            5. env_vars (dict): Dicionário contendo as variáveis de ambiente.
+            6. seletor_ambiente (str): Seletor para identificar o ambiente (não utilizado diretamente na função).
+            7. screenshots (str): Caminho onde as capturas de tela serão salvas.
+            8. oracle_db_connection (object): Conexão com o banco de dados Oracle (não utilizado diretamente na função).
+
+        
+        Exceções:
+        - TimeoutException: Lançada quando o tempo de espera para encontrar um elemento excede o limite.
+        - NoSuchElementException: Lançada quando o elemento esperado não é encontrado na página.
+        - Exception: Captura qualquer outro erro inesperado.
+        """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
@@ -812,6 +865,20 @@ class ContaReceber:
 #END repeticaoContaReceber(init)            
 
     def recebimentoContaReceber(init,query):
+        """
+        Função que simula a operação de recebimento de uma conta a receber na aplicação.
+        Interage com a interface do usuário, preenche campos com dados dinâmicos e registra logs
+        detalhados para monitoramento e depuração de erros. Além disso, captura screenshots quando necessário.
+        
+        Parâmetros:
+        init (tuple): Tupla contendo objetos e variáveis necessárias para o processo, como o navegador (browser),
+                    login, Log_manager, ambiente de execução, e outros componentes de configuração.
+        query (dict): Dicionário que contém informações relacionadas à consulta da conta a receber, 
+                    incluindo identificadores e parâmetros específicos da conta.
+        
+       
+        """
+
         randomQuery = query
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
@@ -1071,6 +1138,26 @@ class ContaReceber:
 
     @staticmethod
     def jurosMultasContaReceber(init):
+        """
+        Função responsável por acessar a aba de Juros e Multas de uma conta a receber,
+        inserir valores aleatórios nos campos correspondentes e validar se os valores
+        foram corretamente inseridos. Todos os eventos são registrados em logs para 
+        rastreamento e análise de falhas.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo os seguintes objetos e variáveis do ambiente:
+            - browser (WebDriver): Instância do WebDriver utilizada para automação.
+            - login: Dados de login (não utilizados diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar as operações.
+            - get_ambiente: Função para obter informações sobre o ambiente.
+            - env_vars (dict): Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor do ambiente (não utilizado diretamente).
+            - screenshots (str): Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente).
+
+        Retorno:
+        - None: A função apenas executa as ações no sistema e gera logs.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -1213,6 +1300,24 @@ class ContaReceber:
 
     @staticmethod
     def editaContaReceber(init):
+        """
+        Função responsável por acessar e clicar no botão de edição de uma conta a receber.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo os seguintes elementos do ambiente:
+            - browser (WebDriver): Instância do WebDriver utilizada para automação.
+            - login: Dados de login (não utilizados diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar as operações.
+            - get_ambiente: Função para obter informações sobre o ambiente.
+            - env_vars (dict): Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor do ambiente (não utilizado diretamente).
+            - screenshots (str): Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente).
+
+        Retorno:
+        - None: A função apenas executa as ações no sistema e gera logs.
+        """
+
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -1424,6 +1529,22 @@ class ContaReceber:
 
     @staticmethod
     def salvaContaReceber(init):
+        """
+        Função responsável por salvar uma conta a receber.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo os seguintes elementos do ambiente:
+            - browser (WebDriver): Instância do WebDriver utilizada para automação.
+            - login: Dados de login (não utilizados diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar as operações.
+            - get_ambiente: Função para obter informações sobre o ambiente.
+            - env_vars (dict): Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor do ambiente (não utilizado diretamente).
+            - screenshots (str): Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente).
+
+        
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB") 
@@ -1460,6 +1581,20 @@ class ContaReceber:
 
     @staticmethod
     def excluiContaReceber(init):
+        """
+        Função responsável por excluir uma conta a receber.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo os seguintes elementos do ambiente:
+            - browser (WebDriver): Instância do WebDriver utilizada para automação.
+            - login: Dados de login (não utilizados diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar as operações.
+            - get_ambiente: Função para obter informações sobre o ambiente.
+            - env_vars (dict): Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor do ambiente (não utilizado diretamente).
+            - screenshots (str): Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente).
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB") 

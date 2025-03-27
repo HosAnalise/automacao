@@ -10,8 +10,10 @@ from pymongo.server_api import ServerApi
 
 
 
-
-load_dotenv()
+# Obtém o caminho absoluto da raiz do projeto
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))  # Sobe dois níveis
+dotenv_path = os.path.join(base_dir, ".env")  # Caminho correto do .env na raiz
+load_dotenv(dotenv_path)
 timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
 
 class LogManager:

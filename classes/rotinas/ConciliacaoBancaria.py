@@ -686,26 +686,8 @@ class ConciliacaoBancaria:
                         error_details=''
                     )
              
-
-            btnConciliar = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#conciliarButton")))
-            btnText = btnConciliar.text
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Botão {btnText} encontrado",
-                    routine="",
-                    error_details=''
-                )
-            
-            btnConciliar.click()
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Botão {btnText} clicado",
-                    routine="",
-                    error_details=''
-                )
-
+            seletor = "#conciliarButton"
+            Components.btnClick(init,seletor)
 
 
 
@@ -720,7 +702,110 @@ class ConciliacaoBancaria:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
         finally:
             browser.switch_to.default_content()          
+#END associarTransferemciaExistente(init,filters,contaReceber)
 
+    @staticmethod
+    def ingnorarLancamento(init):
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+           
+        try: 
+            lancamentoBancarioId = Apex.getValue(browser,"P159_LANCAMENTO_BANCARIO_ID")
+
+            seletor = "[acao='ignorarLancamento']"
+            Components.btnClick(init,seletor)
+
+            seletor = "#SR_ignoradosReport_tab"
+            Components.btnClick(init,seletor)
+
+
+            lancamentoIgnorado = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,f"[lancamentobancarioid={lancamentoBancarioId}]")))
+            
+            if lancamentoIgnorado :
+                Log_manager.add_log(application_type=env_application_type,
+                                    level="ERROR",
+                                    message="Lançamento bancario ignorado com sucesso",
+                                    routine="",
+                                    error_details="")
+            else:
+                Log_manager.add_log(application_type=env_application_type,
+                                    level="ERROR",
+                                    message="Lançamento bancario não ignorado",
+                                    routine="",
+                                    error_details="")
+                    
+
+
+
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        
+#END ignorarLancamento(init)
+
+    @staticmethod
+    def conciliarLancamento(init):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+           
+        try: 
+            lancamentoBancarioId = Apex.getValue(browser,"P159_LANCAMENTO_BANCARIO_ID")
+
+            seletor = "[acao='conciliarLancamento']"
+            Components.btnClick(init,seletor)
+
+            seletor = "#SR_R217176266746131119_tab"
+            Components.btnClick(init,seletor)
+
+            seletor = "#SR_conciliadosReport_tab"
+            Components.btnClick(init,seletor)
+            
+
+
+            lancamentoConciliado = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,f"[lancamentobancarioid={lancamentoBancarioId}]")))
+            
+            if lancamentoConciliado :
+                Log_manager.add_log(application_type=env_application_type,
+                                    level="ERROR",
+                                    message="Lançamento bancario ignorado com sucesso",
+                                    routine="",
+                                    error_details="")
+            else:
+                Log_manager.add_log(application_type=env_application_type,
+                                    level="ERROR",
+                                    message="Lançamento bancario não ignorado",
+                                    routine="",
+                                    error_details="")
+                    
+
+
+
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        
+        
+
+        
 
     @staticmethod
     def processaConciliacaoAutomatica(init,yesNot):
@@ -831,3 +916,50 @@ class ConciliacaoBancaria:
 
 #END processaConciliacaoAutomatica(init,yesNot) 
 
+    @staticmethod
+    def desconciliaLancamento(init,especifico):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+           
+        try: 
+            seletor = especifico if especifico else ".buttonsConciliacao"
+
+            desconciliaLancamento= WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,seletor)))
+            desconciliaLancamentoId = desconciliaLancamento.get_attribute("lancamentoid")
+
+            seletor = "[acao='desconciliarLancamento']"
+
+            Components.btnClick(init,seletor)
+
+            seletor = "#SR_pendentesReport_tab"
+            Components.btnClick(init,seletor)
+
+            lancamentoDesconciliado = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,f"[lancamentobancarioid={desconciliaLancamentoId}]")))
+            
+            if lancamentoDesconciliado :
+                Log_manager.add_log(application_type=env_application_type,
+                                    level="ERROR",
+                                    message="Lançamento bancario desconciliado com sucesso",
+                                    routine="",
+                                    error_details="")
+            else:
+                Log_manager.add_log(application_type=env_application_type,
+                                    level="ERROR",
+                                    message="Lançamento bancario não desconciliado",
+                                    routine="",
+                                    error_details="")
+
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        
+        
