@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
+from dotenv import load_dotenv,find_dotenv
 import os
 import uuid  # Para gerar identificadores únicos
 from pymongo import MongoClient  # Importando MongoClient
@@ -10,10 +10,8 @@ from pymongo.server_api import ServerApi
 
 
 
-# Obtém o caminho absoluto da raiz do projeto
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))  # Sobe dois níveis
-dotenv_path = os.path.join(base_dir, ".env")  # Caminho correto do .env na raiz
-load_dotenv(dotenv_path)
+
+load_dotenv(r"C:\Users\gabri\Desktop\Automacao_old\env")
 timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
 
 class LogManager:

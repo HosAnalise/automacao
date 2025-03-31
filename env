@@ -10,22 +10,25 @@ BROWSER_EDGE=true
 # CREDENCIAIS DE LOGIN PARA OS TESTES
 # Definem os e-mails e senhas dos usuários testados no sistema
 # ==========================================
-TESTE_EMAIL=testeAutomatizacao@hos.com.br
-TESTE_SENHA=123
+TESTE_EMAIL=automatizacao@hos.com.br
+TESTE_PASSWORD=123
 
 # Usuário Login - Admin
 ADMIN_EMAIL=admin@hos.com.br
-ADMIN_SENHA=senhaSegura
+ADMIN_PASSWORD=PASSWORDSegura
 
 #Usuário Login - Gabriel
 GABRIEL_EMAIL=gabriel.siqueira@hos.com.br
-GABRIEL_SENHA=Hos@123
+GABRIEL_PASSWORD=Hos@123
 
 #Usuário Login - Hos ponto de venda
 PDV_EMAIL=8325
-PDV_SENHA=12345
+PDV_PASSWORD=12345
 
 FC_USER="TESTE_TESTE2"
+
+COT_EMAIL=ricardo.nunes@hos.com.br
+COT_PASSWORD=123
 
 # ==========================================
 # CONFIGURAÇÃO DOS AMBIENTES DE TESTE
@@ -51,9 +54,9 @@ NONE_VALORES_AMBIENTE={"nivelAcesso":"1","ambiente":"1","rede":"1","loja":"1"}
 # Define URLs do sistema e caminhos para armazenamento de arquivos
 # ==========================================
 URL_ERP=https://gestao.hos.com.br/ords/erp/r/120/
-SCREENSHOT_PATH=C:\Users\Hos_Gabriel\Desktop\Automatização web\screenshots
+SCREENSHOT_PATH=C:\Users\gabri\Desktop\Automacao\screenshot
 PATH_HOS_FRENTE_CAIXA=C:\MercFarma\FcNovo\HOSFrenteDeCaixa.exe
-
+URL_COT=https://gestao.hos.com.br/ords/erp/r/portal-de-compras
 
 # ==========================================
 # CONFIGURAÇÃO DO MONGODB
@@ -61,28 +64,31 @@ PATH_HOS_FRENTE_CAIXA=C:\MercFarma\FcNovo\HOSFrenteDeCaixa.exe
 # ==========================================
 MONGODB_URI=mongodb+srv://maisdoqisso:Kc19tQgHMP7VkyPA@testesautomatizados.4lxq1.mongodb.net/
 DB_NAME=testesAutomatizados
-COLLECTION_NAME=logs
-
-
+COLLECTION_NAME=testesKin
 
 
 # ==========================================
 # CONFIGURAÇÃO DO BANCO DE DADOS ORACLE
 # Credenciais para conexão com o banco de dados Oracle
-# ==========================================HOST='rachel.hos.com.br:1521'
-USER="HOS_GABRIELS"
-PASSWORD="Hos@956815"
-DATABASE="rachel"
+# ==========================================
 
+
+
+DATABASES = {"oracle":"oracle+cx_oracle://HOS_GABRIELS:Hos@956815@rachel.hos.com.br:1521/rachel"}
+ORACLE_USER =HOS_GABRIELS
+ORACLE_PASSWORD=Hos@956815
+ORACLE_HOST=rachel.hos.com.br
+ORACLE_PORT=1521
+ORACLE_SERVICE_NAME=rachel
 
 # ==========================================
 # LISTA DE DOCUMENTOS E FORNECEDORES
 # Define os IDs de fornecedores e documentos fiscais para validação nos testes
-# ==========================================FORNECEDORES=1685320,1705905,1684812,1878107,1685990,1686238,1875522,2689658,3154177,3187232,3626825,3597277,2302079
+# ==========================================
+FORNECEDORES=1685320,1705905,1684812,1878107,1685990,1686238,1875522,2689658,3154177,3187232,3626825,3597277,2302079
 CREDITO_FORNECEDOR_ORIGEM=1,2,21,22
 DOCUMENTO_FISCAL_SAIDA=1205,1212,1328,1328,1163,11428,76924,76007,99541,99586,135037
 DOCUMENTO_FISCAL_ENTRADA=18620162,30301407,30263156,30300990,30266045
-
 
 # ==========================================
 # CONFIGURAÇÃO PARA LOGS
@@ -97,28 +103,4 @@ DAYS_TO_DELETE_LOGS=7
 WEB="Web"
 DESKTOP="Desktop"
 
-# ==========================================
-# LISTA DE PRODUTOS PARA TESTES
-# Define os produtos usados nos testes automatizados
-# ==========================================
-PRODUCT_LIST=FRALDA,CHOCOLATE,CHICLE
-
-# ==========================================
-# FORMAS DE PAGAMENTO SUPORTADAS
-# Define os métodos de pagamento aceitos no sistema
-# ==========================================
-FORMAS_PAGAMENTO={"DINHEIRO": 0,"CARTAO": 1,"PIX": 2,"CHEQUE": 3,"CHEQUE_PRE": 4,"CRT_PRESENTE": 5,"BOLETO": 6,"DEPOSITO": 7, "TRANSFERENCIA": 8,"CREDIARIO": 0,"CONVENIO":0}
-
-# Explicação dos códigos de pagamento:
-# - 0 = Dinheiro, Crediário e Convênio
-# - 1 = Cartão de Crédito/Débito
-# - 2 = PIX
-# - 3 = Cheque
-# - 4 = Cheque Pré-datado
-# - 5 = Cartão Presente
-# - 6 = Boleto Bancário
-# - 7 = Depósito Bancário
-# - 8 = Transferência Bancária
-
-
-
+DEV="Gabriel Kin"
