@@ -78,7 +78,7 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
 
 
         try:
-            btnVoltar = ".t-Button.t-Button--hot.t-Button--simple.t-Button--stretch"
+            btnSalvar = ".t-Button.t-Button--hot.t-Button--simple.t-Button--stretch"
 
             FuncoesUteis.goToPage(init, page)
             seletor = ContasPagar.filterSelector if i == 0 else ContaReceber.filterSelector
@@ -88,7 +88,7 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
             if i == 1:
                 time.sleep(1)
                 Apex.setValue(browser, "P84_COBRADOR", valorCobrador)
-            Components.btnClick(init, btnVoltar)
+            Components.btnClick(init, btnSalvar)
 
             filtersPosApply = {}
             for key,value in filters.items():

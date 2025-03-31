@@ -10,8 +10,10 @@ BROWSER_EDGE=true
 # CREDENCIAIS DE LOGIN PARA OS TESTES
 # Definem os e-mails e senhas dos usuários testados no sistema
 # ==========================================
-TESTE_EMAIL=automatizacao@hos.com.br
+TESTE_EMAIL=ricardo.nunes@hos.com.br
 TESTE_PASSWORD=123
+    #Email Cotação = ricardo.nunes@hos.com.br
+    #Email ERP = automatizacao@hos.com.br
 
 # Usuário Login - Admin
 ADMIN_EMAIL=admin@hos.com.br
@@ -26,9 +28,6 @@ PDV_EMAIL=8325
 PDV_PASSWORD=12345
 
 FC_USER="TESTE_TESTE2"
-
-COT_EMAIL=ricardo.nunes@hos.com.br
-COT_PASSWORD=123
 
 # ==========================================
 # CONFIGURAÇÃO DOS AMBIENTES DE TESTE
@@ -53,10 +52,12 @@ NONE_VALORES_AMBIENTE={"nivelAcesso":"1","ambiente":"1","rede":"1","loja":"1"}
 # CONFIGURAÇÕES DE URLs E CAMINHOS DE ARQUIVOS
 # Define URLs do sistema e caminhos para armazenamento de arquivos
 # ==========================================
-URL_ERP=https://gestao.hos.com.br/ords/erp/r/120/
+URL_ERP=https://gestao.hos.com.br/ords/erp/r/portal-de-compras/
+    #Cotação = https://gestao.hos.com.br/ords/erp/r/portal-de-compras/
+    #URL_ERP = https://gestao.hos.com.br/ords/erp/r/120/
+
 SCREENSHOT_PATH=C:\Users\gabri\Desktop\Automacao\screenshot
 PATH_HOS_FRENTE_CAIXA=C:\MercFarma\FcNovo\HOSFrenteDeCaixa.exe
-URL_COT=https://gestao.hos.com.br/ords/erp/r/portal-de-compras
 
 # ==========================================
 # CONFIGURAÇÃO DO MONGODB
