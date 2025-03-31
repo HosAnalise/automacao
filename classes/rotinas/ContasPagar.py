@@ -1,5 +1,6 @@
 from datetime import datetime,timedelta
 import random
+import re
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -15,6 +16,26 @@ class ContasPagar:
 
     url="contas-a-pagar"
     filterSelector ="#P46_SELETOR_LOJA"
+    filters ={
+        "P46_SELETOR_LOJA",
+        "P46_TIPO_PERIODO",
+        "P46_DATA_INICIAL",
+        "P46_DATA_INICIAL",
+        "P46_SITUACAO",
+        "P46_NUMERO_DOCUMENTO",
+        "P46_NUMERO_PEDIDO",
+        "P46_NUMERO_TITULO",
+        "P46_CONTA",
+        "P46_CENTRO_CUSTO",
+        "P46_CATEGORIA",
+        "P46_FORNECEDOR",
+        "P46_TIPO_ORIGEM",
+        "P46_CODIGO_BARRAS",
+        "P46_CONFERIDO",
+        "P46_VALOR_INICIAL",
+        "P46_VALOR_FINAL",
+        "P46_EFETUADO_EM"
+    }
     queries ={
         "queryContaId" : """
                 SELECT CONTA.CONTA_ID  
@@ -96,7 +117,7 @@ class ContasPagar:
 
 
     @staticmethod
-    def insereContaPagar(init,query):
+    def insereContaPagar(init,query,staticValues = False):
         """
         Insere dados em diversos campos da tela de "conta a pagar" .
         Preenche os campos do formulário com valores dinâmicos gerados aleatoriamente ou obtidos de uma consulta (`query`).
@@ -114,6 +135,8 @@ class ContasPagar:
             - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente na função).
             
         - query (dict): Dicionário contendo dados necessários para preencher os campos da conta a pagar, como IDs de conta, fornecedor, categoria financeira, etc.
+
+        - staticValues: Dicionário contendo seletores e valores a serem preenchidos de forma personalizada, se passado ele aplica a inserção de contas com os valores personalizados, se não executa a inserção com valores randomicos.
         
         Processos:
         1. Geração de valores aleatórios para preencher os campos:
@@ -153,25 +176,34 @@ class ContasPagar:
             'Query_queryEmpresa': '001'
         }
 
-        insereContaPagar(init, query)
+        insereContaPagar(init, query,staticValues)
         """
         queries = query
+
+        print(f"valores das queries {query}")
+
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
         
-        random_value = round(random.uniform(1, 999999), 2)
-        randomValue = FuncoesUteis.formatBrCurrency(random_value)
+        random_value = round(random.uniform(1, 999999), 2) 
         randomText = GeradorDados.gerar_texto(50)
         randomNumber = GeradorDados.randomNumberDinamic(0,4)
         randomDay = GeradorDados.randomNumberDinamic(1,30)
-
         today = datetime.today()
         randomDay = GeradorDados.randomNumberDinamic(0, 30)
         randomDate = today + timedelta(days=randomDay)
         finalDate = randomDate.strftime("%d/%m/%Y")
 
+        randomValue = FuncoesUteis.formatBrCurrency(random_value) if randomNumber != 0 else randomText
+        contaValue = queries['Query_queryContaId'] if randomNumber != 0 else randomText
+        pessoaFavorecido = queries["Query_queryFornecedorId"] if randomNumber != 0 else randomText
+        dataVencimento = finalDate if randomNumber != 0 else randomText
+        categoriaFinanceira = queries["Query_queryCategoriaFinanceira"] if randomNumber != 0 else randomText
+        loja = queries["Query_queryEmpresa"] if randomNumber != 0 else randomText
+        descricao = randomText if randomNumber != 0 else GeradorDados.gerar_texto(700)
+        
         
         try:
             urlContain = "conta-a-pagar"
@@ -181,167 +213,147 @@ class ContasPagar:
            
                 btnNovaContaPagar = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B129961237978758786")))
                 btnNovaContaPagar.click()
+               
 
             WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_VALOR")))
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: valorOriginal encontrado", routine="ContaPagar", error_details ="" )
 
-            if randomNumber != 0:
-                Apex.setValue(browser,"P47_VALOR",randomValue)
-                valorOriginalValue = Apex.getValue(browser,"P47_VALOR")
-                if valorOriginalValue == str(randomValue):
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: valorOriginal teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_VALOR",randomText)
-                valorOriginalValue = Apex.getValue(browser,"P47_VALOR")
-                if valorOriginalValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: valorOriginal teve o valor inserido incorretamente valor: {valorOriginalValue}", routine="ContaPagar", error_details ="" )
-
-
-            naConta = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_CONTA_ID")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: naConta encontrado", routine="ContaPagar", error_details ="" )
-
-            if randomNumber != 0:
-                Apex.setValue(browser,"P47_CONTA_ID",queries['Query_queryContaId'])
-                naContaValue = Apex.getValue(browser,"P47_CONTA_ID")
-                if naContaValue == queries['Query_queryContaId']:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: naConta teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_CONTA_ID",randomText)
-                naContaValue = Apex.getValue(browser,"P47_CONTA_ID")
-                if naContaValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: naConta teve o valor inserido incorretamente valor: {naContaValue}", routine="ContaPagar", error_details ="" )        
-        
-
-            # Captura pessoa favorecido/fornecedor e insre valores
-            WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_PESSOA_FAVORECIDO_ID")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: pessoaFavorecido encontrado", routine="ContaPagar", error_details ="" )
-
-
-            if randomNumber != 0:
-                Apex.setValue(browser,"P47_PESSOA_FAVORECIDO_ID",queries["Query_queryFornecedorId"])
-                pessoaFavorecidoValue = Apex.getValue(browser,"P47_PESSOA_FAVORECIDO_ID")
-                if pessoaFavorecidoValue == queries["Query_queryFornecedorId"]:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: pessoaFavorecido teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_PESSOA_FAVORECIDO_ID",randomText)
-                pessoaFavorecidoValue = Apex.getValue(browser,"P47_PESSOA_FAVORECIDO_ID")
+            apexValues = {
+                    "P47_VALOR":randomValue,
+                    "P47_CONTA_ID":contaValue,
+                    "P47_PESSOA_FAVORECIDO_ID":pessoaFavorecido,
+                    "P47_DATA_VENCIMENTO":dataVencimento,
+                    "P47_DATA_PREVISAO_PAGAMENTO":dataVencimento,
+                    "P47_CATEGORIA_FINANCEIRA":categoriaFinanceira,
+                    "P47_LOJA":loja,
+                    "P47_DESCRICAO":descricao,
+            }
+            
+            apexGetValue = {}
+            for seletor, value in apexValues.items():
+                Apex.setValue(browser,seletor,value)
+                Log_manager.add_log(application_type=env_application_type, level="INFO", 
+                                                message=f"{seletor} teve o valor {value} inserido", 
+                                                routine="ContaReceber", error_details="")
+               
                 
-                if pessoaFavorecidoValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: pessoaFavorecido teve o valor inserido incorretamente valor: {pessoaFavorecidoValue}", routine="ContaPagar", error_details ="" )
+                # WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                apexGetValue[seletor] = Apex.getValue(browser,seletor)
+                Log_manager.add_log(application_type=env_application_type, level="INFO", 
+                                                message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                                routine="ContaReceber", error_details="")
+                
+                
+                if seletor == "P47_CATEGORIA_FINANCEIRA":
+                    time.sleep(1)
+                    Apex.setValue(browser,seletor,value)
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
+                                                    message=f"{seletor} teve o valor {value} inserido", 
+                                                    routine="ContaReceber", error_details="")
+                
+                    
+                    # WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                    apexGetValue[seletor] = Apex.getValue(browser,seletor)
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
+                                                    message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                                    routine="ContaReceber", error_details="")
+                
+                
+            campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
-
-
-        
-            # Captura o campo de data de vencimento e insere valores
-            vencimentoConta = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_DATA_VENCIMENTO")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: vencimentoConta encontrado", routine="ContaPagar", error_details ="" )
-
-
-            if randomNumber != 0:
-                Apex.setValue(browser,"P47_DATA_VENCIMENTO",finalDate)
-                vencimentoContaValue = Apex.getValue(browser,"P47_DATA_VENCIMENTO")
-                if vencimentoContaValue == finalDate:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: vencimentoConta teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-
-            else:
-                Apex.setValue(browser,"P47_DATA_VENCIMENTO",randomText)
-                vencimentoContaValue = Apex.getValue(browser,"P47_DATA_VENCIMENTO")
-                if vencimentoContaValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: vencimentoConta teve o valor inserido incorretamente valor: {vencimentoContaValue}", routine="ContaPagar", error_details ="" )
-            
-        
-
-            # Escolhe uma data de previsão de pagamento e insere valores
-            previsaoPagamentoConta = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_DATA_PREVISAO_PAGAMENTO")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: previsaoPagamentoConta encontrado", routine="ContaPagar", error_details ="" )
-
-
-            if randomNumber != 0:
-                Apex.setValue(browser,"P47_DATA_PREVISAO_PAGAMENTO",finalDate)
-                previsaoPagamentoContaValue = Apex.getValue(browser,"P47_DATA_PREVISAO_PAGAMENTO")
-                if previsaoPagamentoContaValue == finalDate:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: previsaoPagamentoConta teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-
-            else:
-                Apex.setValue(browser,"P47_DATA_PREVISAO_PAGAMENTO",randomText)
-                previsaoPagamentoContaValue = Apex.getValue(browser,"P47_DATA_PREVISAO_PAGAMENTO")
-                if previsaoPagamentoContaValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: previsaoPagamentoConta teve o valor inserido incorretamente valor: {previsaoPagamentoContaValue}", routine="ContaPagar", error_details ="" )
-
-        
-
-            # Captura o campo de categoria financeira e insere valores
-            categoriaFinanceira = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_CATEGORIA_FINANCEIRA")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: categoriaFinanceira encontrado", routine="ContaPagar", error_details ="" )
-            
-            time.sleep(3)
-
-            if randomNumber != 0:
-                Apex.setValue(browser,"P47_CATEGORIA_FINANCEIRA",queries["Query_queryCategoriaFinanceira"])
-                categoriaFinanceiraValue = Apex.getValue(browser,"P47_CATEGORIA_FINANCEIRA")
-                if categoriaFinanceiraValue == queries["Query_queryCategoriaFinanceira"]:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: categoriaFinanceira teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-
-            else:
-                Apex.setValue(browser,"P47_CATEGORIA_FINANCEIRA",randomText)
-                categoriaFinanceiraValue = Apex.getValue(browser,"P47_CATEGORIA_FINANCEIRA")
-                if categoriaFinanceiraValue == randomText:    
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: previsaoPagamentoConta teve o valor inserido incorretamente valor: {categoriaFinanceiraValue}", routine="ContaPagar", error_details ="" )
+            FuncoesUteis.compareValues(init,campos)
     
-        
+        except TimeoutException as e:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="TimeoutException: " + str(e),
+                routine="",
+                error_details=str(e)
+            )
 
-            # Captura o campo de empresa e insere valores
-            empresa = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_LOJA"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: empresa encontrado", routine="ContaPagar", error_details ="" )
-
-
-            if randomNumber != 0:
-                Apex.setValue(browser,"P47_LOJA",queries["Query_queryEmpresa"])
-                empresaValue = Apex.getValue(browser,"P47_LOJA")
-                if empresaValue ==queries["Query_queryEmpresa"]:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: empresa teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_LOJA",randomText)
-                empresaValue = Apex.getValue(browser,"P47_LOJA")
-                if empresaValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: empresa teve o valor inserido incorretamente valor: {empresaValue}", routine="ContaPagar", error_details ="" )        
-        
-            
-            # captura o campo descricao e insere valores
-
-            descricao = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_DESCRICAO"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: descricao encontrado", routine="ContaPagar", error_details ="" )
-
-            bigText500 = GeradorDados.gerar_texto(500)
-
-            if randomNumber != 0:
-                Apex.setValue(browser,"P47_DESCRICAO",randomText)
-                descricaoValue = Apex.getValue(browser,"P47_DESCRICAO")
-                if descricaoValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: descricao teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_DESCRICAO",bigText500)
-                descricaoValue = Apex.getValue(browser,"P47_DESCRICAO")
-                if descricaoValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: descricao teve o valor inserido incorretamente valor: {descricaoValue}", routine="ContaPagar", error_details ="" )
-
-
-
-
-        except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
             screenshot_path = screenshots
             if screenshot_path:
                 success = browser.save_screenshot(screenshot_path)
                 if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                    Log_manager.add_log(
+                        level="INFO",
+                        message=f"Screenshot salvo em: {screenshot_path}",
+                        routine="",
+                        application_type=env_application_type,
+                        error_details=str(e)
+                    )
                 else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+                    Log_manager.add_log(
+                        level="ERROR",
+                        message="Falha ao salvar screenshot",
+                        routine="",
+                        application_type=env_application_type,
+                        error_details=str(e)
+                    )
+
+        except NoSuchElementException as e:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="NoSuchElementException: " + str(e),
+                routine="",
+                error_details=str(e)
+            )
+
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(
+                        level="INFO",
+                        message=f"Screenshot salvo em: {screenshot_path}",
+                        routine="",
+                        application_type=env_application_type,
+                        error_details=str(e)
+                    )
+                else:
+                    Log_manager.add_log(
+                        level="ERROR",
+                        message="Falha ao salvar screenshot",
+                        routine="",
+                        application_type=env_application_type,
+                        error_details=str(e)
+                    )
+
+        except Exception as e:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="Exception: " + str(e),
+                routine="",
+                error_details=str(e)
+            )
+
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(
+                        level="INFO",
+                        message=f"Screenshot salvo em: {screenshot_path}",
+                        routine="",
+                        application_type=env_application_type,
+                        error_details=str(e)
+                    )
+                else:
+                    Log_manager.add_log(
+                        level="ERROR",
+                        message="Falha ao salvar screenshot",
+                        routine="",
+                        application_type=env_application_type,
+                        error_details=str(e)
+                    )
 
 #END insereContaPagar(init,query)
 
     @staticmethod
-    def detalhesContaPagar(init,query):
+    def detalhesContaPagar(init,query,statiValues = False):
         """
         Preenche os campos aba detalhes de contas a pagar e realiza validações. 
 
@@ -360,6 +372,8 @@ class ContasPagar:
             - Query_queryCentroCusto: valor para o campo "Centro de Custo".
             - Query_queryModelodocumentoFiscal: valor para o campo "Modelo do Documento Fiscal".
 
+        staticValues: Dicionário contendo seletores e valores a serem preenchidos de forma personalizada, se passado ele aplica a inserção de contas com os valores personalizados, se não executa a inserção com valores randomicos.
+    
         Retorno:
         Nenhum. A função preenche campos na interface e gera logs conforme o andamento do processo.
 
@@ -388,6 +402,7 @@ class ContasPagar:
         randomText = GeradorDados.gerar_texto(50)
         randomNumber = GeradorDados.randomNumberDinamic(0,4)
         randomDay = GeradorDados.randomNumberDinamic(1,30)
+        zeroOrOne = GeradorDados.randomNumberDinamic(0,1)
     
         today = datetime.today()
         randomDay = GeradorDados.randomNumberDinamic(0, 30)
@@ -397,209 +412,69 @@ class ContasPagar:
         bigText700 = GeradorDados.gerar_texto(700)
         bigText500 = GeradorDados.gerar_texto(700)
 
-        try:
+        dataEmissao = finalDate if randomNumber != 0 else randomText
+        centroCusto =queries["Query_queryCentroCusto"] if randomNumber != 0 else randomText
+        conferido = zeroOrOne if randomNumber != 0 else randomText
+        chaveNfe = GeradorDados.gerar_chave_nfe() if randomNumber != 0 else bigText500
+        numeroPedido = GeradorDados(0000000,9999999) if randomNumber != 0 else bigText700
+        cpfOrCnpj = GeradorDados.gerar_cpf() if randomNumber in(1,2) else GeradorDados.gerar_cnpj()
+        numeroDocumento = cpfOrCnpj if randomNumber != 0 else bigText500
+        observacao = bigText500 if randomNumber != 0 else  bigText700
+        documentoModeloId = queries["Query_queryModelodocumentoFiscal"] if randomNumber != 0 else randomText
 
-            dataEmissao = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_DATA_EMISSAO")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: dataEmissao encontrado", routine="ContaPagar", error_details ="" )
+        try:            
 
-
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_DATA_EMISSAO",finalDate)
-                dataEmissaoValue = Apex.getValue(browser,"P47_DATA_EMISSAO")
-                if dataEmissaoValue == finalDate:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: dataEmissao teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_DATA_EMISSAO",randomText)
-                dataEmissaoValue = Apex.getValue(browser,"P47_DATA_EMISSAO")
-                if dataEmissaoValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: dataEmissao teve o valor inserido incorretamente valor: {dataEmissaoValue}", routine="ContaPagar", error_details ="" )
-
-            # Escolhe uma data de registro de pagamento e insere valores
-            dataRegistro = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_DATA_REGISTRO")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: dataRegistro encontrado", routine="ContaPagar", error_details ="" )
-
-
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_DATA_REGISTRO",finalDate)
-                dataRegistroValue = Apex.getValue(browser,"P47_DATA_REGISTRO")
-                if dataRegistroValue == finalDate:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: dataRegistro teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_DATA_REGISTRO",randomText)  
-                dataRegistroValue = Apex.getValue(browser,"P47_DATA_REGISTRO")
-                if dataRegistroValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: dataRegistro teve o valor inserido incorretamente valor: {dataRegistroValue}", routine="ContaPagar", error_details ="" )
-                
+            apexValues = statiValues if isinstance(statiValues,dict) else  {
+                "P47_DATA_EMISSAO":dataEmissao,
+                "P47_DATA_REGISTRO":finalDate,
+                "P47_CENTRO_DE_CUSTO":centroCusto,
+                "P47_CONFERIDO":conferido,
+                "P47_DOCUMENTO_FISCAL_MODELO_ID":documentoModeloId,
+                "P47_CHAVE_NFE":chaveNfe,
+                "P47_NUMERO_PEDIDO":numeroPedido,
+                "P47_NUMERO_DOCUMENTO":numeroDocumento,
+                "P47_NUMERO_TITULO":numeroDocumento,
+                "P47_CODIGO_BARRAS":numeroDocumento,
+                "P47_OBSERVACAO":observacao
+            }
+            apexGetValue = {}
+            for seletor, value in apexValues.items():
+                try:
+                    item =  WebDriverWait(browser,5).until(EC.element_to_be_clickable((By.CSS_SELECTOR,f"#{seletor}")))
+                    browser.execute_script("arguments[0].scrollIntoView(true);", item)
+                    Apex.setValue(browser,seletor,value)
+                    Log_manager.add_log(
+                                        application_type=env_application_type,
+                                        level="INFO", 
+                                        message=f"{seletor} teve o valor {value} inserido", 
+                                        routine="ContaReceber", 
+                                        error_details=""
+                                        )
+                                    
+                    
+                    WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                    apexGetValue[seletor] = FuncoesUteis.stringToFloat(Apex.getValue(browser,seletor))
+                    Log_manager.add_log(
+                                        application_type=env_application_type, level="INFO", 
+                                        message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                        routine="ContaReceber", 
+                                        error_details=""
+                                        )                       
+                except (TimeoutException, NoSuchElementException, Exception) as e:
+                    Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+                    screenshot_path = screenshots
+                    if screenshot_path:
+                        success = browser.save_screenshot(screenshot_path)
+                        if success:
+                            Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                        else:
+                            Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
         
-
-
-            # Captura o campo centro custo e insere valores
-
-            centroCusto = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_CENTRO_DE_CUSTO"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: centroCusto encontrado", routine="ContaPagar", error_details ="" )
-
-            
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_CENTRO_DE_CUSTO",queries["Query_queryCentroCusto"])
-                centroCustoValue = Apex.getValue(browser,"P47_CENTRO_DE_CUSTO")
-                if centroCustoValue == queries["Query_queryCentroCusto"]:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: centroCusto teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_CENTRO_DE_CUSTO",randomValue)
-                centroCustoValue = Apex.getValue(browser,"P47_CENTRO_DE_CUSTO")
-                if centroCustoValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: centroCusto teve o valor inserido incorretamente valor: {centroCustoValue}", routine="ContaPagar", error_details ="" )
-
-
-            # Captura o campo conferido e insere valores
-
-            conferido = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_CONFERIDO"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: conferido encontrado", routine="ContaPagar", error_details ="" )
-
-
-            # Role até o elemento para garantir visibilidade
-            browser.execute_script("arguments[0].scrollIntoView(true);", conferido)
-
-            # Clique no elemento
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_CONFERIDO","1")
-            else:
-                Apex.setValue(browser,"P47_CONFERIDO",randomText)               
-
-
-            # Captura o campo tipo do documento e insere valores
-
-            tipoDocumento = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_DOCUMENTO_FISCAL_MODELO_ID"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: tipoDocumento encontrado", routine="ContaPagar", error_details ="" )
-
-
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_DOCUMENTO_FISCAL_MODELO_ID",queries["Query_queryModelodocumentoFiscal"])
-                tipoDocumentoValue = Apex.getValue(browser,"P47_DOCUMENTO_FISCAL_MODELO_ID")
-                if tipoDocumentoValue == queries["Query_queryModelodocumentoFiscal"]:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: tipoDocumento teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-
-            else:
-                Apex.setValue(browser,"P47_DOCUMENTO_FISCAL_MODELO_ID",randomText)
-                tipoDocumentoValue = Apex.getValue(browser,"P47_DOCUMENTO_FISCAL_MODELO_ID")
-                if tipoDocumentoValue == randomText:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: tipoDocumento teve o valor inserido incorretamente valor: {tipoDocumentoValue}", routine="ContaPagar", error_details ="" )
-
-
-
-            # Captura o campo chave da NF-e e insere valores
-            chaveNFe = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_CHAVE_NFE"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: chaveNFe encontrado", routine="ContaPagar", error_details ="" )
-
-            randomChaveNfe = GeradorDados.gerar_chave_nfe()
-
-
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_CHAVE_NFE",randomChaveNfe)
-                chaveNFeValue = Apex.getValue(browser,"P47_CHAVE_NFE")
-                if chaveNFeValue == randomChaveNfe:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: chaveNFe teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-
-            else:
-                Apex.setValue(browser,"P47_CHAVE_NFE",bigText500)
-                chaveNFeValue = Apex.getValue(browser,"P47_CHAVE_NFE")
-                if chaveNFeValue == bigText500:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: chaveNFe teve o valor inserido incorretamente valor: {chaveNFeValue}", routine="ContaPagar", error_details ="" )
                 
+                campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
-            # Captura o campo Nº pedido de compra e insere valores
-            numeroPedidoCompra = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_NUMERO_PEDIDO"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: numeroPedidoCompra encontrado", routine="ContaPagar", error_details ="" )
-            randomNumeroPedidoCompra = GeradorDados.randomNumberDinamic(00000000000,9999999999)
+                FuncoesUteis.compareValues(init,campos)
 
-
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_NUMERO_PEDIDO",randomNumeroPedidoCompra)
-                numeroPedidoCompraValue = Apex.getValue(browser,"P47_NUMERO_PEDIDO")
-                if numeroPedidoCompraValue == randomNumeroPedidoCompra:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: numeroPedidoCompra teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_NUMERO_PEDIDO",bigText500)
-                numeroPedidoCompraValue = Apex.getValue(browser,"P47_NUMERO_PEDIDO")
-                if numeroPedidoCompraValue == bigText500:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: numeroPedidoCompra teve o valor inserido incorretamente valor: {numeroPedidoCompraValue}", routine="ContaPagar", error_details ="" )
-
-
-
-
-            # Captura o campo Tipo documento e insere valores
-            numeroDocumento = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_NUMERO_DOCUMENTO"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: numeroDocumento encontrado", routine="ContaPagar", error_details ="" )
-            randomNumeroDocumento = GeradorDados.randomNumberDinamic(00000000000,9999999999)
-
-
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_NUMERO_DOCUMENTO",randomNumeroDocumento)
-                numeroDocumentoValue = Apex.getValue(browser,"P47_NUMERO_DOCUMENTO")
-                if numeroDocumentoValue == randomNumeroDocumento:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: numeroDocumento teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_NUMERO_DOCUMENTO",bigText500)      
-                numeroDocumentoValue = Apex.getValue(browser,"P47_NUMERO_DOCUMENTO")
-                if numeroDocumentoValue == bigText500:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: numeroDocumento teve o valor inserido incorretamente valor: {numeroDocumentoValue}", routine="ContaPagar", error_details ="" )
-
-
-
-            # Captura o campo Tipo documento e insere valores
-            numeroTitulo = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_NUMERO_TITULO"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: numeroTitulo encontrado", routine="ContaPagar", error_details ="" )
-            randomNumeroTitulo = GeradorDados.randomNumberDinamic(00000000000,9999999999)
-
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_NUMERO_TITULO",randomNumeroTitulo)
-                numeroTituloValue = Apex.getValue(browser,"P47_NUMERO_TITULO")
-                if numeroTituloValue == randomNumeroTitulo:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: numeroTitulo teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_NUMERO_TITULO",bigText500)   
-                numeroTituloValue = Apex.getValue(browser,"P47_NUMERO_TITULO")
-                if numeroTituloValue == bigText500:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: numeroTitulo teve o valor inserido incorretamente valor: {numeroTituloValue}", routine="ContaPagar", error_details ="" )       
-                
-            # Captura o campo Tipo documento e insere valores
-            codigoBarras = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_CODIGO_BARRAS")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: codigoBarras encontrado", routine="ContaPagar", error_details ="" )
-            randomCodigoBarras = GeradorDados.randomNumberDinamic(00000000000,9999999999)
-
-    
-
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_CODIGO_BARRAS",randomCodigoBarras)
-                codigoBarrasValue = Apex.getValue(browser,"P47_CODIGO_BARRAS")
-                if codigoBarrasValue == randomCodigoBarras:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: codigoBarras teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_CODIGO_BARRAS",bigText500) 
-                codigoBarrasValue = Apex.getValue(browser,"P47_CODIGO_BARRAS")
-                if codigoBarrasValue == bigText500:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: codigoBarras teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )        
-
-
-
-            observacoes = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_OBSERVACAO"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: observacoes encontrado", routine="ContaPagar", error_details ="" )
-
-
-            # Role até o elemento para garantir visibilidade
-            browser.execute_script("arguments[0].scrollIntoView(true);", observacoes)
-
-            # Clique no elemento
-            if randomNumber == 0:
-                Apex.setValue(browser,"P47_OBSERVACAO",bigText500)
-                observacoesValue = Apex.getValue(browser,"P47_OBSERVACAO")
-                if observacoesValue == bigText500:
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: observacoes teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-            else:
-                Apex.setValue(browser,"P47_OBSERVACAO",bigText700)     
-                observacoesValue = Apex.getValue(browser,"P47_OBSERVACAO")
-                if observacoesValue == bigText700:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: observacoes teve o valor inserido incorretamente valor: {observacoesValue}", routine="ContaPagar", error_details ="" )
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
@@ -615,10 +490,10 @@ class ContasPagar:
 
 
     @staticmethod
-    def repeticaoContaPagar(init):
+    def repeticaoContaPagar(init,staticValues = False):
         """
         Função responsável por automatizar a aba repetição de uma conta a pagar.
-        
+                
         A função realiza as seguintes ações:
         1. Navega até a aba de repetição de conta a pagar.
         2. Verifica se já existem repetições cadastradas. Caso não existam, cria uma nova repetição.
@@ -637,6 +512,8 @@ class ContasPagar:
             7. screenshots: Caminho para salvar screenshots de erro.
             8. oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente aqui, mas pode ser usada em outras partes do código).
         
+        - staticValues: Dicionário contendo seletores e valores a serem preenchidos de forma personalizada, se passado ele aplica a inserção de contas com os valores personalizados, se não executa a inserção com valores randomicos.
+
         Fluxo:
         1. A função navega até a aba de repetição de contas a pagar no sistema.
         2. Verifica se já existem repetições cadastradas. Se não, cria uma nova repetição.
@@ -654,10 +531,6 @@ class ContasPagar:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
         
-        randomDay = GeradorDados.randomNumberDinamic(1,30)
-        randomMonth = GeradorDados.randomNumberDinamic(1,12)
-        randonDayOfTheWeek = GeradorDados.randomNumberDinamic(1,7)
-        randomWeeks = GeradorDados.randomNumberDinamic(0,998)
     #_________________________________________________________________
     # inicio da aba repetição de nova conta a pagar
         try:
@@ -692,163 +565,122 @@ class ContasPagar:
                 Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao clicado", routine="ContaPagar", error_details ="" )
 
                 Components.has_alert(init)
-
                 
                 seletor = "[title='Geração de Repetições']"
                 has_frame = Components.has_frame(init,seletor)
                 if has_frame:
-                    randomZeroOrOne = GeradorDados.randomNumberDinamic(0,1)
 
+                    randomDay = GeradorDados.randomNumberDinamic(1,30)
+                    randomMonth = GeradorDados.randomNumberDinamic(1,12)
+                    randonDayOfTheWeek = GeradorDados.randomNumberDinamic(1,7)
+                    randomWeeks = GeradorDados.randomNumberDinamic(0,998)
 
-                    if randomZeroOrOne == 0:
-                        Apex.setValue(browser,"P71_OPCAO_FERIADO","A")
-                        opcaoFeriadoValue = Apex.getValue(browser,"P71_OPCAO_FERIADO_0")
-                        if opcaoFeriadoValue == "A":
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P71_OPCAO_FERIADO: Opção feriados teve o valor : Antecipar inserido corretamente", routine="ContaPagar", error_details ="" )
+                    randomValue = GeradorDados.randomNumberDinamic(0,4)
+                    randomText = GeradorDados.gerar_texto(50)
 
-                    elif randomZeroOrOne == 1 :
-                        Apex.setValue(browser,"P71_OPCAO_FERIADO","P")  
-                        opcaoFeriadoValue = Apex.getValue(browser,"P71_OPCAO_FERIADO_1")
-                        if opcaoFeriadoValue == "P":
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P71_OPCAO_FERIADO: Opção feriados teve o valor : Postergar Sábados e Doomingos inserido corretamente", routine="ContaPagar", error_details ="" )
-                
+                    aOrP = ("A","P")
+                    aOrP = random.choice(aOrP)
+                    oOrR = ("O","R")
+                    oOrR = random.choice(oOrR)
+                    periodo = ( "M",  "S",  "E")
+                    periodo = random.choice(periodo)
+                        
+                    opcaoFeriadoValue = aOrP if randomValue != 0 else randomText
+                    opcaoCompetencia = oOrR if randomValue != 0 else randomText
+                    selecaoPeriodo = periodo if randomValue != 0 else randomText
+                    dia = randomDay if randomValue != 0 else randomText
+                    quantidadeMes = randomMonth if randomValue != 0 else randomText
+                    diaSemana = randonDayOfTheWeek if randomValue != 0 else randomText
+                    quantidadeSemana = randomWeeks if randomValue != 0 else randomText
+                    aCadaDia = randomWeeks if randomValue != 0 else randomText
 
-                    if randomZeroOrOne == 0:
-                        Apex.setValue(browser,"P71_OPCAO_COMPETENCIA","O")
-                        opcaoCompetencia = Apex.getValue(browser,"P71_OPCAO_COMPETENCIA")
-                        if opcaoCompetencia == "O":
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P71_OPCAO_COMPETENCIA: Opção Competencia teve o valor: Ajustar Data Emissão/Competência conforme periodicidade da repetição  inserido corretamente", routine="ContaPagar", error_details ="" )
-                    elif randomZeroOrOne == 1:
-                        Apex.setValue(browser,"P71_OPCAO_COMPETENCIA","R")     
-                        opcaoCompetencia = Apex.getValue(browser,"P71_OPCAO_COMPETENCIA")
-                        if opcaoCompetencia == "R":
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P71_OPCAO_COMPETENCIA: Opção Competencia teve o valor: Manter mesmo dia Data Emissão/Competência da conta original nas repetições inserido corretamente", routine="ContaPagar", error_details ="" )
-
-
-                    randomPeriodo = GeradorDados.randomNumberDinamic(0, 2)
-
-                    # Mapeia os valores possíveis
-                    periodo_map = {
-                        0: "M",
-                        1: "S",
-                        2: "E"
+                    apexValues =  staticValues if isinstance(staticValues,dict) else {
+                            "P71_OPCAO_FERIADO":opcaoFeriadoValue,
+                            "P71_OPCAO_COMPETENCIA":opcaoCompetencia,
+                            "P71_SELECAO_PERIODO":selecaoPeriodo,
+                            "P71_DIA":dia,
+                            "P71_QUANTIDADE_MES":quantidadeMes,
+                            "P71_DIA_SEMANA":diaSemana,
+                            "P71_QUANTIDADE_SEMANA": quantidadeSemana,
+                            "P71_A_CADA_DIA": aCadaDia,
+                            "P71_QUANTIDADE_VEZ": aCadaDia
                     }
 
-                    # Define o valor correspondente
-                    valor_selecionado = periodo_map[randomPeriodo].strip().upper()        
-                    Apex.setValue(browser, "P71_SELECAO_PERIODO", valor_selecionado)  
+                    apexGetValue = {}
+                    for seletor, value in apexValues.items():
+                        try:
+                            item =  WebDriverWait(browser,5).until(EC.element_to_be_clickable((By.CSS_SELECTOR,f"#{seletor}")))
+                            browser.execute_script("arguments[0].scrollIntoView(true);", item)
+                            if periodo == "M" and (seletor == "P71_DIA"  or seletor == "P71_QUANTIDADE_MES"):
+                                Apex.setValue(browser,seletor,value)
+                                Log_manager.add_log(
+                                                application_type=env_application_type,
+                                                level="INFO", 
+                                                message=f"{seletor} teve o valor {value} inserido", 
+                                                routine="ContaReceber", 
+                                                error_details=""
+                                                )
+                            elif periodo == "S" and (seletor == "P71_DIA_SEMANA" or seletor  ==  "P71_QUANTIDADE_SEMANA"):  
+                                Apex.setValue(browser,seletor,value)
+                                Log_manager.add_log(
+                                                    application_type=env_application_type,
+                                                    level="INFO", 
+                                                    message=f"{seletor} teve o valor {value} inserido", 
+                                                    routine="ContaReceber", 
+                                                    error_details=""
+                                                    )
+                            elif periodo == "E" and (seletor == "P71_A_CADA_DIA" or seletor == "P71_QUANTIDADE_VEZ"):
+                                Apex.setValue(browser,seletor,value)
+                                Log_manager.add_log(
+                                                    application_type=env_application_type,
+                                                    level="INFO", 
+                                                    message=f"{seletor} teve o valor {value} inserido", 
+                                                    routine="ContaReceber", 
+                                                    error_details=""
+                                                    )
+                            else:
+                                Apex.setValue(browser,seletor,value)
+                                Log_manager.add_log(
+                                                    application_type=env_application_type,
+                                                    level="INFO", 
+                                                    message=f"{seletor} teve o valor {value} inserido", 
+                                                    routine="ContaReceber", 
+                                                    error_details=""
+                                                    )
 
-
-                    selecaoPeriodoValue = Apex.getValue(browser, "P71_SELECAO_PERIODO")
-                    time.sleep(2)
+                            WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                            apexGetValue[seletor] = FuncoesUteis.stringToFloat(Apex.getValue(browser,seletor))
+                            Log_manager.add_log(
+                                                application_type=env_application_type, level="INFO", 
+                                                message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                                routine="ContaReceber", 
+                                                error_details=""
+                                                )                       
+                            
+                        except (TimeoutException, NoSuchElementException, Exception) as e:
+                            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+                            screenshot_path = screenshots
+                            if screenshot_path:
+                                success = browser.save_screenshot(screenshot_path)
+                                if success:
+                                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                                else:
+                                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+                
                     
-                    if selecaoPeriodoValue:
-                        selecaoPeriodoValue = selecaoPeriodoValue[0].strip().upper()
-                        selecaoPeriodoValue = str(selecaoPeriodoValue)
+                    campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
-                    if selecaoPeriodoValue == valor_selecionado:
-                        Log_manager.add_log(
-                            application_type=env_application_type,
-                            level="INFO",
-                            message=f"Campo P71_OPCAO_COMPETENCIA: Seleção período teve o valor inserido corretamente valor selecionado {valor_selecionado}",
-                            routine="ContaPagar",
-                            error_details="")
-                    else:
-                        Log_manager.add_log(
-                            application_type=env_application_type,
-                            level="ERROR",
-                            message="Falha ao definir o valor do campo : Seleção período",
-                            routine="ContaPagar",
-                            error_details=f"Esperado: {valor_selecionado}, Obtido: {selecaoPeriodoValue}" )
-
-
-                    if selecaoPeriodoValue == "M":
-                        WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P71_DIA")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P71_DIA encontrado", routine="ContaPagar", error_details ="" )
-
-                        Apex.setValue(browser, "P71_DIA", randomDay)
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P71_DIA:Todo dia teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-                        time.sleep(1)
-
-                        WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P71_QUANTIDADE_MES")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P71_QUANTIDADE_MES encontrado", routine="ContaPagar", error_details ="" )
-
-                        Apex.setValue(browser, "P71_QUANTIDADE_MES", randomMonth)
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P71_QUANTIDADE_MES: Repetir por teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-                        
-                        btnNovaSimulacao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B117755939196395627")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine="ContaPagar", error_details ="" )
-
-                        btnNovaSimulacao.click()
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine="ContaPagar", error_details ="" )
-
-                    elif selecaoPeriodoValue == "S":
-                        WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P71_DIA_SEMANA")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P71_DIA_SEMANA encontrado", routine="ContaPagar", error_details ="" )
-
-                        Apex.setValue(browser, "P71_DIA_SEMANA", randonDayOfTheWeek)
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P71_DIA_SEMANA:Repetir:todo(a) teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-                        time.sleep(1)
-
-                        WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P71_QUANTIDADE_SEMANA")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P71_QUANTIDADE_SEMANA encontrado", routine="ContaPagar", error_details ="" )
-                        
-                        Apex.setValue(browser, "P71_QUANTIDADE_SEMANA", randomWeeks)
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P71_QUANTIDADE_SEMANA:por teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-                        
-                        btnNovaSimulacao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B117756094566395628")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine="ContaPagar", error_details ="" )
-
-                        btnNovaSimulacao.click()
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine="ContaPagar", error_details ="" )
-                    
-                    elif selecaoPeriodoValue == "E":
-                        WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P71_A_CADA_DIA")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P71_A_CADA_DIA encontrado", routine="ContaPagar", error_details ="" )
-
-                        Apex.setValue(browser, "P71_A_CADA_DIA", randomWeeks)
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P71_A_CADA_DIA:Repetir a cada teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-                        time.sleep(1)
-
-                        WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P71_QUANTIDADE_VEZ")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P71_QUANTIDADE_VEZ encontrado", routine="ContaPagar", error_details ="" )
-
-                        Apex.setValue(browser, "P71_QUANTIDADE_VEZ", randomWeeks)
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P71_QUANTIDADE_VEZ:por teve o valor inserido corretamente", routine="ContaPagar", error_details ="" )
-                        
-                        btnNovaSimulacao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B117756106145395629")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine="ContaPagar", error_details ="" )
-
-                        btnNovaSimulacao.click()
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine="ContaPagar", error_details ="" )
+                    FuncoesUteis.compareValues(init,campos)    
             
-
-                    try:
-
-                        formError = WebDriverWait(browser,10).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".a-Form-error")))
+                    Components.has_form(init)
                     
-                        if formError:
-                            content = formError.text
-                            Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Mais de um valor inserido no campo P71_OPCAO_FERIADO, error:{content}", routine="ContaPagar", error_details ="" )
-
-                    except (TimeoutException, NoSuchElementException, Exception) as e :
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "formError não encontrado campo P71_OPCAO_FERIADO preenchido apenas com um valor", routine="ContaPagar", error_details =f"{e}" )   
-
-
                     WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".a-IRR-table")))
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Tabela Criada Simulação realizada", routine="ContaPagar", error_details ="" )
 
-
-                    btnSaveIframeRepeticaoPagamento = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B112188062181997438"))) 
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão salvar da aba geração de repetições encontrado", routine="ContaPagar", error_details ="" )
-            
-                    btnSaveIframeRepeticaoPagamento.click()
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão salvar da aba geração de repetições clicado", routine="ContaPagar", error_details ="" )
-
-
-                    Components.has_alert(init)
-
-                
+                    seletor = "#B112188062181997438"
+                    Components.btnClick(init,seletor)
+                    
+                    Components.has_alert(init)                
 
             
         except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -866,7 +698,7 @@ class ContasPagar:
 
 #END repeticaoContaPagar(init)
     @staticmethod
-    def pagamentosContaPagar(init,query):
+    def pagamentosContaPagar(init):
       
         """
         Função para realizar o pagamento de uma conta a pagar, aplicando possíveis descontos condicionais, juros, multas e verificando se os valores inseridos estão corretos.
@@ -906,28 +738,25 @@ class ContasPagar:
         - Não retorna nenhum valor diretamente. A função realiza a interação com a interface do usuário e gera logs.
 
         """
-        queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
         
-        random_value = round(random.uniform(1, 9999), 2)
-        randomStr = FuncoesUteis.formatBrCurrency(random_value)
-        randomValue = FuncoesUteis.stringToFloat(randomStr)
-        randomText = GeradorDados.gerar_texto(50)
-        randomNumber = GeradorDados.randomNumberDinamic(0,2)
-        randomDay = GeradorDados.randomNumberDinamic(1,30)
-        descontoCondicionalValue = 0
+        # random_value = round(random.uniform(1, 9999), 2)
+        # randomStr = FuncoesUteis.formatBrCurrency(random_value)
+        # randomValue = FuncoesUteis.stringToFloat(randomStr)
+        # randomText = GeradorDados.gerar_texto(50)
+        # randomNumber = GeradorDados.randomNumberDinamic(0,2)
+        # randomDay = GeradorDados.randomNumberDinamic(1,30)
+        # descontoCondicionalValue = 0
     
 
-        today = datetime.today()
-        randomDay = GeradorDados.randomNumberDinamic(0, 30)
-        randomDate = today + timedelta(days=randomDay)
-        finalDate = randomDate.strftime("%d/%m/%Y")
+        # today = datetime.today()
+        # randomDay = GeradorDados.randomNumberDinamic(0, 30)
+        # randomDate = today + timedelta(days=randomDay)
+        # finalDate = randomDate.strftime("%d/%m/%Y")
 
-        bigText700 = GeradorDados.gerar_texto(700)
-
-
+        # bigText700 = GeradorDados.gerar_texto(700)
 
 
     #_________________________________________________________________
@@ -941,18 +770,11 @@ class ContasPagar:
             )
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento encontrada", routine="ContaPagar", error_details ="" )
 
-
             # Garante que o elemento está na tela
             browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", abaPagamento)
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de pagamento ", routine="ContaPagar", error_details ="" )
 
-
-            # Aguarda até que o elemento esteja clicável
-            WebDriverWait(browser, 5).until(EC.element_to_be_clickable((By.ID, "pagamento_tab")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicavel", routine="ContaPagar", error_details ="" )
-
-
-            # Tenta clicar normalmente, se falhar, usa JavaScript para forçar o clique
+           
             try:
                 abaPagamento.click()
                 Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicada via py", routine="ContaPagar", error_details ="" )
@@ -961,212 +783,10 @@ class ContasPagar:
                 browser.execute_script("arguments[0].click();", abaPagamento)
                 Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicada via js", routine="ContaPagar", error_details ="" )
 
-            if randomNumber in (0, 2):
-
-
-                lancaDescontoCondicional = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B107285263114283801"))) 
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão lança denconto condicional encontrado", routine="ContaPagar", error_details ="" )
-
-                
-                lancaDescontoCondicional.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão lança denconto condicional clicado", routine="ContaPagar", error_details ="" )
-
-                WebDriverWait(browser, 30).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "[title='Lançamento Desconto Condicional']"))) 
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Trocando para iframe Lançamento Desconto Condicional ", routine="ContaPagar", error_details ="" )
-
-                descontoCondicional = GeradorDados.randomNumberDinamic(1, 100)
-                if randomNumber == 0:
-                    Apex.setValue(browser,"P220_DESCONTO",descontoCondicional)
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f" Desconto Condicional inserido {descontoCondicional} ", routine="ContaPagar", error_details ="" )
-
-                    Apex.setValue(browser,"P220_OBSERVACAO",randomText)
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Texto de observação inserido", routine="ContaPagar", error_details ="" )
-
-
-                else:
-                    Apex.setValue(browser,"P220_DESCONTO",randomValue)
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f" Desconto Condicional inserido {randomValue} ", routine="ContaPagar", error_details ="" )
-
-                    Apex.setValue(browser,"P220_OBSERVACAO",bigText700)   
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Texto 700 caracteres inserido", routine="ContaPagar", error_details ="" )
-
-                btnSaveIframeDescontoCondicional = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B107285890923283807")))    
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão Save denconto condicional encontrado", routine="ContaPagar", error_details ="" )
-
-                descontoCondicionalValue = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P220_DESCONTO"))
                 
 
-
-                btnSaveIframeDescontoCondicional.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão Save denconto condicional clicado", routine="ContaPagar", error_details ="" )
-                
-                valorOriginalFormatado = FuncoesUteis.stringToFloat(valorOriginalValue)
-                novoValor = abs(valorOriginalFormatado - descontoCondicional)
-
-                has_alert = Components.has_alert(init)
-                if has_alert:
-
-                    
-                        Apex.setValue(browser,"P220_DESCONTO",novoValor)
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f" Desconto Condicional inserido {novoValor} ", routine="ContaPagar", error_details ="" )
-                        btnSaveIframeDescontoCondicional.click()
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão Save denconto condicional clicado", routine="ContaPagar", error_details ="" )
-                
-                browser.switch_to.default_content()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaPagar", error_details ="" )
-
-            elif randomNumber in (1,2):
-                
-
-                novoPagamento = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B264204626044900605")))    
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo pagamento encontrado", routine="ContaPagar", error_details ="" )
-
-                novoPagamento.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo pagamento clicado", routine="ContaPagar", error_details ="" )
-                
-                
-                WebDriverWait(browser, 30).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "#Pagamentos")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Trocando para iframe Pagamentos ", routine="ContaPagar", error_details ="" )
-                
-                valorPagamentoDividido = round((valorOriginalFormatado/3),2)
-                valorDescontoDividido = round((randomValue/4),2)
-                valorDescontoDividido = FuncoesUteis.formatBrCurrency(valorDescontoDividido)
-                print(f'Valor do desconto a ser inserido {valorDescontoDividido}')
-
-
-                if randomNumber == 0:
-                    Apex.setValue(browser,"P70_CONTA_ID",queries["Query_queryContaId"])
-                    Apex.setValue(browser,"P70_FORMA_PAGAMENTO",queries["Query_queryContaId"])
-                    Apex.setValue(browser,"P70_DATA_PAGAMENTO",finalDate)
-                    Apex.setValue(browser,"P70_VALOR_PAGAMENTO",valorPagamentoDividido)
-                    Apex.setValue(browser,"P70_DESCONTO",valorDescontoDividido)
-                    Apex.setValue(browser,"P70_JUROS",randomValue)
-                    Apex.setValue(browser,"P70_MULTA",randomValue)
-                    Apex.setValue(browser,"P70_ACRESCIMOS",randomValue)     
-                    Apex.setValue(browser,"P70_OBSERVACAO",randomText)   
-
-
-                else:
-                    Apex.setValue(browser,"P70_CONTA_ID",randomText)
-                    Apex.setValue(browser,"P70_FORMA_PAGAMENTO",randomText)
-                    Apex.setValue(browser,"P70_DATA_PAGAMENTO",randomText)
-                    Apex.setValue(browser,"P70_VALOR_PAGAMENTO",randomText)
-                    Apex.setValue(browser,"P70_DESCONTO",randomText)
-                    Apex.setValue(browser,"P70_JUROS",randomText)
-                    Apex.setValue(browser,"P70_MULTA",randomText)
-                    Apex.setValue(browser,"P70_ACRESCIMOS",randomText)
-                    
-
-                descontoEditavel  = Apex.getValue(browser,"P70_DESCONTO")
-                descontoEditavelFloat = FuncoesUteis.stringToFloat(descontoEditavel)  
-
-                time.sleep(1)
-
-                jurosEditavel = Apex.getValue(browser,"P70_JUROS")
-                jurosEditavelFloat = FuncoesUteis.stringToFloat(jurosEditavel)
-
-                multaEditavel = Apex.getValue(browser,"P70_MULTA")
-                multaEditavelFloat = FuncoesUteis.stringToFloat(multaEditavel)
-
-                acrescimosEditavel = Apex.getValue(browser,"P70_ACRESCIMOS")
-                acrescimosEditavelFloat = FuncoesUteis.stringToFloat(acrescimosEditavel)
-
-                despesas = Apex.getValue(browser,"P70_DESPESAS")
-                despesasFloat = FuncoesUteis.stringToFloat(despesas)
-                
-                valorPagamento = Apex.getValue(browser,"P70_VALOR_PAGAMENTO")
-                valorPagamentoFloat = FuncoesUteis.stringToFloat(valorPagamento)
-
-                time.sleep(1)
-                
-                descontoDisplay  = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P70_DESCONTO_CONTA_DISPLAY > span")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P70_DESCONTO_CONTA_DISPLAY  Display de desconto achado", routine="ContaPagar", error_details ="" )
-                descontoDisplay =  descontoDisplay.text      
-                
-                
-                jurosDisplay = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P70_JUROS_CONTA_DISPLAY > span")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P70_JUROS_CONTA_DISPLAY  Display de desconto achado", routine="ContaPagar", error_details ="" )
-                jurosDisplay = jurosDisplay.text      
-                
-                multaDisplay = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P70_MULTA_CONTA_DISPLAY > span")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P70_MULTA_CONTA_DISPLAY  Display de desconto achado", routine="ContaPagar", error_details ="" )
-                multaDisplay = multaDisplay.text
-
-                acrescimosDisplay = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P70_VALOR_ACRESCIMOS_DISPLAY > span")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P70_VALOR_ACRESCIMOS_DISPLAY  Display de desconto achado", routine="ContaPagar", error_details ="" )
-                acrescimosDisplay = acrescimosDisplay.text
             
-                despesasDisplay = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P70_VALOR_DESPESA_DISPLAY > span")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P70_VALOR_DESPESA_DISPLAY  Display de desconto achado", routine="ContaPagar", error_details ="" )
-                despesasDisplay = despesasDisplay.text
-            
-                saldoPagarDisplay = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P70_SALDO_DISPLAY > span")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P70_SALDO_DISPLAY  Display de desconto achado", routine="ContaPagar", error_details ="" )
-                saldoPagarDisplay = saldoPagarDisplay.text
-            
-                valorOriginalDisplay = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P70_VALOR_DISPLAY")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P70_VALOR_DISPLAY  Display de desconto achado", routine="ContaPagar", error_details ="" )
-                valorOriginalDisplay = valorOriginalDisplay.text
-            
-                valorTotal = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P70_VALOR_TOTAL_DISPLAY > span")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P70_VALOR_DISPLAY  Display de desconto achado", routine="ContaPagar", error_details ="" )
-                valorTotal = valorTotal.text
-            
-            
-                valorTotalFloat = FuncoesUteis.stringToFloat(valorTotal)
-                valorOriginalDisplayFloat = FuncoesUteis.stringToFloat(valorOriginalDisplay)
-                descontoDisplayFloat = FuncoesUteis.stringToFloat(descontoDisplay)
-
-                jurosDisplayFloat = FuncoesUteis.stringToFloat(jurosDisplay)
-                multaDisplayFloat = FuncoesUteis.stringToFloat(multaDisplay)
-                acrescimosDisplayFloat = FuncoesUteis.stringToFloat(acrescimosDisplay)
-                despesasDisplayFloat = FuncoesUteis.stringToFloat(despesasDisplay)
-                saldoPagarDisplayFloat = FuncoesUteis.stringToFloat(saldoPagarDisplay)
-
-
-            valorSomado =  round(abs(valorOriginalDisplayFloat - descontoDisplayFloat + jurosDisplayFloat + multaDisplayFloat + acrescimosDisplayFloat),2)
-
-        
-            # Dicionário para armazenar comparações
-            valores = {
-                "Desconto": ((descontoEditavelFloat + descontoCondicionalValue), descontoDisplayFloat),
-                "Juros": (jurosEditavelFloat, jurosDisplayFloat),
-                "Multa": (multaEditavelFloat, multaDisplayFloat),
-                "Acréscimos": (acrescimosEditavelFloat, acrescimosDisplayFloat),
-                "Despesas": (despesasFloat, despesasDisplayFloat),
-                "Valor Total": (valorTotalFloat, valorSomado),
-                "Valor Pagamento": (valorPagamentoFloat, saldoPagarDisplayFloat),
-                "Valor Original": (valorOriginalValue,valorOriginalDisplayFloat)
-            }
-
-            # Verifica quais valores são diferentes
-            valoresDiferentes = {chave: (v1, v2) for chave, (v1, v2) in valores.items() if v1 != v2}
-
-            if not valoresDiferentes:
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Todos valores foram inseridos corretamente ", routine="ContaPagar", error_details ="" )
-
-            else:
-                Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = " Valores foram inseridos incorretamente  ", routine="ContaPagar", error_details ="" )
-
-                for chave, (v1, v2) in valoresDiferentes.items():
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f" valores incorretos: - {chave}: {v1} (esperado) ≠ {v2} (atual)", routine="ContaPagar", error_details ="" )
-
-
-
-            btnSaveIframePagamentos =  WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#btn_salvar"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão save do iframe Pagamentos encontrado", routine="ContaPagar", error_details ="" )
-
-            btnSaveIframePagamentos.click()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão save do iframe Pagamentos clicado", routine="ContaPagar", error_details ="" )
-
-
-
-            browser.switch_to.default_content()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaPagar", error_details ="" )
-            
-            has_alert = Components.has_alert(init)
-                
-
+           
             
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -1179,7 +799,316 @@ class ContasPagar:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 
-#END pagamentosContaPagar(init,query)               
+#END pagamentosContaPagar(init,query)       
+
+    @staticmethod
+    def lancarDescontoCondicional(init,staticValues = False):
+        """
+        Função para realizar o pagamento de uma conta a pagar, aplicando possíveis descontos condicionais, juros, multas e verificando se os valores inseridos estão corretos.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo as seguintes variáveis:
+            - browser: Instância do navegador WebDriver.
+            - login: Objeto responsável pelo login no sistema.
+            - Log_manager: Gerenciador de logs para armazenar e exibir informações.
+            - get_ambiente: Função para obter variáveis de ambiente.
+            - env_vars: Variáveis de ambiente da aplicação.
+            - seletor_ambiente: Função para identificar o ambiente atual da aplicação.
+            - screenshots: Caminho para salvar capturas de tela de erros.
+            - oracle_db_connection: Conexão com o banco de dados Oracle.
+        
+        - staticValues: Dicionário contendo seletores e valores a serem preenchidos de forma personalizada, se passado ele aplica a inserção de contas com os valores personalizados, se não executa a inserção com valores randomicos.
+
+        Fluxo de operação:
+        1. Obtém o valor original da conta a pagar.
+        2. realiza o lançamento de um desconto condicional, inserindo o valor e a observação, e clicando para salvar.
+        3. Verifica se há alertas ou erros no processo e salva as informações no log.
+
+        Exceções tratadas:
+        - TimeoutException: Caso o tempo de espera por um elemento seja excedido.
+        - NoSuchElementException: Caso um elemento não seja encontrado.
+        - Exception: Para capturar outras exceções gerais.
+
+        Logs:
+        - A função gera logs detalhados durante cada etapa do processo, informando o que está sendo realizado e os valores manipulados.
+        - Se houver erros durante a execução, um log de erro será gerado, junto com uma captura de tela do erro (se configurado).
+
+        Retorno:
+        - Não retorna nenhum valor diretamente. A função realiza a interação com a interface do usuário e gera logs.
+
+        """
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")   
+
+        try:
+            valorOriginalValue = Apex.getValue(browser,"P47_VALOR")
+
+
+            seletor = "#B107285263114283801"
+            Components.btnClick(init,seletor)
+
+            seletor = "[title='Lançamento Desconto Condicional']"
+            hasFrame = Components.has_frame(init,seletor)
+
+            if hasFrame:
+                randomNumber = GeradorDados.randomNumberDinamic(0,4)
+                randomText = GeradorDados.gerar_texto(50)
+                bigText500 = GeradorDados.gerar_texto(500)
+
+                desconto = GeradorDados.randomNumberDinamic(1, 100)
+                descontoCondicional = desconto if randomNumber != 0 else randomText
+                observacao = randomText if randomNumber != 0 else bigText500
+
+                apexValues = staticValues if isinstance(staticValues,dict) else {
+                    "P220_DESCONTO":descontoCondicional,
+                    "P220_OBSERVACAO":observacao                    
+                }
+
+                apexGetValue = {}
+                for seletor, value in apexValues.items():
+                    try:
+                        Apex.setValue(browser,seletor,value)
+                        Log_manager.add_log(
+                                            application_type=env_application_type,
+                                            level="INFO", 
+                                            message=f"{seletor} teve o valor {value} inserido", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )                                        
+                        time.sleep(1)
+                        WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                        apexGetValue[seletor] = FuncoesUteis.stringToFloat(Apex.getValue(browser,seletor))
+                        Log_manager.add_log(
+                                            application_type=env_application_type, level="INFO", 
+                                            message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )                       
+                    except (TimeoutException, NoSuchElementException, Exception) as e:
+                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+                        screenshot_path = screenshots
+                        if screenshot_path:
+                            success = browser.save_screenshot(screenshot_path)
+                            if success:
+                                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                            else:
+                                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            
+                    
+                campos = {seletor: (apexGetValue[seletor], str(value)) for seletor, value in apexValues.items()}                
+
+                FuncoesUteis.compareValues(init,campos)    
+                
+                seletor = "#B107285890923283807"
+                Components.btnClick(init,seletor)
+
+                has_alert = Components.has_alert(init)
+
+                if has_alert:
+                    valorOriginalFormatado = FuncoesUteis.stringToFloat(valorOriginalValue)
+                    novoValor = abs(valorOriginalFormatado - descontoCondicional)
+                    Apex.setValue(browser,"P220_DESCONTO",novoValor)
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f" Desconto Condicional inserido {novoValor} ", routine="ContaPagar", error_details ="" )
+                    Components.btnClick(init,seletor)                     
+        
+                browser.switch_to.default_content()
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaPagar", error_details ="" )            
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+#END lancaDescontoCondicional(init,staticValues = False)           
+
+    @staticmethod
+    def novoPagamento(init,query,staticValues = False):
+        """
+        Função para realizar o pagamento de uma conta a pagar, aplicando possíveis descontos condicionais, juros, multas e verificando se os valores inseridos estão corretos.
+
+        Parâmetros:
+        - init (tuple): Tupla contendo as seguintes variáveis:
+            - browser: Instância do navegador WebDriver.
+            - login: Objeto responsável pelo login no sistema.
+            - Log_manager: Gerenciador de logs para armazenar e exibir informações.
+            - get_ambiente: Função para obter variáveis de ambiente.
+            - env_vars: Variáveis de ambiente da aplicação.
+            - seletor_ambiente: Função para identificar o ambiente atual da aplicação.
+            - screenshots: Caminho para salvar capturas de tela de erros.
+            - oracle_db_connection: Conexão com o banco de dados Oracle.
+        
+        - staticValues: Dicionário contendo seletores e valores a serem preenchidos de forma personalizada, se passado ele aplica a inserção de contas com os valores personalizados, se não executa a inserção com valores randomicos.
+
+        Fluxo de operação:
+        1. Obtém o valor original da conta a pagar.
+        2. realiza o pagamento da conta, inserindo valores como desconto, juros, multa, acréscimos e despesas. Também valida se os valores inseridos correspondem aos esperados.
+        3. Verifica se há alertas ou erros no processo e salva as informações no log.
+
+        Exceções tratadas:
+        - TimeoutException: Caso o tempo de espera por um elemento seja excedido.
+        - NoSuchElementException: Caso um elemento não seja encontrado.
+        - Exception: Para capturar outras exceções gerais.
+
+        Logs:
+        - A função gera logs detalhados durante cada etapa do processo, informando o que está sendo realizado e os valores manipulados.
+        - Se houver erros durante a execução, um log de erro será gerado, junto com uma captura de tela do erro (se configurado).
+
+        Retorno:
+        - Não retorna nenhum valor diretamente. A função realiza a interação com a interface do usuário e gera logs.
+
+        """
+        queries = query
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")   
+
+        try:
+            valorOriginalValue = Apex.getValue(browser,"P47_VALOR")
+            valorOriginalFormatado = FuncoesUteis.stringToFloat(valorOriginalValue)
+
+            seletor = "#B264204626044900605"
+            Components.btnClick(init,seletor)
+
+            seletor = "#Pagamentos"
+            hasFrame = Components.has_frame(seletor)
+
+            if hasFrame:
+                randomValue = GeradorDados.randomNumberDinamic(0,4)
+                valorPagamentoMaior = valorOriginalFormatado * 2
+                valorPagamentoDividido = round((valorOriginalFormatado/3),2)
+                valorDescontoDividido = round((randomValue/4),2)
+                valorDescontoDividido = FuncoesUteis.formatBrCurrency(valorDescontoDividido)
+
+                today = datetime.today()
+                todayStr = today.strftime("%d/%m/%Y")
+                randomDay = GeradorDados.randomNumberDinamic(0, 30)
+                randomDate = today + timedelta(days=randomDay)
+                finalDate = randomDate.strftime("%d/%m/%Y")
+
+                randomText = GeradorDados.gerar_texto(50)
+                bigText500 = GeradorDados.gerar_texto(500)
+
+
+                contaId = queries["Query_queryContaId"] if randomValue != 0 else randomText
+                dataPagamento = todayStr if randomValue != 0 else finalDate if randomValue == 4 else randomText
+                valorPagamento = valorPagamentoDividido if randomValue != 0 else valorPagamentoMaior if randomValue == 4 else randomText
+                desconto = valorDescontoDividido if randomValue != 0 else valorPagamentoMaior if randomValue == 4 else randomText
+                observacao = randomText if randomValue != 0 else bigText500
+                formaPagamento = queries["Query_queryFormaPagamento"] if randomValue != 0 else randomText
+
+
+
+                apexValues = staticValues if isinstance(staticValues,dict) else {
+                    "P70_CONTA_ID": contaId,
+                    "P70_FORMA_PAGAMENTO":formaPagamento,
+                    "P70_DATA_PAGAMENTO":dataPagamento,
+                    "P70_VALOR_PAGAMENTO":valorPagamento,
+                    "P70_DESCONTO":desconto,
+                    "P70_JUROS":valorPagamento,
+                    "P70_MULTA":valorPagamento,
+                    "P70_ACRESCIMOS":valorPagamento,
+                    "P70_OBSERVACAO":observacao
+                }       
+
+                apexGetValue = {}
+                for seletor, value in apexValues.items():
+                    try:
+                        Apex.setValue(browser,seletor,value)
+                        Log_manager.add_log(
+                                            application_type=env_application_type,
+                                            level="INFO", 
+                                            message=f"{seletor} teve o valor {value} inserido", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )                                        
+                        
+                        WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                        apexGetValue[seletor] = FuncoesUteis.stringToFloat(Apex.getValue(browser,seletor))
+                        Log_manager.add_log(
+                                            application_type=env_application_type, level="INFO", 
+                                            message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )                       
+                    except (TimeoutException, NoSuchElementException, Exception) as e:
+                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+                        screenshot_path = screenshots
+                        if screenshot_path:
+                            success = browser.save_screenshot(screenshot_path)
+                            if success:
+                                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                            else:
+                                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            
+                    
+                    campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
+
+                    FuncoesUteis.compareValues(init,campos)    
+
+
+                apexValues = {
+                "#P70_DESCONTO_CONTA_DISPLAY > span",
+                "#P70_JUROS_CONTA_DISPLAY > span",
+                "#P70_MULTA_CONTA_DISPLAY > span",
+                "#P70_VALOR_ACRESCIMOS_DISPLAY > span",
+                "#P70_VALOR_DESPESA_DISPLAY > span",
+                "#P70_SALDO_DISPLAY > span",
+                "#P70_VALOR_DISPLAY",
+                "#P70_VALOR_TOTAL_DISPLAY > span"
+
+                }    
+
+                textValues = {}
+                for key in apexValues:
+                    item = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, key)))
+                    textDisplay = item.text
+                    textValues[key] = FuncoesUteis.stringToFloat(textDisplay)
+
+                              
+                valorSomado =  round(abs(textValues["#P70_VALOR_DISPLAY"] - textValues["#P70_DESCONTO_CONTA_DISPLAY > span"] + textValues["#P70_JUROS_CONTA_DISPLAY > span"] + textValues["#P70_MULTA_CONTA_DISPLAY > span"] + textValues["#P70_VALOR_ACRESCIMOS_DISPLAY > span"]),2)
+                regex = r"[\s#>]|span"
+                campos = {
+                    re.sub(regex, "", seletor): (apexGetValue[seletor], value)  # Aplica o regex para limpar o seletor
+                    for seletor, value in textValues.items()
+                }
+
+                FuncoesUteis.compareValues(init,campos)              
+
+
+        
+            # Dicionário para armazenar comparações
+            valores = {               
+                "Valor Total": (textDisplay["#P70_VALOR_TOTAL_DISPLAY > span"], valorSomado)                
+            }
+
+            FuncoesUteis.compareValues(init,valores)              
+
+            seletor = "#btn_salvar"
+            Components.btnClick(init,seletor)
+
+
+            browser.switch_to.default_content()
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaPagar", error_details ="" )
+            
+            Components.has_alert(init)       
+
+
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+
 
     @staticmethod
     def instrucaoPagamentoContaPagar(init,query):

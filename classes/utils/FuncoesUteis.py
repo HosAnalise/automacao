@@ -589,3 +589,16 @@ class FuncoesUteis:
                     error_details=str(e)
                 )            
 #END aplyFilter(init,apexValues)
+    
+    @staticmethod
+    def combine_sets_to_dict(keys_set, values_set):
+        """
+        Combina dois sets, um para chaves e outro para valores, em um dicionário.
+        Se os sets tiverem tamanhos diferentes, o excedente será ignorado.
+        """
+        # Combina os sets com zip e cria o dicionário
+        dict_with_values = dict(zip(keys_set, values_set))
+        
+        return dict_with_values
+
+

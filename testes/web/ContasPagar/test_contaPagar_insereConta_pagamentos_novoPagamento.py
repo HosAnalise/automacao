@@ -15,7 +15,8 @@ def test_contaPagar_insereConta_pagamentos(init):
         query = FuncoesUteis.getQueryResults(init,ContasPagar.queries)
         FuncoesUteis.showHideFilter(init,ContasPagar.filterSelector,False)
         ContasPagar.insereContaPagar(init,query)
-        ContasPagar.pagamentosContaPagar(init,query)
+        ContasPagar.pagamentosContaPagar(init)
+        ContasPagar.novoPagamento(init,query)
         ContasPagar.finalizaInsertContaPagar(init)   
         
             

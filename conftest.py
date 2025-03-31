@@ -42,6 +42,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "--headless", action="store", default="Yes", help="Escolha se o navegador de testes estará visivel (Yes or No)"
     )
+    parser.addoption(
+        "--daysToDelete", action="store", default="7", help="logs com mais de x dias serão deletados"
+    )
 
 
 

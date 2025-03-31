@@ -15,6 +15,29 @@ from classes.utils.Components import Components
 class ContaReceber:
     url="contas-a-receber"
     filterSelector="#P84_SELETOR_LOJA"
+    filters ={
+        "P84_SELETOR_LOJA",
+        "P84_TIPO_PERIODO",
+        "P84_DATA_INICIAL",
+        "P84_DATA_FINAL",
+        "P84_SITUACAO",
+        "P84_NUMERO_DOCUMENTO",
+        "P84_NUMERO_PEDIDO",
+        "P84_CONTA",
+        "P84_CENTRO_CUSTO",
+        "P84_CATEGORIA",
+        "P84_CLIENTE",
+        "P84_VALOR_INICIAL",
+        "P84_VALOR_FINAL",
+        "P84_ORIGEM",
+        "P84_VENDA_ORIGEM",
+        "P84_CONVENIO",
+        "P84_NR_CONTA",
+        "P84_RECEBIDO_EM",
+        "P84_TIPO_COBRANCA",
+        "P84_COBRADOR",
+        "P84_CONTEM_BOLETO"
+    }
     queries = {
         "queryModelodocumentoFiscal":   """
                                                 SELECT 

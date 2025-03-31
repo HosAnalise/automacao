@@ -17,6 +17,18 @@ class ExtratoContas:
 
     url = "exibir-extrato-das-contas"
     filterSelector = "#P76_CONTAS"
+    filters = {
+        "P76_CONTAS",
+        "P76_DATA_INICIAL",
+        "P76_DATA_FINAL",
+        "P76_SITUACAO",
+        "P76_VALOR_MIN",
+        "P76_VALOR_MAX",
+        "P76_NUMERO_DOCUMENTO",
+        "P76_CATEGORIAS",
+        "P76_CENTRO_CUSTO",
+        "P76_ORIGEM"
+    }
     queries = {
                 "queryModelodocumentoFiscal":   """
                                                         SELECT 
