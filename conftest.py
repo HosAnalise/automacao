@@ -222,6 +222,9 @@ def login(browser, request):
     env_vars = getEnv()
     log_manager = LogManager()
     erp_url = env_vars.get('URL_ERP', '')
+    emailField = env_vars.get('EMAIL_FIELD', '')
+    passwordField = env_vars.get('PASSWORD_FIELD', '')
+    btnLogin = env_vars.get('BTN_LOGIN', '')
 
     if not erp_url:
         pytest.exit("Erro crítico: ERP_URL não encontrada no .env")
@@ -238,9 +241,9 @@ def login(browser, request):
 )
 
         # Realizando login
-        WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "P9999_USERNAME"))).send_keys(email)
-        WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.ID, "P9999_PASSWORD"))).send_keys(senha)
-        WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, "buttonLogin"))).click()
+        WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, emailField))).send_keys(email)
+        WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, passwordField))).send_keys(senha)
+        WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, btnLogin))).click()
 
         WebDriverWait(browser, 10).until(EC.url_changes(f"{erp_url}login"))
     except (TimeoutException, NoSuchElementException) as e:

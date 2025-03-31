@@ -11,6 +11,7 @@ def test_contaPagar_insereConta_pagamentos(init):
 
 
     try:
+        
         FuncoesUteis.goToPage(init,ContasPagar.url)
         query = FuncoesUteis.getQueryResults(init,ContasPagar.queries)
         FuncoesUteis.showHideFilter(init,ContasPagar.filterSelector,False)
