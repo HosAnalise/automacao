@@ -2,5 +2,4 @@ screenshots/
 .env
 .gitignore
 venv/
-conftest.py
 classes/utils/LogManager.py
