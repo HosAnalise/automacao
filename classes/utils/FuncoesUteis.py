@@ -705,8 +705,8 @@ class FuncoesUteis:
                     application_type=env_application_type, 
                     error_details=str(e)
                 )
-
 #END setFilters(init,apexValues)
+
     @staticmethod
     def combine_sets_to_dict(keys_set, values_set):
         """
@@ -761,7 +761,225 @@ class FuncoesUteis:
                 routine="",
                 error_details=""
             )
-        
+# END setValue(init,seletor,value)
 
+    @staticmethod
+    def guaranteeShowHideFilter(init,seletor,showHide):
+        '''
+        Usando o próprio showHide, pode definir para abrir ou fechar o filtro lateral definitivamente.
+        O método anterior poderia causar falhas caso seja alterado um filtro que vinha aberto para começar a vir fechado, e vice-versa.
+        '''
 
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")  
+
+        if showHide:
+            openClose = [
+                "Abrir",
+                "Aberto"
+            ]
+        else:
+            openClose = [
+                "Fechar",
+                "Fechado"
+            ]
+
+        try:
+            # Verifica se o filtro lateral já está aberto
+            elemento = browser.find_elements(By.CSS_SELECTOR, seletor)  
+            if elemento and elemento[0].is_displayed():
+                open = 1
+                status = "Aberto"
+            else:
+                open = 0
+                status = "Fechado"
+
+            #Ou o filtro deve ficar aberto, porém não está. Ou o filtro deve ficar fechado porém está aberto
+            if (showHide and not open) or (not showHide and open):
+                script = "$('button#t_Button_rightControlButton > span').click()"
+                browser.execute_script(script)
+
+                Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"Foi Escolhido {openClose[0]} o Filtro Lateral, e Ele Estava {status}. Logo, foi {openClose[1]}",
+                routine="",
+                error_details=''
+                )
+            else:
+                Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"Foi Escolhido {openClose[0]} o Filtro Lateral, Porém Já Estava {status}.",
+                routine="",
+                error_details=''
+                )
+
+        except TimeoutException as e:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="Erro: Tempo limite excedido ao acessar a página",
+                routine="",
+                error_details=str(e)
+            )
+            screenshot_path = screenshots
+
+            # Verifica se o screenshot foi tirado corretamente
+            if screenshot_path:
+                sucess  = browser.save_screenshot(screenshot_path)
+                if sucess:            
+                    Log_manager.add_log(
+                        level="INFO", 
+                        message=f"Screenshot salvo em: {screenshot_path}", 
+                        routine="",
+                        application_type=env_application_type, 
+                        error_details=str(e)
+                )
+            else:
+                Log_manager.add_log(
+                    level="ERROR", 
+                    message="Falha ao salvar screenshot", 
+                    routine="",
+                    application_type=env_application_type, 
+                    error_details=str(e)
+                )
+
+        except NoSuchElementException as e:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="Erro: Elemento não encontrado na página",
+                routine="",
+                error_details=str(e)
+            )
+            screenshot_path = screenshots
+            
+            # Verifica se o screenshot foi tirado corretamente
+            if screenshot_path:
+                sucess  = browser.save_screenshot(screenshot_path)
+                if sucess:  
+                    Log_manager.add_log(
+                        level="INFO", 
+                        message=f"Screenshot salvo em: {screenshot_path}", 
+                        routine="",
+                        application_type=env_application_type, 
+                        error_details=str(e)
+                )
+            else:
+                Log_manager.add_log(
+                    level="ERROR", 
+                    message="Falha ao salvar screenshot", 
+                    routine="",
+                    application_type=env_application_type, 
+                    error_details=str(e)
+                )
+
+        except Exception as e:  # Captura qualquer outro erro inesperado
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="Erro desconhecido ao acessar a página",
+                routine="",
+                error_details=str(e)
+            )
+            screenshot_path = screenshots
+            
+            # Verifica se o screenshot foi tirado corretamente
+            if screenshot_path:
+                sucess  = browser.save_screenshot(screenshot_path)
+                if sucess:  
+                    Log_manager.add_log(
+                        level="INFO", 
+                        message=f"Screenshot salvo em: {screenshot_path}", 
+                        routine="",
+                        application_type=env_application_type, 
+                        error_details=str(e)
+                )
+            else:
+                Log_manager.add_log(
+                    level="ERROR", 
+                    message="Falha ao salvar screenshot", 
+                    routine="",
+                    application_type=env_application_type, 
+                    error_details=str(e)
+                )
+#END guaranteeShowHideFilter(init,seletor,showHide)
+
+    @staticmethod
+    def getURL(init):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        url = None  # Inicializa a variável URL
+
+        try:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Iniciando a captura da URL da nova janela.",
+                routine="Prestador/Empresa",
+                error_details=''
+            )
+
+            # Salve o ID da janela original
+            originalWindow = browser.current_window_handle
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"ID da janela original salvo: {originalWindow}",
+                routine="Prestador/Empresa",
+                error_details=''
+            )
+
+            # Aguarde até que uma nova janela seja aberta
+            WebDriverWait(browser, 20).until(lambda d: len(d.window_handles) > 1)
+
+            # Obtenha todos os IDs das janelas
+            allWindows = browser.window_handles
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"IDs das janelas obtidos: {allWindows}",
+                routine="Prestador/Empresa",
+                error_details=''
+            )
+
+            # Mude o foco para a nova janela (que não é a original)
+            for window in allWindows:
+                if window != originalWindow:
+                    browser.switch_to.window(window)
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Foco alterado para a nova janela: {window}",
+                        routine="Prestador/Empresa",
+                        error_details=''
+                    )
+                    break
+
+            # Aguarde até que a URL esteja disponível
+            url = WebDriverWait(browser, 20).until(lambda d: d.current_url if d.current_url != "" else False)
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"URL capturada: {url}",
+                routine="Prestador/Empresa",
+                error_details=''
+            )
+            
+            return url
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+#END getURL(init)

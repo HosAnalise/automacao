@@ -13,29 +13,13 @@ from selenium.webdriver.common.alert import Alert
 from selenium.common.exceptions import NoAlertPresentException
 
 
-def test_ExportarCotacao(init):
+def test_DevolverTransferencia(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
 
-    filters = {
-        "P1_DATA_INICIO": "05/01/2025",
-        "P1_DATA_FIM" : "05/01/2025"
-    }
-    
     try:
-        time.sleep(2)
-        print("Parou Aqui 1")
-        Components.btnClick(init, "#cotacoesFinalizadas_tab")
-        print("Parou Aqui 2")
-        FuncoesUteis.setFilters(init, filters)
-        print("Parou Aqui 3")
-        Components.btnClick(init, "#btnFiltrar")
-        print("Parou Aqui 4")
-        Components.btnClick(init, ".fa.fa-edit")
-
-        PortalCotacoes.exportCotacao(init)
-        time.sleep(3)
+        
 
 
     except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -44,9 +28,9 @@ def test_ExportarCotacao(init):
         if screenshot_path:
             success = browser.save_screenshot(screenshot_path)
             if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="Cotações", application_type=env_application_type, error_details=str(e))
+                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ExtratoDeContas", application_type=env_application_type, error_details=str(e))
             else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="Cotações", application_type=env_application_type, error_details=str(e))
+                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="ExtratoDeContas", application_type=env_application_type, error_details=str(e))
 
     finally:
         endTime = time.time()
@@ -60,7 +44,7 @@ def test_ExportarCotacao(init):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="Cotações",
+            routine="ExtratoDeContas",
             error_details=''
         )
 

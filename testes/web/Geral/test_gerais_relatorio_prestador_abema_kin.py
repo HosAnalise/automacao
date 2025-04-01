@@ -1,5 +1,5 @@
 import time
-from classes.rotinas.PortalCotacoes import PortalCotacoes
+from classes.rotinas.Abema import AbemaRelatorioPrestador as ARP
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
@@ -11,31 +11,36 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.alert import Alert
 from selenium.common.exceptions import NoAlertPresentException
+from time import sleep
 
 
-def test_ExportarCotacao(init):
+def test_GerarRelatorioPrestador(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
+    getEnv = env_vars
 
     filters = {
-        "P1_DATA_INICIO": "05/01/2025",
-        "P1_DATA_FIM" : "05/01/2025"
+        "P56_COMPETENCIA_FOLHA_1" : "01/2025",
+        "P56_COMPETENCIA_FOLHA_FIM_1" : "01/2025",
+        "prestadorempresa_saved_reports" : "82523067444671710"
     }
-    
-    try:
-        time.sleep(2)
-        print("Parou Aqui 1")
-        Components.btnClick(init, "#cotacoesFinalizadas_tab")
-        print("Parou Aqui 2")
-        FuncoesUteis.setFilters(init, filters)
-        print("Parou Aqui 3")
-        Components.btnClick(init, "#btnFiltrar")
-        print("Parou Aqui 4")
-        Components.btnClick(init, ".fa.fa-edit")
+    url = getEnv.get("URL_ERP")
+    print(f"{url}relatório-prestador")
 
-        PortalCotacoes.exportCotacao(init)
-        time.sleep(3)
+    try:
+        FuncoesUteis.goToPage(init, "relatório-prestador")
+
+        FuncoesUteis.guaranteeShowHideFilter(init, ARP.filterSelector, 1)
+
+        FuncoesUteis.setFilters(init, filters)
+
+        Components.btnClick(init, "#B82287259769324517")
+
+        Components.btnClick(init, "#botaorelatorio")
+
+        print(f"{FuncoesUteis.getURL(init)}")
+
 
 
     except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -44,9 +49,9 @@ def test_ExportarCotacao(init):
         if screenshot_path:
             success = browser.save_screenshot(screenshot_path)
             if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="Cotações", application_type=env_application_type, error_details=str(e))
+                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="Prestador/Empresa", application_type=env_application_type, error_details=str(e))
             else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="Cotações", application_type=env_application_type, error_details=str(e))
+                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="Prestador/Empresa", application_type=env_application_type, error_details=str(e))
 
     finally:
         endTime = time.time()
@@ -60,7 +65,7 @@ def test_ExportarCotacao(init):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="Cotações",
+            routine="Prestador/Empresa",
             error_details=''
         )
 

@@ -10,10 +10,14 @@ BROWSER_EDGE=true
 # CREDENCIAIS DE LOGIN PARA OS TESTES
 # Definem os e-mails e senhas dos usuários testados no sistema
 # ==========================================
-TESTE_EMAIL=ricardo.nunes@hos.com.br
-TESTE_PASSWORD=123
+TESTE_EMAIL=hos
+TESTE_PASSWORD=Hos@4400
     #Email Cotação = ricardo.nunes@hos.com.br
     #Email ERP = automatizacao@hos.com.br
+    #Senha Cotação & ERP = 123
+
+    #User ABEMA = hos
+    #Senha ABEMA = Hos@4400
 
 # Usuário Login - Admin
 ADMIN_EMAIL=admin@hos.com.br
@@ -28,6 +32,17 @@ PDV_EMAIL=8325
 PDV_PASSWORD=12345
 
 FC_USER="TESTE_TESTE2"
+
+# ==========================================
+# CONFIGURAÇÃO DOS BOTÕES DE LOGIN
+# Define quais botãos serão apertados e inseridos durante login
+# ==========================================
+EMAIL_FIELD="#P9999_USERNAME"
+PASSWORD_FIELD="#P9999_PASSWORD"
+BTN_LOGIN="#B27096688082464955"
+    #Btn Login Cotação = "#B178875747525289355"
+    #Btn Login ABEMA = "#B27096688082464955"
+
 
 # ==========================================
 # CONFIGURAÇÃO DOS AMBIENTES DE TESTE
@@ -52,9 +67,10 @@ NONE_VALORES_AMBIENTE={"nivelAcesso":"1","ambiente":"1","rede":"1","loja":"1"}
 # CONFIGURAÇÕES DE URLs E CAMINHOS DE ARQUIVOS
 # Define URLs do sistema e caminhos para armazenamento de arquivos
 # ==========================================
-URL_ERP=https://gestao.hos.com.br/ords/erp/r/portal-de-compras/
+URL_ERP=https://autorizadorhos.abema.far.br/ords/abema/r/hos-abema/
     #Cotação = https://gestao.hos.com.br/ords/erp/r/portal-de-compras/
     #URL_ERP = https://gestao.hos.com.br/ords/erp/r/120/
+    #ABEMA = https://autorizadorhos.abema.far.br/ords/abema/r/hos-abema/
 
 SCREENSHOT_PATH=C:\Users\gabri\Desktop\Automacao\screenshot
 PATH_HOS_FRENTE_CAIXA=C:\MercFarma\FcNovo\HOSFrenteDeCaixa.exe
