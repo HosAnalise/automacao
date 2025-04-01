@@ -1,5 +1,5 @@
 screenshots/
 .env
 .gitignore
-venv/
 classes/utils/LogManager.py
+conftest.py
