@@ -1,7 +1,9 @@
 from datetime import datetime
 import locale
+import socket
 import time
 import pytest
+import requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -715,5 +717,51 @@ class FuncoesUteis:
         dict_with_values = dict(zip(keys_set, values_set))
         
         return dict_with_values
+#END combine_sets_to_dict(keys_set, values_set)
+   
+    @staticmethod
+    def has_connection():
+
+        def _has_connection_socket():
+
+            try:
+                socket.create_connection(("8.8.8.8", 53), timeout=3)
+                return True
+            except OSError:
+                return False
+            
+
+
+        def _has_connection_requests():
+        
+            try:
+                response = requests.get("https://www.google.com", timeout=3)
+                if response.status_code == 200:
+                    return True
+                else:
+                    return False
+            except requests.ConnectionError:
+                return False    
+            
+        return _has_connection_socket() and _has_connection_requests()
+# END has_connection()
+
+
+    @staticmethod
+    def setValue(init,seletor,value):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        item = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
+        textItem = item.text
+        item.send_keys(value)
+        Log_manager.add_log(
+                application_type="WEB",
+                level="INFO",
+                message=f"Valor {value}, inserido no {textItem}",
+                routine="",
+                error_details=""
+            )
+        
+
 
 
