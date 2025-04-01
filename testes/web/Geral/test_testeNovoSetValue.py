@@ -1,42 +1,33 @@
 import time
-from classes.rotinas.ContasReceber import ContaReceber
+from classes.rotinas.ContasPagar import ContasPagar
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 
-
-
-
-
-
-def test_test(init):
+def test_contaPagar_insereConta_pagamentos(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
 
 
     try:
+        
+        FuncoesUteis.goToPage(init,ContasPagar.url)
+        query = FuncoesUteis.getQueryResults(init,ContasPagar.queries)
+        FuncoesUteis.showHideFilter(init,ContasPagar.filterSelector,False)
+        seletor = "#B129961237978758786"
+        Components.btnClick(init,seletor)
+        value = query["Query_queryContaId"]
+        FuncoesUteis.setValue(init,"#P47_PESSOA_FAVORECIDO_ID","25/03/2025")
+        valor  = Apex.getValue(browser,"P47_PESSOA_FAVORECIDO_ID")
 
-        FuncoesUteis.goToPage(init,ContaReceber.url)
-        query = FuncoesUteis.getQueryResults(init,ContaReceber.queries)
-        FuncoesUteis.showHideFilter(init,ContaReceber.filterSelector,True)
-        ContaReceber.insereContaReceber(init,query)
-
-        dataEmissao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P85_PESSOA_CLIENTE_ID_HIDDENVALUE")))
-        dataEmissao.send_keys(query["Query_queryFornecedorId"])
-
-        time.sleep(30)
-
-
-
+        print(f"Valor da query{query["Query_queryContaId"]} valor do elemento {valor}")
 
 
+           
+        
             
     except (TimeoutException, NoSuchElementException, Exception) as e:
         Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))

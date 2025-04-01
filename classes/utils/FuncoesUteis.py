@@ -749,7 +749,37 @@ class FuncoesUteis:
 
     @staticmethod
     def setValue(init,seletor,value):
+
+
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+
+        try:
+            item = None
+            item = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
+            textItem = item.text
+            item.send_keys(value)
+            Log_manager.add_log(
+                    application_type="WEB",
+                    level="INFO",
+                    message=f"Valor {value}, inserido no {textItem}",
+                    routine="",
+                    error_details=""
+                )
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type="WEB", level="ERROR", message=f"item não encontrado {item}", routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type="WEB", error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type="WEB", error_details=str(e))
+
+        
+
+
+
 
         item = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
         textItem = item.text
