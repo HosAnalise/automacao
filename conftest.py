@@ -45,6 +45,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "--daysToDelete", action="store", default="7", help="logs com mais de x dias serão deletados"
     )
+    parser.addoption(
+        "--urlToUse", action="store", default="URL_ERP", help="Url do login"
+    )
 
 
 
@@ -54,7 +57,7 @@ def timestampFormat():
 
 
 def getEnv():
-    env_vars = dotenv_values("env") 
+    env_vars = dotenv_values(".env") 
     return env_vars
 
 @pytest.fixture
@@ -219,9 +222,10 @@ def get_ambiente(request):
 def login(browser, request):  
     """Realiza o login no sistema e retorna o WebDriver já autenticado."""
     user = request.config.getoption("user")  # Pegando o valor do parâmetro de usuário via CLI
+    url = request.config.getoption("urlToUse")
     env_vars = getEnv()
     log_manager = LogManager()
-    erp_url = env_vars.get('URL_ERP', '')
+    erp_url = env_vars.get(f'{url}', '')
     emailField = env_vars.get('EMAIL_FIELD', '')
     passwordField = env_vars.get('PASSWORD_FIELD', '')
     btnLogin = env_vars.get('BTN_LOGIN', '')

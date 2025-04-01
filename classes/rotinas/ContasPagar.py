@@ -180,7 +180,6 @@ class ContasPagar:
         """
         queries = query
 
-        print(f"valores das queries {query}")
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -189,7 +188,7 @@ class ContasPagar:
         
         random_value = round(random.uniform(1, 999999), 2) 
         randomText = GeradorDados.gerar_texto(50)
-        randomNumber = GeradorDados.randomNumberDinamic(0,4)
+        randomNumber = GeradorDados.randomNumberDinamic(0,5)
         randomDay = GeradorDados.randomNumberDinamic(1,30)
         today = datetime.today()
         randomDay = GeradorDados.randomNumberDinamic(0, 30)
@@ -218,7 +217,7 @@ class ContasPagar:
             WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_VALOR")))
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: valorOriginal encontrado", routine="ContaPagar", error_details ="" )
 
-            apexValues = {
+            apexValues = staticValues if isinstance(staticValues,dict) else {
                     "P47_VALOR":randomValue,
                     "P47_CONTA_ID":contaValue,
                     "P47_PESSOA_FAVORECIDO_ID":pessoaFavorecido,
@@ -975,7 +974,7 @@ class ContasPagar:
             Components.btnClick(init,seletor)
 
             seletor = "#Pagamentos"
-            hasFrame = Components.has_frame(seletor)
+            hasFrame = Components.has_frame(init,seletor)
 
             if hasFrame:
                 randomValue = GeradorDados.randomNumberDinamic(0,4)
@@ -1045,10 +1044,10 @@ class ContasPagar:
                             else:
                                 Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
             
-                    
-                    campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
+                
+                campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
-                    FuncoesUteis.compareValues(init,campos)    
+                FuncoesUteis.compareValues(init,campos)    
 
 
                 apexValues = {
@@ -1111,7 +1110,7 @@ class ContasPagar:
 
 
     @staticmethod
-    def instrucaoPagamentoContaPagar(init,query):
+    def instrucaoPagamentoContaPagar(init,query,staticValues = False):
         """
         Função responsável por preencher e submeter os dados de uma instrução de pagamento no sistema de conta a pagar.
 
@@ -1165,12 +1164,8 @@ class ContasPagar:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
         
-        random_value = round(random.uniform(1, 999999), 2)
-        randomValue = FuncoesUteis.formatBrCurrency(random_value)
-        randomText = GeradorDados.gerar_texto(20)
+       
 
-        bigText700 = GeradorDados.gerar_texto(700)
-        randomChavePixId = queries["Query_queryTipoChave"]
 
 
         try:
@@ -1186,92 +1181,132 @@ class ContasPagar:
             abaInstrucaoPagamento.click()
             Log_manager.add_log(application_type=env_application_type, level="INFO", message="Aba instrução de pagamento clicada", routine="ContaPagar", error_details="")
 
-            # Gera um número aleatório para forma de pagamento
-            formaPagamento = GeradorDados.randomNumberDinamic(0, 2)
+            randomValues = GeradorDados.randomNumberDinamic(0,5)
+            random_value = round(random.uniform(1, 999999), 2)
+            randomValue = FuncoesUteis.formatBrCurrency(random_value)
+            randomText = GeradorDados.gerar_texto(20)
 
-            # Gera um número aleatório para DDA
-            randomDda = GeradorDados.randomNumberDinamic(0, 2)
-            if randomDda == 0:
-                Apex.setValue(browser, "P47_DDA", "1")
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message="DDA definido (DDA)", routine="ContaPagar", error_details="")
+            randomChavePixId = queries["Query_queryTipoChave"]
+            zeroOrOne = GeradorDados.randomNumberDinamic(0, 1)
+            cpf = GeradorDados.gerar_cpf()
+            cnpj = GeradorDados.gerar_cnpj()
 
-            if formaPagamento == 0:
-                Apex.setValue(browser, "P47_FORMA_INSTRUCAO_PAGAMENTO_ID", 2)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message="Forma de pagamento definida como 2 (Boleto)", routine="ContaPagar", error_details="")
 
-            elif formaPagamento == 1:
-                Apex.setValue(browser, "P47_FORMA_INSTRUCAO_PAGAMENTO_ID", 3)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message="Forma de pagamento definida como 3 (PIX)", routine="ContaPagar", error_details="")
+            cpfcnpj = cpf if zeroOrOne == 0 else cnpj if zeroOrOne == 1 else randomText if randomValues != 0 else randomText
+            celular = GeradorDados.gerar_numero_celular() if randomValues != 0 else randomText
+            email = GeradorDados.gerar_email()
+            chaveAleatoria = GeradorDados.gerar_chave_aleatoria()
+            destino = GeradorDados.randomNumberDinamic(1,3)
+            digitoConta = GeradorDados.randomNumberDinamic(0, 9)
+            numeroAgencia = GeradorDados.randomNumberDinamic(0000, 9999)
+            numeroConta = GeradorDados.randomNumberDinamic(0000000000, 999999999)
+            nomeFavorece = GeradorDados.gerar_nome()
+            formaP = GeradorDados.randomNumberDinamic(2,4)
+            
+            dda = 1 if randomValues != 0 else 0
+            formaPagamento = formaP if randomValues != 0 else randomText
+            
+            tipoChave = randomChavePixId if randomValues != 0 else randomText
+            chavepix = cpfcnpj if randomChavePixId == 1 else celular if randomChavePixId == 2 else email if randomChavePixId == 3  else chaveAleatoria 
+            banco = queries["Query_queryBanco"] if randomValues != 0 else randomText
+            agencia = numeroAgencia if  randomValues != 0 else randomText
+            conta = numeroConta if   randomValues != 0 else randomText
+            digito = digitoConta if   randomValues != 0 else randomText
+            nomeFavorecido = nomeFavorece if   randomValues != 0 else randomText
+            documentoFavorecido =  cpfcnpj if randomValues != 0  else randomText
+
+            apexValues = staticValues if isinstance(staticValues,dict) else {
+                "P47_DDA":str(dda),
+                "P47_FORMA_INSTRUCAO_PAGAMENTO_ID":str(formaPagamento),
+                "P47_PIX_TIPO_CHAVE_ID":str(tipoChave),
+                "P47_PIX_CHAVE":str(chavepix),
+                "P47_TED_CONTA_DESTINO_ID":str(destino),
+                "P47_TED_BANCO_ID":str( banco),
+                "P47_TED_AGENCIA":str( agencia),
+                "P47_TED_CONTA":str( conta),
+                "P47_TED_CONTA_DIGITO":str( digito),
+                "P47_TED_NOME_FAVORECIDO":str( nomeFavorecido),
+                "P47_INSTRUCAO_OBSERVACAO":str( randomText),
+                "P47_BOL_CODIGO_BARRA":str( chaveAleatoria),
+                "P47_TED_DOCUMENTO_FAVORECIDO":str(documentoFavorecido)
+            }
+
+
+            apexGetValue = {}
+            for seletor, value in apexValues.items():
+                try:
+                        
+                    if seletor in ("P47_FORMA_INSTRUCAO_PAGAMENTO_ID","P47_DDA"):
+                        Apex.setValue(browser,seletor,value)
+                        Log_manager.add_log(
+                                            application_type=env_application_type,
+                                            level="INFO", 
+                                            message=f"{seletor} teve o valor {value} inserido", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )                                        
+                        WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                        apexGetValue[seletor] = Apex.getValue(browser,seletor)
+                        Log_manager.add_log(
+                                            application_type=env_application_type, level="INFO", 
+                                            message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )        
+                    elif (seletor == "P47_BOL_CODIGO_BARRA" and formaPagamento == 2) or (seletor == "P47_PIX_CHAVE" and formaPagamento == 3) or ( seletor in("P47_TED_AGENCIA","P47_TED_CONTA","P47_TED_CONTA_DIGITO","P47_TED_NOME_FAVORECIDO","P47_TED_DOCUMENTO_FAVORECIDO") and formaPagamento == 4):
+                        FuncoesUteis.setValue(init,f"#{seletor}",value)
+                        Log_manager.add_log(
+                                            application_type=env_application_type,
+                                            level="INFO", 
+                                            message=f"{seletor} teve o valor {value} inserido", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )   
+                        WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                        apexGetValue[seletor] = Apex.getValue(browser,seletor)
+                        Log_manager.add_log(
+                                            application_type=env_application_type, level="INFO", 
+                                            message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                        )     
+                    
+                    elif seletor in ("P47_TED_BANCO_ID","P47_TED_CONTA_DESTINO_ID") and formaPagamento == 4:
+                        Apex.setValue(browser,seletor,value)
+                        Log_manager.add_log(
+                                            application_type=env_application_type,
+                                            level="INFO", 
+                                            message=f"{seletor} teve o valor {value} inserido", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )                    
+
                 
-                # Aguarda o campo de tipo de chave PIX estar clicável
-                WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#P47_PIX_TIPO_CHAVE_ID")))
-                Apex.setValue(browser, "P47_PIX_TIPO_CHAVE_ID", randomChavePixId)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Tipo de chave PIX definido como {randomChavePixId}", routine="ContaPagar", error_details="")
+                        WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                        apexGetValue[seletor] = Apex.getValue(browser,seletor)
+                        Log_manager.add_log(
+                                            application_type=env_application_type, level="INFO", 
+                                            message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
+                                            routine="ContaReceber", 
+                                            error_details=""
+                                            )                      
+                except (TimeoutException, NoSuchElementException, Exception) as e:
+                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+                        screenshot_path = screenshots
+                        if screenshot_path:
+                            success = browser.save_screenshot(screenshot_path)
+                            if success:
+                                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                            else:
+                                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
                 
-                if randomChavePixId == 1:
-                    cpfCnpj = GeradorDados.randomNumberDinamic(0, 1)
-                    if cpfCnpj == 0:
-                        Apex.setValue(browser, "P47_PIX_CHAVE", GeradorDados.gerar_cpf())
-                        Log_manager.add_log(application_type=env_application_type, level="INFO", message="Chave PIX definida como CPF", routine="ContaPagar", error_details="")
-                    else:
-                        Apex.setValue(browser, "P47_PIX_CHAVE", GeradorDados.gerar_cnpj())
-                        Log_manager.add_log(application_type=env_application_type, level="INFO", message="Chave PIX definida como CNPJ", routine="ContaPagar", error_details="")
-                elif randomChavePixId == 2:
-                    Apex.setValue(browser, "P47_PIX_CHAVE", GeradorDados.gerar_numero_celular())
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Chave PIX definida como número de celular", routine="ContaPagar", error_details="")
-                elif randomChavePixId == 3:
-                    Apex.setValue(browser, "P47_PIX_CHAVE", GeradorDados.gerar_email())
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Chave PIX definida como email", routine="ContaPagar", error_details="")
-                elif randomChavePixId in (4, 5, 6):
-                    Apex.setValue(browser, "P47_PIX_CHAVE", GeradorDados.gerar_chave_aleatoria())
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Chave PIX definida como chave aleatória", routine="ContaPagar", error_details="")
-
-            elif formaPagamento == 2:
-                Apex.setValue(browser, "P47_FORMA_INSTRUCAO_PAGAMENTO_ID", 4)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message="Forma de pagamento definida como 4 (TED)", routine="ContaPagar", error_details="")
                 
-                contaDestino = GeradorDados.randomNumberDinamic(0, 2)
-                if contaDestino == 0:
-                    Apex.setValue(browser, "P47_TED_CONTA_DESTINO_ID", 1)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Conta destino definida como 1 (Corrente)", routine="ContaPagar", error_details="")
-                elif contaDestino == 1:
-                    Apex.setValue(browser, "P47_TED_CONTA_DESTINO_ID", 2)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Conta destino definida como 2 (Poupança)", routine="ContaPagar", error_details="")
-                elif contaDestino == 2:
-                    Apex.setValue(browser, "P47_TED_CONTA_DESTINO_ID", 3)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Conta destino definida como 3 (Pagamento)", routine="ContaPagar", error_details="")
-                
-                digitoConta = GeradorDados.randomNumberDinamic(0, 9)
-                numeroAgencia = GeradorDados.randomNumberDinamic(0000, 9999)
-                numeroConta = GeradorDados.randomNumberDinamic(0000000000, 999999999)
-                nomeFavorcido = GeradorDados.gerar_nome()
-                textOrNumber = GeradorDados.randomNumberDinamic(0, 1)
+            campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
-                if textOrNumber == 0:
-                    Apex.setValue(browser, "P47_TED_BANCO_ID", queries["Query_queryBanco"])
-                    Apex.setValue(browser, "P47_TED_AGENCIA", numeroAgencia)
-                    Apex.setValue(browser, "P47_TED_CONTA", numeroConta)
-                    Apex.setValue(browser, "P47_TED_CONTA_DIGITO", digitoConta)
-                    Apex.setValue(browser, "P47_TED_NOME_FAVORECIDO", nomeFavorcido)
-                    Apex.setValue(browser, "P47_INSTRUCAO_OBSERVACAO", randomText)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Informações da conta TED preenchidas corretamente", routine="ContaPagar", error_details="")
-                else:
-                    Apex.setValue(browser, "P47_TED_BANCO_ID", queries["Query_queryBanco"])
-                    Apex.setValue(browser, "P47_TED_AGENCIA", randomText)
-                    Apex.setValue(browser, "P47_TED_CONTA", randomText)
-                    Apex.setValue(browser, "P47_TED_CONTA_DIGITO", randomText)
-                    Apex.setValue(browser, "P47_TED_NOME_FAVORECIDO", randomValue)
-                    Apex.setValue(browser, "P47_INSTRUCAO_OBSERVACAO", bigText700)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Informações de conta TED com texto aleatório preenchidas", routine="ContaPagar", error_details="")
+            FuncoesUteis.compareValues(init,campos)    
+            
 
-                cpfCnpj2 = GeradorDados.randomNumberDinamic(0, 1)
-                if cpfCnpj2 == 0:
-                    Apex.setValue(browser, "P47_TED_DOCUMENTO_FAVORECIDO", GeradorDados.gerar_cpf())
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Documento do favorecido definido como CPF", routine="ContaPagar", error_details="")
-                else:
-                    Apex.setValue(browser, "P47_TED_DOCUMENTO_FAVORECIDO", GeradorDados.gerar_cnpj())
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Documento do favorecido definido como CNPJ", routine="ContaPagar", error_details="")
-        
+           
         except (TimeoutException, NoSuchElementException, Exception) as e:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
             screenshot_path = screenshots
