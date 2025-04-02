@@ -401,7 +401,7 @@ class ExtratoContas:
                     )
                 
                 Components.has_alert(init)
-                Components.has_alert_sucess(init),
+                Components.has_alert_sucess(init)
 
                 browser.switch_to.default_content()
               
