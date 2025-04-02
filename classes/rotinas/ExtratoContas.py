@@ -360,9 +360,10 @@ class ExtratoContas:
                                                 message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
                                                 routine="", error_details="")
                     
-                if contaDestino:
-                    Apex.setValue(browser,"P78_CONTA_DESTINO_ID",contaDestinoIdValue)
-                    contaDestinoValue =  Apex.getValue(browser,"P78_CONTA_DESTINO_ID")
+                    if contaDestino:
+                        values = value if seletor == "P78_CONTA_DESTINO_ID" and isinstance(staticValues,dict) else contaDestinoIdValue
+                        Apex.setValue(browser,"P78_CONTA_DESTINO_ID",values)
+                        contaDestinoValue =  Apex.getValue(browser,"P78_CONTA_DESTINO_ID")
 
                 origem =   Apex.getValue(browser,"P78_ORIGEM") 
 
