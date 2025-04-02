@@ -27,8 +27,6 @@ def test_DevolverTransferencia(init):
 
         FuncoesUteis.goToPage(init, "exibir-extrato-das-contas")
 
-        Components.btnClick(init, "#novaTransferencia")
-
         #fazendo a transferencia
         contaOrigem = "5290"
         data = FuncoesUteis.simpleRandDate()
@@ -40,29 +38,21 @@ def test_DevolverTransferencia(init):
             "P78_CONTA_ORIGEM_ID" : contaOrigem,
             "P78_CONTA_DESTINO_ID" : conta,
             "P78_DATA_TRANSFERENCIA" : data,
-            "P78_VALOR_TRANSFERENCIA" : str(valorTransf),
+            "P78_VALOR_TRANSFERENCIA" : valorTransf,
             "P78_NUMERO_DOCUMENTO" : numDoc,
             "P78_DESCRICAO" : desc
         }
-        print(contaOrigem)
-        print(conta)
-        print(data)
-        print(valorTransf)
-        print(numDoc)
-        print(desc)
 
         contaTransfPre = {
             "P78_CONTA_ORIGEM_ID" : conta,
             "P78_CONTA_DESTINO_ID" : contaOrigem, #trocado para fazer a comparação com a transferencia devolvida
             "P78_DATA_TRANSFERENCIA" : data,
-            "P78_VALOR_TRANSFERENCIA" : str(valorTransf),
-            "P78_NUMERO_DOCUMENTO" : numDoc,
+            "P78_VALOR_TRANSFERENCIA" : valorTransf,
+            "P78_NUMERO_DOCUMENTO" : numDoc
         }
-
-        FuncoesUteis.setFilters(init, contaTransf)
-
-        Components.btnClick(init, "#B5886099528185118")
-        #Conta criada, agora procurar por ela
+        time.sleep(1)
+        FuncoesUteis.guaranteeShowHideFilter(init, "#P76_CONTAS", 0)
+        ExtratoContas.novaTransferencia(init, "", True, contaTransf)
 
         filtros = {
             "P76_CONTAS" : conta,
@@ -70,7 +60,7 @@ def test_DevolverTransferencia(init):
             "P76_DATA_FINAL" : data, #garante que o periodo é apenas um dia
             "P76_VALOR_MIN" : str(valorTransf),
             "P76_VALOR_MAX" : str(valorTransf),
-            "P76_NUMERO_DOCUMENTO" : numDoc,
+            "P76_NUMERO_DOCUMENTO" : numDoc
         }
 
         FuncoesUteis.guaranteeShowHideFilter(init, "#P76_CONTAS", 1)
@@ -140,6 +130,6 @@ def test_DevolverTransferencia(init):
             error_details=''
         )
 
-    Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution()
 
-    browser.quit()
+        browser.quit()
