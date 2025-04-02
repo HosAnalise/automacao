@@ -351,6 +351,7 @@ class FuncoesUteis:
            
             script ="$('button#t_Button_rightControlButton > span').click()"
             browser.execute_script(script)   
+            
     
         except TimeoutException as e:
             Log_manager.add_log(
@@ -602,11 +603,11 @@ class FuncoesUteis:
             try:
 
 
-                    for seletor,value in apexValues.items():
-                        Apex.setValue(browser,seletor,value)
-                        Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                                message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="", error_details="")
+                for seletor,value in apexValues.items():
+                    Apex.setValue(browser,seletor,value)
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
+                                            message=f"{seletor} teve o valor {value} inserido", 
+                                            routine="", error_details="")
 
                         
 
