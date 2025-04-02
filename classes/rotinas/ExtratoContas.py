@@ -334,7 +334,8 @@ class ExtratoContas:
                     "P78_NUMERO_DOCUMENTO": documento,
                     "P78_VALOR_TRANSFERENCIA":valorTransferenciaValue,
                     "P78_FORMA_PAGAMENTO":formaPagamentoValue,
-                    "P78_DESCRICAO":descricaoText
+                    "P78_DESCRICAO":descricaoText,
+                    "P78_CONTA_DESTINO_ID":None
                 }
                 apexGetValue = {}   
 
