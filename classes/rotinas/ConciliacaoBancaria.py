@@ -14,13 +14,14 @@ from classes.rotinas.ExtratoContas import ExtratoContas
 class ConciliacaoBancaria:
     url="conciliacao-bancaria"
     filterSelector = "#P154_FILTRO_CONTA"
-    filters = {
+    filters = [
         "P154_FILTRO_CONTA",
         "P154_FILTRO_PERIODO_POR",
         "P154_DATA_INICIAL",
         "P154_DATA_INICIAL",
         "P154_FILTRO_SITUACAO"
-    }
+    ]
+        
     
 
     @staticmethod

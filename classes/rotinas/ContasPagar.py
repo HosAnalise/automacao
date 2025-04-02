@@ -16,7 +16,7 @@ class ContasPagar:
 
     url="contas-a-pagar"
     filterSelector ="#P46_SELETOR_LOJA"
-    filters ={
+    filters =[
         "P46_SELETOR_LOJA",
         "P46_TIPO_PERIODO",
         "P46_DATA_INICIAL",
@@ -35,7 +35,7 @@ class ContasPagar:
         "P46_VALOR_INICIAL",
         "P46_VALOR_FINAL",
         "P46_EFETUADO_EM"
-    }
+    ]
     queries ={
         "queryContaId" : """
                 SELECT CONTA.CONTA_ID  
@@ -396,8 +396,6 @@ class ContasPagar:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
         
-        random_value = round(random.uniform(1, 999999), 2)
-        randomValue = FuncoesUteis.formatBrCurrency(random_value)
         randomText = GeradorDados.gerar_texto(50)
         randomNumber = GeradorDados.randomNumberDinamic(0,4)
         randomDay = GeradorDados.randomNumberDinamic(1,30)
@@ -415,7 +413,7 @@ class ContasPagar:
         centroCusto =queries["Query_queryCentroCusto"] if randomNumber != 0 else randomText
         conferido = zeroOrOne if randomNumber != 0 else randomText
         chaveNfe = GeradorDados.gerar_chave_nfe() if randomNumber != 0 else bigText500
-        numeroPedido = GeradorDados(0000000,9999999) if randomNumber != 0 else bigText700
+        numeroPedido = GeradorDados.randomNumberDinamic(0000000,9999999) if randomNumber != 0 else bigText700
         cpfOrCnpj = GeradorDados.gerar_cpf() if randomNumber in(1,2) else GeradorDados.gerar_cnpj()
         numeroDocumento = cpfOrCnpj if randomNumber != 0 else bigText500
         observacao = bigText500 if randomNumber != 0 else  bigText700
@@ -1477,7 +1475,7 @@ class ContasPagar:
 #END despesasContaPagar(init)
 
     @staticmethod
-    def editaContaPagar(init):
+    def editaContaPagar(init,callback = False):
         """
         Função responsável por automatizar a edição de uma conta a pagar em uma aplicação web. Ela localiza o ícone de edição
         da conta, captura o `data-id` associado a essa conta, e inicia o processo de edição, enquanto gera logs detalhados 
@@ -1552,6 +1550,8 @@ class ContasPagar:
                 routine="ContaPagar",
                 error_details=''
             )
+            if callback:
+                callback()
          
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -1611,7 +1611,7 @@ class ContasPagar:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")    
-        dataId = "data id não encontrado"  
+          
 
         try:                  
 
@@ -1667,7 +1667,7 @@ class ContasPagar:
 
             Components.has_alert(init)
 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Conta a pagar {dataId} foi excluida", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Conta a pagar foi excluida", routine="ContaPagar", error_details ="" )
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:

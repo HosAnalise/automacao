@@ -11,15 +11,14 @@ from classes.rotinas.ExtratoContas import ExtratoContas
 class PortalCotacoes:
 
     filterSelector = "#P1_REGIAO"
-    filters ={
+    filters =[
         "P1_REGIAO",
         "P1_TIPO_PERIODO",
         "P1_DATA_INICIO",
         "P1_DATA_FIM",
         "P1_NOME_PEDIDO",
         "P1_NUMERO_PEDIDO",
-        "P1_SITUACAO"
-    }
+        "P1_SITUACAO"]
 
     @staticmethod
     def exportCotacao(init):
@@ -28,4 +27,5 @@ class PortalCotacoes:
         Components.btnClick(init, "#L197697988027934774")
         Components.btnClick(init, "#menu_L197697988027934774_0i")
 
+    
 #END exportCotacao(init)

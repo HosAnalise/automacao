@@ -206,134 +206,132 @@ class FuncoesUteis:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")        
         isDictAndNotNull =  isinstance(apexValues, dict) and apexValues
-        try:
+        if isDictAndNotNull:
+            try:
 
-            if isDictAndNotNull:
+            
 
-                apexGetValue = {}   
-
-                for seletor,value in apexValues.items():
-                    Apex.setValue(browser,seletor,value)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                            message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="", error_details="")
-
-                    apexGetValue[seletor] = Apex.getValue(browser,seletor)     
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                            message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                            routine="", error_details="") 
-                   
-
-                btnAplicaFiltros = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".t-Button.t-Button--hot.t-Button--simple.t-Button--stretch")))
-                btnText = btnAplicaFiltros.text
-                
-                Log_manager.add_log(
-                        application_type=env_application_type,
-                        level="INFO",
-                        message=f"Botão {btnText} encontrado",
-                        routine="",
-                        error_details=''
-                    )
-                btnAplicaFiltros.click()
-                Log_manager.add_log(
-                        application_type=env_application_type,
-                        level="INFO",
-                        message=f"Botão {btnText} clicado",
-                        routine="",
-                        error_details=''
-                    )
                 
 
-    
-        except TimeoutException as e:
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="Erro: Tempo limite excedido ao acessar a página",
-                routine="",
-                error_details=str(e)
-            )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
+                    for seletor,value in apexValues.items():
+                        Apex.setValue(browser,seletor,value)
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", 
+                                                message=f"{seletor} teve o valor {value} inserido", 
+                                                routine="", error_details="")
 
-        except NoSuchElementException as e:
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="Erro: Elemento não encontrado na página",
-                routine="",
-                error_details=str(e)
-            )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
+                        
+                    
 
-        except Exception as e:  # Captura qualquer outro erro inesperado
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="Erro desconhecido ao acessar a página",
-                routine="",
-                error_details=str(e)
-            )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
+                    btnAplicaFiltros = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".t-Button.t-Button--hot.t-Button--simple.t-Button--stretch")))
+                    btnText = btnAplicaFiltros.text
+                    
                     Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
+                            application_type=env_application_type,
+                            level="INFO",
+                            message=f"Botão {btnText} encontrado",
+                            routine="",
+                            error_details=''
+                        )
+                    btnAplicaFiltros.click()
+                    Log_manager.add_log(
+                            application_type=env_application_type,
+                            level="INFO",
+                            message=f"Botão {btnText} clicado",
+                            routine="",
+                            error_details=''
+                        )
+                    
+
+        
+            except TimeoutException as e:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="ERROR",
+                    message="Erro: Tempo limite excedido ao acessar a página",
+                    routine="",
+                    error_details=str(e)
+                )
+                screenshot_path = screenshots
+                
+                # Verifica se o screenshot foi tirado corretamente
+                if screenshot_path:
+                    sucess  = browser.save_screenshot(screenshot_path)
+                    if sucess:            
+                        Log_manager.add_log(
+                            level="INFO", 
+                            message=f"Screenshot salvo em: {screenshot_path}", 
+                            routine="",
+                            application_type=env_application_type, 
+                            error_details=str(e)
+                    )
+                else:
+                    Log_manager.add_log(
+                        level="ERROR", 
+                        message="Falha ao salvar screenshot", 
                         routine="",
                         application_type=env_application_type, 
                         error_details=str(e)
-                )
-            else:
+                    )
+
+            except NoSuchElementException as e:
                 Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
+                    application_type=env_application_type,
+                    level="ERROR",
+                    message="Erro: Elemento não encontrado na página",
                     routine="",
-                    application_type=env_application_type, 
                     error_details=str(e)
-                )            
+                )
+                screenshot_path = screenshots
+                
+                # Verifica se o screenshot foi tirado corretamente
+                if screenshot_path:
+                    sucess  = browser.save_screenshot(screenshot_path)
+                    if sucess:  
+                        Log_manager.add_log(
+                            level="INFO", 
+                            message=f"Screenshot salvo em: {screenshot_path}", 
+                            routine="",
+                            application_type=env_application_type, 
+                            error_details=str(e)
+                    )
+                else:
+                    Log_manager.add_log(
+                        level="ERROR", 
+                        message="Falha ao salvar screenshot", 
+                        routine="",
+                        application_type=env_application_type, 
+                        error_details=str(e)
+                    )
+
+            except Exception as e:  # Captura qualquer outro erro inesperado
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="ERROR",
+                    message="Erro desconhecido ao acessar a página",
+                    routine="",
+                    error_details=str(e)
+                )
+                screenshot_path = screenshots
+                
+                # Verifica se o screenshot foi tirado corretamente
+                if screenshot_path:
+                    sucess  = browser.save_screenshot(screenshot_path)
+                    if sucess:  
+                        Log_manager.add_log(
+                            level="INFO", 
+                            message=f"Screenshot salvo em: {screenshot_path}", 
+                            routine="",
+                            application_type=env_application_type, 
+                            error_details=str(e)
+                    )
+                else:
+                    Log_manager.add_log(
+                        level="ERROR", 
+                        message="Falha ao salvar screenshot", 
+                        routine="",
+                        application_type=env_application_type, 
+                        error_details=str(e)
+                    )            
 #END aplyFilter(init,apexValues)
 
 
@@ -349,11 +347,10 @@ class FuncoesUteis:
 
             if showHide:
                 WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
-                script ="$('button#t_Button_rightControlButton > span').click()"
-                browser.execute_script(script)
-            else:
-                script ="$('button#t_Button_rightControlButton > span').click()"
-                browser.execute_script(script)   
+                
+           
+            script ="$('button#t_Button_rightControlButton > span').click()"
+            browser.execute_script(script)   
     
         except TimeoutException as e:
             Log_manager.add_log(
@@ -600,125 +597,117 @@ class FuncoesUteis:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")        
         isDictAndNotNull =  isinstance(apexValues, dict) and apexValues
-        try:
+        if isDictAndNotNull:
 
-            if isDictAndNotNull:
+            try:
 
-                apexGetValue = {}   
 
-                for seletor,value in apexValues.items():
-                    Apex.setValue(browser,seletor,value)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                            message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="", error_details="")
+                    for seletor,value in apexValues.items():
+                        Apex.setValue(browser,seletor,value)
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", 
+                                                message=f"{seletor} teve o valor {value} inserido", 
+                                                routine="", error_details="")
 
-                    apexGetValue[seletor] = Apex.getValue(browser,seletor)     
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                            message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                            routine="", error_details="") 
+                        
 
-        except TimeoutException as e:
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="Erro: Tempo limite excedido ao acessar a página",
-                routine="",
-                error_details=str(e)
-            )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
+            except TimeoutException as e:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="ERROR",
+                    message="Erro: Tempo limite excedido ao acessar a página",
+                    routine="",
+                    error_details=str(e)
+                )
+                screenshot_path = screenshots
+                
+                # Verifica se o screenshot foi tirado corretamente
+                if screenshot_path:
+                    sucess  = browser.save_screenshot(screenshot_path)
+                    if sucess:            
+                        Log_manager.add_log(
+                            level="INFO", 
+                            message=f"Screenshot salvo em: {screenshot_path}", 
+                            routine="",
+                            application_type=env_application_type, 
+                            error_details=str(e)
+                    )
+                else:
                     Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
+                        level="ERROR", 
+                        message="Falha ao salvar screenshot", 
                         routine="",
                         application_type=env_application_type, 
                         error_details=str(e)
-                )
-            else:
+                    )
+
+            except NoSuchElementException as e:
                 Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
+                    application_type=env_application_type,
+                    level="ERROR",
+                    message="Erro: Elemento não encontrado na página",
                     routine="",
-                    application_type=env_application_type, 
                     error_details=str(e)
                 )
-
-        except NoSuchElementException as e:
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="Erro: Elemento não encontrado na página",
-                routine="",
-                error_details=str(e)
-            )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
+                screenshot_path = screenshots
+                
+                # Verifica se o screenshot foi tirado corretamente
+                if screenshot_path:
+                    sucess  = browser.save_screenshot(screenshot_path)
+                    if sucess:  
+                        Log_manager.add_log(
+                            level="INFO", 
+                            message=f"Screenshot salvo em: {screenshot_path}", 
+                            routine="",
+                            application_type=env_application_type, 
+                            error_details=str(e)
+                    )
+                else:
                     Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
+                        level="ERROR", 
+                        message="Falha ao salvar screenshot", 
                         routine="",
                         application_type=env_application_type, 
                         error_details=str(e)
-                )
-            else:
+                    )
+
+            except Exception as e:  # Captura qualquer outro erro inesperado
                 Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
+                    application_type=env_application_type,
+                    level="ERROR",
+                    message="Erro desconhecido ao acessar a página",
                     routine="",
-                    application_type=env_application_type, 
                     error_details=str(e)
                 )
-
-        except Exception as e:  # Captura qualquer outro erro inesperado
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="Erro desconhecido ao acessar a página",
-                routine="",
-                error_details=str(e)
-            )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
+                screenshot_path = screenshots
+                
+                # Verifica se o screenshot foi tirado corretamente
+                if screenshot_path:
+                    sucess  = browser.save_screenshot(screenshot_path)
+                    if sucess:  
+                        Log_manager.add_log(
+                            level="INFO", 
+                            message=f"Screenshot salvo em: {screenshot_path}", 
+                            routine="",
+                            application_type=env_application_type, 
+                            error_details=str(e)
+                    )
+                else:
                     Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
+                        level="ERROR", 
+                        message="Falha ao salvar screenshot", 
                         routine="",
                         application_type=env_application_type, 
                         error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
-#END setFilters(init,apexValues)
+                    )
+    #END setFilters(init,apexValues)
 
+    
     @staticmethod
-    def combine_sets_to_dict(keys_set, values_set):
-        """
-        Combina dois sets, um para chaves e outro para valores, em um dicionário.
-        Se os sets tiverem tamanhos diferentes, o excedente será ignorado.
-        """
-        # Combina os sets com zip e cria o dicionário
-        dict_with_values = dict(zip(keys_set, values_set))
-        
-        return dict_with_values
-#END combine_sets_to_dict(keys_set, values_set)
+    def combine_lists_to_dict(keys_list, values_list):
+       
+        return dict(zip(keys_list, values_list))
+
+#END combine_lists_to_dict(keys_set, values_set)
    
     @staticmethod
     def has_connection():
@@ -858,16 +847,7 @@ class FuncoesUteis:
 
 
 
-        item = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
-        textItem = item.text
-        item.send_keys(value)
-        Log_manager.add_log(
-                application_type="WEB",
-                level="INFO",
-                message=f"Valor {value}, inserido no {textItem}",
-                routine="",
-                error_details=""
-            )
+    
 # END setValue(init,seletor,value)
 
     @staticmethod

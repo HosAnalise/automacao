@@ -15,7 +15,7 @@ from classes.utils.Components import Components
 class ContaReceber:
     url="contas-a-receber"
     filterSelector="#P84_SELETOR_LOJA"
-    filters ={
+    filters =[
         "P84_SELETOR_LOJA",
         "P84_TIPO_PERIODO",
         "P84_DATA_INICIAL",
@@ -37,7 +37,7 @@ class ContaReceber:
         "P84_TIPO_COBRANCA",
         "P84_COBRADOR",
         "P84_CONTEM_BOLETO"
-    }
+    ]
     queries = {
         "queryModelodocumentoFiscal":   """
                                                 SELECT 
@@ -164,7 +164,7 @@ class ContaReceber:
 
     
     @staticmethod
-    def insereContaReceber(init,query):
+    def insereContaReceber(init,query,staticValues = False):
         """
         Função para inserir uma conta a receber no sistema.
 
@@ -192,24 +192,7 @@ class ContaReceber:
            
 
             if not has_contaReceber:
-            
-                btnNovaContaReceber = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B392477272658547904")))
-                btnText = btnNovaContaReceber.text
-                Log_manager.add_log(
-                        application_type=env_application_type,
-                        level="INFO",
-                        message=f"Botão {btnText} encontrado",
-                        routine="",
-                        error_details=''
-                    )
-                btnNovaContaReceber.click()
-                Log_manager.add_log(
-                        application_type=env_application_type,
-                        level="INFO",
-                        message=f"Botão {btnText} clicado",
-                        routine="",
-                        error_details=''
-                    )
+                Components.btnClick(init,"#B392477272658547904")
                 
             has_receipt = Apex.getValue(browser,"P85_RECEBIDO") 
                         
@@ -242,7 +225,7 @@ class ContaReceber:
             descricaoValue = randomText if randomNumber != 0 else bigText500
 
 
-            apexValues = {
+            apexValues = staticValues if isinstance(staticValues,dict) else {
                 "P85_RECEBIDO":recebidovalue,
                 "P85_VALOR" : valorValue,
                 "P85_CONTA_ID":contaIdValue,
@@ -1322,7 +1305,7 @@ class ContaReceber:
 
 
     @staticmethod
-    def editaContaReceber(init):
+    def editaContaReceber(init,callback = False):
         """
         Função responsável por acessar e clicar no botão de edição de uma conta a receber.
 
@@ -1343,114 +1326,59 @@ class ContaReceber:
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
-
+        env_application_type = getEnv.get("WEB")    
+        dataId = "data id não encontrado"  
         try:
-
-            btnEdit = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit")))
-            btnText = btnEdit.text
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Botão editar encontrado",
-                    routine="",
-                    error_details=''
-                )
-            
-        
-            btnEdit.click()
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Botão editar clicado",
-                    routine="",
-                    error_details=''
-                )
-            
-        
-        except TimeoutException as e:
+           
+            edit = WebDriverWait(browser,120).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit")))
             Log_manager.add_log(
                 application_type=env_application_type,
-                level="ERROR",
-                message="Erro: Tempo limite excedido ao acessar a página",
+                level="INFO",
+                message="Conta a pagar editavel encontrada",
                 routine="ContaPagar",
-                error_details=str(e)
+                error_details=''
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
-        except NoSuchElementException as e:
+            dataId = edit.get_attribute("data-id")
             Log_manager.add_log(
                 application_type=env_application_type,
-                level="ERROR",
-                message="Erro: Elemento não encontrado na página",
+                level="INFO",
+                message="Conta a pagar data-id capturado",
                 routine="ContaPagar",
-                error_details=str(e)
+                error_details=''
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
-        except Exception as e:  # Captura qualquer outro erro inesperado
+            edit.click()
             Log_manager.add_log(
                 application_type=env_application_type,
-                level="ERROR",
-                message="Erro desconhecido ao acessar a página",
+                level="INFO",
+                message="Conta a pagar editavel clicada. Inicio da edição da conta!",
                 routine="ContaPagar",
-                error_details=str(e)
+                error_details=''
             )
+            if callback:
+                callback()
+         
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
             screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
             if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+
+
+        finally:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"Conta a pagar {dataId} editada",
+                routine="ContaPagar",
+                error_details=''
+            )    
 #END editaContaReceber(init)                       
 
 
