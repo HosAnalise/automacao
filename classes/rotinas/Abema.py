@@ -12,7 +12,7 @@ from time import sleep
 class AbemaRelatorioPrestador:
 
     filterSelector = "#P56_PRESTADOR_1"
-    filters ={
+    filters =[
         "P56_PRESTADOR_1",
         "P56_INCLUIR_INATIVOS_0",
         "P56_EMPRESA_ASSOCIADA",
@@ -21,4 +21,4 @@ class AbemaRelatorioPrestador:
         "P56_COMPETENCIA_FOLHA_FIM_1",
         "P56_STATUS_LOTE",
         "prestadorempresa_saved_reports"
-    }
+    ]

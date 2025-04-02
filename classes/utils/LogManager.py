@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from dotenv import load_dotenv,find_dotenv
+from dotenv import load_dotenv
 import os
 import uuid  # Para gerar identificadores únicos
 from pymongo import MongoClient  # Importando MongoClient
@@ -11,7 +11,7 @@ from pymongo.server_api import ServerApi
 
 
 
-load_dotenv(r"C:\Users\gabri\Desktop\Automacao_old\env")
+load_dotenv()
 timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
 
 class LogManager:

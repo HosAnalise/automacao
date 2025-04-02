@@ -17,7 +17,7 @@ class ExtratoContas:
 
     url = "exibir-extrato-das-contas"
     filterSelector = "#P76_CONTAS"
-    filters = {
+    filters = [
         "P76_CONTAS",
         "P76_DATA_INICIAL",
         "P76_DATA_FINAL",
@@ -28,7 +28,7 @@ class ExtratoContas:
         "P76_CATEGORIAS",
         "P76_CENTRO_CUSTO",
         "P76_ORIGEM"
-    }
+    ]
     queries = {
                 "queryModelodocumentoFiscal":   """
                                                         SELECT 
@@ -270,7 +270,7 @@ class ExtratoContas:
 
     #insere uma nova transferencia 
     @staticmethod
-    def novaTransferencia(init,query,contaDestino = True):
+    def novaTransferencia(init,query,contaDestino = True,staticValues=False):
         randomQueries =  query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -326,7 +326,7 @@ class ExtratoContas:
                 dataValue = todaystr if randomNumber != 0 else descricaoText700
                 text = "Transferência entre Contas"
 
-                apexValues = {
+                apexValues = staticValues if isinstance(staticValues,dict) else{
                     "P78_CONTA_ORIGEM_ID":contaOrigemIdValue,
                     "P78_DATA_TRANSFERENCIA":dataValue,
                     "P78_FORMA_TRANSFERENCIA":formaTransferenciaValue,

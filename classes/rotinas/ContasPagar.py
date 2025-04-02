@@ -16,7 +16,7 @@ class ContasPagar:
 
     url="contas-a-pagar"
     filterSelector ="#P46_SELETOR_LOJA"
-    filters ={
+    filters =[
         "P46_SELETOR_LOJA",
         "P46_TIPO_PERIODO",
         "P46_DATA_INICIAL",
@@ -35,7 +35,7 @@ class ContasPagar:
         "P46_VALOR_INICIAL",
         "P46_VALOR_FINAL",
         "P46_EFETUADO_EM"
-    }
+    ]
     queries ={
         "queryContaId" : """
                 SELECT CONTA.CONTA_ID  
@@ -396,8 +396,6 @@ class ContasPagar:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
         
-        random_value = round(random.uniform(1, 999999), 2)
-        randomValue = FuncoesUteis.formatBrCurrency(random_value)
         randomText = GeradorDados.gerar_texto(50)
         randomNumber = GeradorDados.randomNumberDinamic(0,4)
         randomDay = GeradorDados.randomNumberDinamic(1,30)
@@ -415,7 +413,7 @@ class ContasPagar:
         centroCusto =queries["Query_queryCentroCusto"] if randomNumber != 0 else randomText
         conferido = zeroOrOne if randomNumber != 0 else randomText
         chaveNfe = GeradorDados.gerar_chave_nfe() if randomNumber != 0 else bigText500
-        numeroPedido = GeradorDados(0000000,9999999) if randomNumber != 0 else bigText700
+        numeroPedido = GeradorDados.randomNumberDinamic(0000000,9999999) if randomNumber != 0 else bigText700
         cpfOrCnpj = GeradorDados.gerar_cpf() if randomNumber in(1,2) else GeradorDados.gerar_cnpj()
         numeroDocumento = cpfOrCnpj if randomNumber != 0 else bigText500
         observacao = bigText500 if randomNumber != 0 else  bigText700
@@ -1304,7 +1302,7 @@ class ContasPagar:
             campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
             FuncoesUteis.compareValues(init,campos)    
-            
+
 
            
         except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -1320,7 +1318,7 @@ class ContasPagar:
 #END instrucaoPagamentoContaPagar(init,query)
 
     @staticmethod
-    def despesasContaPagar(init):
+    def despesasContaPagar(init,staticValues = False,sendKeys = False):
         """
         Função responsável por automatizar o processo de inserção de despesas em uma conta a pagar. Ela navega pela aba de despesas,
         preenche campos com valores aleatórios e, em seguida, salva a nova despesa. Durante todo o processo, logs detalhados são 
@@ -1378,12 +1376,10 @@ class ContasPagar:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
         
-        random_value = round(random.uniform(1, 999999), 2)
-        randomValue = FuncoesUteis.formatBrCurrency(random_value)
-        randomText = GeradorDados.gerar_texto(30)
-        bigText700 = GeradorDados.gerar_texto(700)
+        
     
         try:
+            valorOrginal = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P47_VALOR"))
     
             abaDespesas = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#despesas_tab")))
             Log_manager.add_log(
@@ -1428,88 +1424,42 @@ class ContasPagar:
                 error_details=''
             )
 
+            seletor = "[title='Conta Pagar X Despesas']"
+            hasFrame = Components.has_frame(init,seletor)
 
-            WebDriverWait(browser,30).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR,"[title='Conta Pagar X Despesas']")))
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="INFO",
-                message="Mudando para o iframe Conta Pagar X Despesas",
-                routine="ContaPagar",
-                error_details=''
-            )
+            if hasFrame:
+                valorOrginalInt = int(valorOrginal)
 
-            smallOrbig = GeradorDados.randomNumberDinamic(0,4)
+                randomValues = GeradorDados.randomNumberDinamic(0,5)
+                despesa = GeradorDados.randomNumberDinamic(0,valorOrginalInt)
+                motivo = GeradorDados.gerar_texto(50) if randomValues else GeradorDados.gerar_texto(500)
 
-            if smallOrbig != 0:
-                Apex.setValue(browser,"P139_MOTIVO",randomText) 
+                apexValues = staticValues if isinstance(staticValues,dict) else {
+
+                    "P139_MOTIVO":motivo,
+                    "P139_DESPESA":despesa
+
+                }
+
+                campos = FuncoesUteis.prepareToCompareValues(init,apexValues,sendKeys)  
+
+                FuncoesUteis.compareValues(init,campos)   
+
+
+                seletor = "#B22200413557968720"
+                Components.btnClick(init,seletor)
+
+                Components.has_alert(init)
+
+
+                browser.switch_to.default_content()
                 Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Valor P139_MOTIVO setado para: {randomText}",
-                    routine="ContaPagar",
-                    error_details=''
-                )
-            else:
-                Apex.setValue(browser,"P139_MOTIVO",bigText700) 
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Valor P139_MOTIVO setado para: {bigText700}",
-                    routine="ContaPagar",
-                    error_details=''
-                )
-
-            
-
-            if smallOrbig != 0:
-                Apex.setValue(browser,"P139_DESPESA",randomValue)
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Valor P139_DESPESA setado para: {randomValue}",
-                    routine="ContaPagar",
-                    error_details=''
-                ) 
-            else:
-                Apex.setValue(browser,"P139_DESPESA",randomText)
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Valor P139_DESPESA setado para: {randomText}",
-                    routine="ContaPagar",
-                    error_details=''
-                ) 
-
-            btnSaveIframeDespesas = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B22200413557968720")))
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message="Botão Save do iframe encontrado",
-                    routine="ContaPagar",
-                    error_details=''
-                )
-            btnSaveIframeDespesas.click()
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message="Botão Save do iframe clicado",
-                    routine="ContaPagar",
-                    error_details=''
-                )
-            
-            has_alert = Components.has_alert(init)
-
-
-            browser.switch_to.default_content()
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message="Voltando pro contexto principal",
-                    routine="ContaPagar",
-                    error_details=''
-                )
-            
-
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Voltando pro contexto principal",
+                        routine="ContaPagar",
+                        error_details=''
+                    )
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -1525,7 +1475,7 @@ class ContasPagar:
 #END despesasContaPagar(init)
 
     @staticmethod
-    def editaContaPagar(init):
+    def editaContaPagar(init,callback = False):
         """
         Função responsável por automatizar a edição de uma conta a pagar em uma aplicação web. Ela localiza o ícone de edição
         da conta, captura o `data-id` associado a essa conta, e inicia o processo de edição, enquanto gera logs detalhados 
@@ -1600,6 +1550,8 @@ class ContasPagar:
                 routine="ContaPagar",
                 error_details=''
             )
+            if callback:
+                callback()
          
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
@@ -1659,7 +1611,7 @@ class ContasPagar:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")    
-        dataId = "data id não encontrado"  
+          
 
         try:                  
 
@@ -1715,7 +1667,7 @@ class ContasPagar:
 
             Components.has_alert(init)
 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Conta a pagar {dataId} foi excluida", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Conta a pagar foi excluida", routine="ContaPagar", error_details ="" )
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:

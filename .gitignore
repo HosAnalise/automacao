@@ -1,6 +1,5 @@
 screenshots/
 .env
-.gitignore
 conftest.py
 classes/utils/LogManager.py
 env
