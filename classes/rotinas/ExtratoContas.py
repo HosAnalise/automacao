@@ -315,16 +315,17 @@ class ExtratoContas:
                 )
                 descricaoText500 = GeradorDados.gerar_texto(500)
                 descricaoText700 = GeradorDados.gerar_texto(700)
+                if randomQueries:
 
-                documento = GeradorDados.gerar_cpf() if randomValue != 0 else GeradorDados.gerar_chave_aleatoria()
-                formaTransferenciaValue = randomQueries['Query_queryCliente'] if randomNumber != 0 else descricaoText700
-                valorTransferenciaValue = randomValue if randomNumber != 0 else descricaoText700
-                contaOrigemIdValue = randomQueries['Query_queryContaId'] if randomNumber != 0 else descricaoText700
-                contaDestinoIdValue = staticValues["P78_CONTA_DESTINO_ID"] if isinstance(staticValues,dict) else randomQueries['Query_queryContaDestinoId'] if randomNumber != 0 else descricaoText700
-                formaPagamentoValue = randomQueries['Query_queryFormaPagamento'] if randomNumber != 0 else descricaoText700
-                descricaoText =  descricaoText500 if randomNumber != 0 else descricaoText700
-                dataValue = todaystr if randomNumber != 0 else descricaoText700
-                text = "Transferência entre Contas"
+                    documento = GeradorDados.gerar_cpf() if randomValue != 0 else GeradorDados.gerar_chave_aleatoria()
+                    formaTransferenciaValue = randomQueries['Query_queryCliente'] if randomNumber != 0 else descricaoText700
+                    valorTransferenciaValue = randomValue if randomNumber != 0 else descricaoText700
+                    contaOrigemIdValue = randomQueries['Query_queryContaId'] if randomNumber != 0 else descricaoText700
+                    contaDestinoIdValue = randomQueries['Query_queryContaDestinoId'] if randomNumber != 0 else descricaoText700
+                    formaPagamentoValue = randomQueries['Query_queryFormaPagamento'] if randomNumber != 0 else descricaoText700
+                    descricaoText =  descricaoText500 if randomNumber != 0 else descricaoText700
+                    dataValue = todaystr if randomNumber != 0 else descricaoText700
+                    text = "Transferência entre Contas"
 
                 apexValues = staticValues if isinstance(staticValues,dict) else{
                     "P78_CONTA_ORIGEM_ID":contaOrigemIdValue,
@@ -333,7 +334,8 @@ class ExtratoContas:
                     "P78_NUMERO_DOCUMENTO": documento,
                     "P78_VALOR_TRANSFERENCIA":valorTransferenciaValue,
                     "P78_FORMA_PAGAMENTO":formaPagamentoValue,
-                    "P78_DESCRICAO":descricaoText
+                    "P78_DESCRICAO":descricaoText,
+                    "P78_CONTA_DESTINO_ID":None
                 }
                 apexGetValue = {}   
 
@@ -359,10 +361,10 @@ class ExtratoContas:
                                                 message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
                                                 routine="", error_details="")
                     
-                if contaDestino:
-
-                    Apex.setValue(browser,"P78_CONTA_DESTINO_ID",contaDestinoIdValue)
-                    contaDestinoValue =  Apex.getValue(browser,"P78_CONTA_DESTINO_ID")
+                    if contaDestino:
+                        values = value if seletor == "P78_CONTA_DESTINO_ID" and isinstance(staticValues,dict) else contaDestinoIdValue
+                        Apex.setValue(browser,"P78_CONTA_DESTINO_ID",values)
+                        contaDestinoValue =  Apex.getValue(browser,"P78_CONTA_DESTINO_ID")
 
                 origem =   Apex.getValue(browser,"P78_ORIGEM") 
 
@@ -399,7 +401,7 @@ class ExtratoContas:
                     )
                 
                 Components.has_alert(init)
-                Components.has_alert_sucess(init),
+                Components.has_alert_sucess(init)
 
                 browser.switch_to.default_content()
               
