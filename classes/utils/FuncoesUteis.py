@@ -12,6 +12,7 @@ import random
 from classes.utils.ApexUtil import Apex
 
 
+
 class FuncoesUteis:
     """
     Classe contendo funções utilitárias para automação de testes.
@@ -777,7 +778,83 @@ class FuncoesUteis:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type="WEB", error_details=str(e))
 
         
+    @staticmethod
+    def prepareToCompareValues(init,apexValues,sendKeys = False):
+        browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
+        apexGetValue = {}
 
+        for seletor, value in apexValues.items():
+            try:
+                if sendKeys:
+                    FuncoesUteis.setValue(init, f"#{seletor}", value)
+                    Log_manager.add_log(
+                        application_type='WEB',
+                        level="INFO",
+                        message=f"{seletor} teve o valor {value} inserido",
+                        routine="ContaReceber",
+                        error_details=""
+                    )
+                else:
+                    Apex.setValue(browser, seletor, value)
+                    Log_manager.add_log(
+                        application_type='WEB',
+                        level="INFO",
+                        message=f"{seletor} teve o valor {value} inserido",
+                        routine="ContaReceber",
+                        error_details=""
+                )
+
+                WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
+                apexGetValue[seletor] = Apex.getValue(browser, seletor)
+
+                Log_manager.add_log(
+                    application_type='WEB',
+                    level="INFO",
+                    message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado",
+                    routine="ContaReceber",
+                    error_details=""
+                )
+
+            except (TimeoutException, NoSuchElementException) as e:
+                Log_manager.add_log(
+                    application_type='WEB',
+                    level="ERROR",
+                    message=f"Erro ao manipular {seletor}: {str(e)}",
+                    routine="ContaReceber",
+                    error_details=str(e)
+                )
+
+            except Exception as e:
+                Log_manager.add_log(
+                    application_type='WEB',
+                    level="ERROR",
+                    message=f"Erro inesperado em {seletor}: {str(e)}",
+                    routine="ContaReceber",
+                    error_details=str(e)
+                )
+
+            finally:
+                if screenshots:
+                    screenshot_path = f"{screenshots}/{seletor}.png"
+                    if browser.save_screenshot(screenshot_path):
+                        Log_manager.add_log(
+                            application_type='WEB',
+                            level="INFO",
+                            message=f"Screenshot salvo em: {screenshot_path}",
+                            routine="ContaReceber",
+                            error_details=""
+                        )
+                    else:
+                        Log_manager.add_log(
+                            application_type='WEB',
+                            level="ERROR",
+                            message=f"Falha ao salvar screenshot em {screenshot_path}",
+                            routine="ContaReceber",
+                            error_details=""
+                        )
+
+        campos = {seletor: (apexGetValue.get(seletor, None), value) for seletor, value in apexValues.items()}
+        return campos
 
 
 
