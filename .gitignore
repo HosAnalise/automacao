@@ -3,4 +3,4 @@ screenshots/
 .gitignore
 conftest.py
 classes/utils/LogManager.py
-conftest.py
+env

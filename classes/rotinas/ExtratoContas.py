@@ -1102,4 +1102,62 @@ class ExtratoContas:
                     application_type=env_application_type, 
                     error_details=str(e)
                 )
-                
+#END conciliarDesconciliar(init,conciliaDesconcilia)
+
+    @staticmethod
+    def editaExtratoConta(init):
+        
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")    
+        dataId = "data id não encontrado"  
+        try:
+           
+            edit = WebDriverWait(browser,120).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit")))
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Extrato de Conta editavel encontrada",
+                routine="ContaPagar",
+                error_details=''
+            )
+
+            dataId = edit.get_attribute("data-id")
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Extrato de Conta data-id capturado",
+                routine="ContaPagar",
+                error_details=''
+            )
+
+            edit.click()
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Extrato de Conta editavel clicada. Inicio da edição da conta!",
+                routine="ContaPagar",
+                error_details=''
+            )
+         
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+
+
+        finally:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"Extrato de Conta {dataId} editada",
+                routine="ContaPagar",
+                error_details=''
+            )    
+#END editaExtratoConta(init)

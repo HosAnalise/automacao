@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import random
 from classes.utils.ApexUtil import Apex
-
+import string
 
 class FuncoesUteis:
     """
@@ -1013,3 +1013,18 @@ class FuncoesUteis:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 #END getURL(init)
+
+    @staticmethod
+    def simpleRandString(min, max):
+        tamanho = random.randint(min, max)
+        chars = string.ascii_letters + string.digits
+        return ''.join(random.choices(chars, k=tamanho))
+#END simpleRandString(min, max)
+
+    @staticmethod
+    def simpleRandDate():
+        dia = random.randint(1, 28)
+        mes = random.randint(1, 12)
+        ano = random.randint(2019, 2024)
+
+        return f"{dia}/{mes}/{ano}"

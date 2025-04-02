@@ -1,5 +1,6 @@
 import time
-from classes.rotinas.PortalCotacoes import PortalCotacoes
+import random
+from classes.rotinas.ExtratoContas import ExtratoContas
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
@@ -19,8 +20,99 @@ def test_DevolverTransferencia(init):
     env_application_type = env_vars['WEB']
 
     try:
-        
+        FuncoesUteis.goToPage(init, "configurações-gerais")
 
+        conta = Apex.getValue(browser, "P107_CONTA_RECEBIMENTO_PIX_VENDA")
+
+
+        FuncoesUteis.goToPage(init, "exibir-extrato-das-contas")
+
+        Components.btnClick(init, "#novaTransferencia")
+
+        #fazendo a transferencia
+        contaOrigem = "5290"
+        data = FuncoesUteis.simpleRandDate()
+        valorTransf = round(random.uniform(10, 230), 2)
+        numDoc = FuncoesUteis.simpleRandString(5, 8)
+        desc = FuncoesUteis.simpleRandString(7, 15)
+
+        contaTransf = {
+            "P78_CONTA_ORIGEM_ID" : contaOrigem,
+            "P78_CONTA_DESTINO_ID" : conta,
+            "P78_DATA_TRANSFERENCIA" : data,
+            "P78_VALOR_TRANSFERENCIA" : str(valorTransf),
+            "P78_NUMERO_DOCUMENTO" : numDoc,
+            "P78_DESCRICAO" : desc
+        }
+        print(contaOrigem)
+        print(conta)
+        print(data)
+        print(valorTransf)
+        print(numDoc)
+        print(desc)
+
+        contaTransfPre = {
+            "P78_CONTA_ORIGEM_ID" : conta,
+            "P78_CONTA_DESTINO_ID" : contaOrigem, #trocado para fazer a comparação com a transferencia devolvida
+            "P78_DATA_TRANSFERENCIA" : data,
+            "P78_VALOR_TRANSFERENCIA" : str(valorTransf),
+            "P78_NUMERO_DOCUMENTO" : numDoc,
+        }
+
+        FuncoesUteis.setFilters(init, contaTransf)
+
+        Components.btnClick(init, "#B5886099528185118")
+        #Conta criada, agora procurar por ela
+
+        filtros = {
+            "P76_CONTAS" : conta,
+            "P76_DATA_INICIAL" : data,
+            "P76_DATA_FINAL" : data, #garante que o periodo é apenas um dia
+            "P76_VALOR_MIN" : str(valorTransf),
+            "P76_VALOR_MAX" : str(valorTransf),
+            "P76_NUMERO_DOCUMENTO" : numDoc,
+        }
+
+        FuncoesUteis.guaranteeShowHideFilter(init, "#P76_CONTAS", 1)
+        FuncoesUteis.setFilters(init, filtros)
+        Components.btnClick(init, "#filtrar")
+
+        ExtratoContas.editaExtratoConta(init)
+
+        Components.btnClick(init, "#btnDevolver")
+        Components.btnClick(init, ".js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot")
+
+        FuncoesUteis.guaranteeShowHideFilter(init, "#P76_CONTAS", 1)
+        FuncoesUteis.setFilters(init, filtros)
+        Apex.setValue(browser, "#P76_ORIGEM", "4")
+        Components.btnClick(init, "#filtrar")
+
+        ExtratoContas.editaExtratoConta(init)
+
+        contaTransfDevolvida = {}
+        for key, value in contaTransfPre.items():
+            contaTransfDevolvida[key] = Apex.getValue(browser, key)
+
+        camposBefAfter = {seletor: (contaTransfPre[seletor], value) for seletor, value in contaTransfDevolvida.items()}
+
+        FuncoesUteis.compareValues(init, camposBefAfter) #verifica se as contas estão invertidas e a data, valor e num de doc estão iguais
+
+        if contaTransfDevolvida["P78_DESCRICAO"] != f"DEVOLVIDO - {contaTransf['P78_DESCRICAO']}": #verifica se o campo descrição está igual, porem com 'DEVOLVIDO - ' antes
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"A Descrição Está Incorreta, Valor Obtido = {contaTransfDevolvida['P78_DESCRICAO']}",
+                    routine="",
+                    error_details=""
+                )
+        else:
+            Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"A Descrição Está Correta, Valor Obtido = {contaTransfDevolvida['P78_DESCRICAO']}",
+                    routine="",
+                    error_details=""
+                )
 
     except (TimeoutException, NoSuchElementException, Exception) as e:
         Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
