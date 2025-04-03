@@ -1,5 +1,6 @@
 import time
 from classes.rotinas.ContasPagar import ContasPagar
+from classes.rotinas.ExtratoContas import ExtratoContas
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
@@ -19,24 +20,29 @@ def test_FiltroLateralAbreEZeroRegistros(init):
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
 
-    for i in range(2):
+    for i in range(3):
 
-        if i == 0: #contas a pagar
+        if i == 0:
             rotina = "Contas a Pagar"
             page = ContasPagar.url
-            seletor = "P46_TIPO_PERIODO"
+            seletor = ContasPagar.filterSelector
 
-        else:
+        elif i == 1:
             rotina = "Contas a Receber"
             page = ContaReceber.url
-            seletor = "P84_TIPO_PERIODO"
+            seletor = ContaReceber.filterSelector
+
+        else:
+            rotina = "Extrato de Contas"
+            page = ExtratoContas.url
+            seletor = ExtratoContas.filterSelector
 
         try:
             FuncoesUteis.goToPage(init, page)
 
             try:
 
-                WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, f"#{seletor}")))
+                WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, seletor)))
 
                 Log_manager.add_log(
                     level="INFO",
@@ -77,7 +83,7 @@ def test_FiltroLateralAbreEZeroRegistros(init):
             if screenshot_path:
                 success = browser.save_screenshot(screenshot_path)
                 if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ContaPagar", application_type=env_application_type, error_details=str(e))
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 
@@ -93,7 +99,7 @@ def test_FiltroLateralAbreEZeroRegistros(init):
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-                routine="ContaPagar",
+                routine="",
                 error_details=''
             )
 
