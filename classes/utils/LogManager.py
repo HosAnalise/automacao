@@ -11,7 +11,7 @@ from pymongo.server_api import ServerApi
 
 
 
-load_dotenv(r"C:\Users\gabri\Desktop\Automacao\env")
+load_dotenv()
 timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
 
 class LogManager:

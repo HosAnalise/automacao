@@ -57,7 +57,7 @@ def timestampFormat():
 
 
 def getEnv():
-    env_vars = dotenv_values("env") 
+    env_vars = dotenv_values(".env") 
     return env_vars
 
 @pytest.fixture

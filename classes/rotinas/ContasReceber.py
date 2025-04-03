@@ -237,49 +237,17 @@ class ContaReceber:
                 "P85_DESCRICAO":descricaoValue
             }
 
-            apexGetValue = {}
+           
             for seletor, value in apexValues.items():
+                WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
                 Apex.setValue(browser,seletor,value)
                 Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {value} inserido", 
                                                 routine="ContaReceber", error_details="")
                 
-                WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
-                apexGetValue[seletor] = FuncoesUteis.stringToFloat(Apex.getValue(browser,seletor))
-                Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                                message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                routine="ContaReceber", error_details="")
                 
-            apexSpecificValue = {
-                "P85_DATA_VENCIMENTO":dataVencimentoValue,
-                "P85_DATA_PREVISAO_RECEBIMENTO":dataPrevisaoRecebimento,
-                "P85_DESCRICAO":descricaoValue
-            }    
-
-            apexGetSpecificValue = {}
-            for seletor, value in apexSpecificValue.items():                       
-                apexGetSpecificValue[seletor] = Apex.getValue(browser,seletor)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                                message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                routine="ContaReceber", error_details="")
-
-
-                
-            apexCompareValues = {
-                "Recebimento":(recebidovalue,apexGetValue["P85_RECEBIDO"]),
-                "Valor":(valorValue,apexGetValue["P85_VALOR"]),
-                "Conta":(contaIdValue,apexGetValue["P85_CONTA_ID"]),
-                "Cliente":(pessoaClienteId,apexGetValue["P85_PESSOA_CLIENTE_ID"]),
-                "DataVencimento":(dataVencimentoValue,apexGetSpecificValue["P85_DATA_VENCIMENTO"]),
-                "DataPrevisaoRecebimento":(dataPrevisaoRecebimento,apexGetSpecificValue["P85_DATA_PREVISAO_RECEBIMENTO"]),
-                "CategoriaFinanceira":(categoriaFinanceiraValue,apexGetValue["P85_CATEGORIA_FINANCEIRA"]),
-                "Empresa":(lojaIdValue,apexGetValue["P85_LOJA"]),
-                "Descricao":(descricaoValue,apexGetSpecificValue["P85_DESCRICAO"])
-
-
-            }
-
-            FuncoesUteis.compareValues(init,apexCompareValues)
+            campos = FuncoesUteis.prepareToCompareValues(init,apexValues)
+            FuncoesUteis.compareValues(init,campos)
 
 
 
@@ -377,7 +345,7 @@ class ContaReceber:
 
 
     @staticmethod
-    def detalhesContaReceber(init,query):
+    def detalhesContaReceber(init,query,staticValues = False):
         """
         Função para preencher os detalhes de uma conta a receber no sistema.
 
@@ -435,7 +403,7 @@ class ContaReceber:
             observacao = randomText if randomNumber != 0 else bigText700
 
 
-            apexValues = {
+            apexValues = staticValues if isinstance(staticValues,dict) else {
                 "P85_DATA_EMISSAO":dataEmissao,
                 "P85_DATA_REGISTRO":dataRegistro,
                 "P85_CENTRO_DE_CUSTO":centroLucro,
@@ -448,19 +416,11 @@ class ContaReceber:
                 "P85_OBSERVACAO":observacao,
             }
             
-            apexGetValue = {}
 
-            for seletor, value in apexValues.items():
-                Apex.setValue(browser,seletor,value)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                                message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="ContaReceber", error_details="")
+            campos = FuncoesUteis.prepareToCompareValues(init,apexValues)
+            FuncoesUteis.compareValues(init,campos)
                 
-                WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
-                apexGetValue[seletor] = FuncoesUteis.stringToFloat(Apex.getValue(browser,seletor))
-                Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                                message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                routine="ContaReceber", error_details="")
+                
 
 
 
@@ -870,7 +830,7 @@ class ContaReceber:
             browser.switch_to.default_content()
 #END repeticaoContaReceber(init)            
 
-    def recebimentoContaReceber(init,query):
+    def recebimentoContaReceber(init,query,staticValues = False):
         """
         Função que simula a operação de recebimento de uma conta a receber na aplicação.
         Interage com a interface do usuário, preenche campos com dados dinâmicos e registra logs
@@ -970,7 +930,7 @@ class ContaReceber:
                     randomValue = randomValue  if randomNumber != 0 else randomText
                     randomText =randomText  if randomNumber != 0 else randomValue
 
-                    apexValues = {
+                    apexValues = staticValues if isinstance(staticValues,dict) else{
                         "P87_CONTA_ID":randomContaId,
                         "P87_FORMA_PAGAMENTO":randomPagamentoId,
                         "P87_DATA_RECEBIMENTO":finalDate,
@@ -1143,7 +1103,7 @@ class ContaReceber:
 #END recebimentoContaReceber(init,query) 
 
     @staticmethod
-    def jurosMultasContaReceber(init):
+    def jurosMultasContaReceber(init,staticValues = False):
         """
         Função responsável por acessar a aba de Juros e Multas de uma conta a receber,
         inserir valores aleatórios nos campos correspondentes e validar se os valores
@@ -1192,31 +1152,17 @@ class ContaReceber:
             multaValor = FuncoesUteis.formatBrCurrency(GeradorDados.randomNumberDinamic(1,100)) if randomValue != 0 else randomText
             jurosMesValor = FuncoesUteis.formatBrCurrency(GeradorDados.randomNumberDinamic(1,100)) if randomValue != 0 else randomText
 
-            apexValues = {
+            apexValues = staticValues if isinstance(staticValues,dict) else {
                 "P85_JUROS_CONTA_RECEBER":jurosDiaValor,
                 "P85_MULTA_CONTA_RECEBER":multaValor,
                 "P85_JUROS_MES_CONTA_RECEBER":jurosMesValor
             }
 
-            apexGetValue = {}
-            for seletor, value in apexValues.items():
-                Apex.setValue(browser,seletor,value)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                                message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="ContaReceber", error_details="")
-                
-                apexGetValue[seletor] = FuncoesUteis.formatBrCurrency(Apex.getValue(browser,seletor))
-                Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                                message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                routine="ContaReceber", error_details="")
-                
-            itens = {
-                "JurosDia" : (jurosDiaValor,FuncoesUteis.stringToFloat(apexGetValue["P85_JUROS_CONTA_RECEBER"].replace('%','').strip())),
-                "Multa" : (multaValor,FuncoesUteis.stringToFloat(apexGetValue["P85_MULTA_CONTA_RECEBER"].replace('%','').strip())),
-                "JurosMes":(jurosMesValor,FuncoesUteis.stringToFloat(apexGetValue["P85_JUROS_MES_CONTA_RECEBER"].replace('%','').strip()))
-            }
+            print(f"valores apex {apexValues}")
+           
+            campos = FuncoesUteis.prepareToCompareValues(init,apexValues,True)
+            FuncoesUteis.compareValues(init,campos)
 
-            FuncoesUteis.compareValues(init,itens)
 
         except TimeoutException as e:
             Log_manager.add_log(

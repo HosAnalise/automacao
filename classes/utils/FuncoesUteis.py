@@ -210,36 +210,36 @@ class FuncoesUteis:
             try:
 
             
+                for seletor,value in apexValues.items():
+                    Apex.setValue(browser,seletor,value)
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
+                                            message=f"{seletor} teve o valor {value} inserido", 
+                                            routine="", error_details="")
+
+                    
+                
+
+                btnAplicaFiltros = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".t-Button.t-Button--hot.t-Button--simple.t-Button--stretch")))
+                btnText = btnAplicaFiltros.text
+                
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} encontrado",
+                        routine="",
+                        error_details=''
+                    )
+                btnAplicaFiltros.click()
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Botão {btnText} clicado",
+                        routine="",
+                        error_details=''
+                    )
 
                 
 
-                    for seletor,value in apexValues.items():
-                        Apex.setValue(browser,seletor,value)
-                        Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                                message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="", error_details="")
-
-                        
-                    
-
-                    btnAplicaFiltros = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".t-Button.t-Button--hot.t-Button--simple.t-Button--stretch")))
-                    btnText = btnAplicaFiltros.text
-                    
-                    Log_manager.add_log(
-                            application_type=env_application_type,
-                            level="INFO",
-                            message=f"Botão {btnText} encontrado",
-                            routine="",
-                            error_details=''
-                        )
-                    btnAplicaFiltros.click()
-                    Log_manager.add_log(
-                            application_type=env_application_type,
-                            level="INFO",
-                            message=f"Botão {btnText} clicado",
-                            routine="",
-                            error_details=''
-                        )
                     
 
         

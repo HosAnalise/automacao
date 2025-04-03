@@ -1,10 +1,10 @@
 import time
 from classes.rotinas.ContasReceber import ContaReceber
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from classes.utils.GerarDados import GeradorDados  
-from classes.utils.ApexUtil import Apex
+# from classes.utils.GerarDados import GeradorDados  
+# from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
-from classes.utils.Components import Components
+# from classes.utils.Components import Components
 
 
 
@@ -44,7 +44,6 @@ def test_contaReceber_editaContaReceber(init):
         }
         FuncoesUteis.aplyFilter(init,filters)
         ContaReceber.editaContaReceber(init)
-        ContaReceber.insereContaReceber(init,query)
         ContaReceber.detalhesContaReceber(init,query)
         ContaReceber.salvaContaReceber(init)
         
