@@ -1,5 +1,6 @@
 import time
 import random
+import webdriver_manager
 from classes.rotinas.ExtratoContas import ExtratoContas
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.GerarDados import GeradorDados  
@@ -29,10 +30,10 @@ def test_DevolverTransferencia(init):
 
         #fazendo a transferencia
         contaOrigem = "5290"
-        data = FuncoesUteis.simpleRandDate()
-        valorTransf = round(random.uniform(10, 230), 2)
-        numDoc = FuncoesUteis.simpleRandString(5, 8)
-        desc = FuncoesUteis.simpleRandString(7, 15)
+        data = FuncoesUteis.simpleRandDate(init)
+        valorTransf = f"{random.uniform(10, 230):.2f}".replace(".", ",")
+        numDoc = FuncoesUteis.simpleRandString(init, 5, 8)
+        desc = FuncoesUteis.simpleRandString(init, 7, 15)
 
         contaTransf = {
             "P78_CONTA_ORIGEM_ID" : contaOrigem,
@@ -42,42 +43,61 @@ def test_DevolverTransferencia(init):
             "P78_NUMERO_DOCUMENTO" : numDoc,
             "P78_DESCRICAO" : desc
         }
+        for chave, valor in contaTransf.items():
+            print(f"{chave}: {valor}")
 
-        contaTransfPre = {
+
+        contaTransfPre = { #usado para comparar com a transferencia devolvida
             "P78_CONTA_ORIGEM_ID" : conta,
             "P78_CONTA_DESTINO_ID" : contaOrigem, #trocado para fazer a comparação com a transferencia devolvida
             "P78_DATA_TRANSFERENCIA" : data,
             "P78_VALOR_TRANSFERENCIA" : valorTransf,
-            "P78_NUMERO_DOCUMENTO" : numDoc
+            "P78_NUMERO_DOCUMENTO" : numDoc,
+            "P78_DESCRICAO" : f"DEVOLVIDO - {desc}"
         }
-        time.sleep(1)
-        FuncoesUteis.guaranteeShowHideFilter(init, "#P76_CONTAS", 0)
-        ExtratoContas.novaTransferencia(init, "", True, contaTransf)
 
         filtros = {
             "P76_CONTAS" : conta,
             "P76_DATA_INICIAL" : data,
             "P76_DATA_FINAL" : data, #garante que o periodo é apenas um dia
-            "P76_VALOR_MIN" : str(valorTransf),
-            "P76_VALOR_MAX" : str(valorTransf),
+            #"P76_VALOR_MIN" : valorTransf, #retirados pois não está achando a transferencia quando usando o valor
+            #"P76_VALOR_MAX" : valorTransf, #posso depender do numDoc para filtrar, a chance de repetir a string é de 0,000000000000018%
             "P76_NUMERO_DOCUMENTO" : numDoc
         }
 
-        FuncoesUteis.guaranteeShowHideFilter(init, "#P76_CONTAS", 1)
+        time.sleep(1)
+        FuncoesUteis.guaranteeShowHideFilter(init, ExtratoContas.filterSelector, 0) #depois, substituir por ExtratoContas.filterSelector
+
+        Components.btnClick(init, "#novaTransferencia")
+        WebDriverWait(browser, 30).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "[title='Cadastro de Transferência']")))
+
+        FuncoesUteis.setFilters(init, contaTransf)
+        Components.btnClick(init, "#B5886099528185118")
+
+        browser.switch_to.default_content()
+
+        FuncoesUteis.guaranteeShowHideFilter(init, ExtratoContas.filterSelector, 1)
         FuncoesUteis.setFilters(init, filtros)
         Components.btnClick(init, "#filtrar")
 
         ExtratoContas.editaExtratoConta(init)
+        WebDriverWait(browser, 30).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "[title='Cadastro de Transferência']")))
+
 
         Components.btnClick(init, "#btnDevolver")
-        Components.btnClick(init, ".js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot")
+        time.sleep(1)
+        browser.switch_to.default_content()
 
-        FuncoesUteis.guaranteeShowHideFilter(init, "#P76_CONTAS", 1)
+        browser.execute_script("$('.js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot').click()")
+        
+        FuncoesUteis.guaranteeShowHideFilter(init, ExtratoContas.filterSelector, 1)
+
         FuncoesUteis.setFilters(init, filtros)
-        Apex.setValue(browser, "#P76_ORIGEM", "4")
+        Apex.setValue(browser, "P76_ORIGEM", "4")
         Components.btnClick(init, "#filtrar")
 
         ExtratoContas.editaExtratoConta(init)
+        WebDriverWait(browser, 30).until(EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "[title='Cadastro de Transferência']")))
 
         contaTransfDevolvida = {}
         for key, value in contaTransfPre.items():
@@ -91,15 +111,16 @@ def test_DevolverTransferencia(init):
             Log_manager.add_log(
                     application_type=env_application_type,
                     level="INFO",
-                    message=f"A Descrição Está Incorreta, Valor Obtido = {contaTransfDevolvida['P78_DESCRICAO']}",
+                    message=f"Descrição Incorreta, Valor Obtido = {contaTransfDevolvida['P78_DESCRICAO']}, Valor Original = {contaTransf['P78_DESCRICAO']}",
                     routine="",
                     error_details=""
                 )
+
         else:
             Log_manager.add_log(
                     application_type=env_application_type,
                     level="INFO",
-                    message=f"A Descrição Está Correta, Valor Obtido = {contaTransfDevolvida['P78_DESCRICAO']}",
+                    message=f"Descrição Correta, Valor Obtido = {contaTransfDevolvida['P78_DESCRICAO']}, Valor Original = {contaTransf['P78_DESCRICAO']}",
                     routine="",
                     error_details=""
                 )

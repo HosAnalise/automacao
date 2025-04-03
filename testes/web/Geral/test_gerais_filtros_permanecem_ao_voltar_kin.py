@@ -1,4 +1,5 @@
 import time
+from classes.rotinas.ExtratoContas import ExtratoContas
 from classes.rotinas.ContasPagar import ContasPagar
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.GerarDados import GeradorDados  
@@ -19,9 +20,9 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
 
-    for i in range(2):
+    for i in range(3):
 
-        if i == 0: #contas a pagar
+        if i == 0:
             rotina = "Contas a Pagar"
             page = ContasPagar.url
             voltar = '#B103339792839912425' 
@@ -47,7 +48,7 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
                 }
 
 
-        else: #contas a receber
+        elif i == 1:
             rotina = "Contas a Receber"
             page = ContaReceber.url
             voltar = '#B118649869079784509'
@@ -67,7 +68,7 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
                     "P84_VALOR_INICIAL": "269,58",
                     "P84_VALOR_FINAL": "269,58",
                     "P84_ORIGEM": "1",
-                    #"P84_VENDA_ORIGEM": "1", não funcionando, erro de is not defined
+                    #"P84_VENDA_ORIGEM": "1", não funcionando, erro 'is not defined'
                     "P84_CONVENIO": "-1",
                     "P84_NR_CONTA": "",
                     "P84_RECEBIDO_EM": "3",
@@ -77,13 +78,31 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
                 }
 
 
+        # else:
+        #     rotina = "Extrato de Contas"
+        #     page = ExtratoContas.url
+        #     voltar = '#B116404984751394426'
+        #     filters = {
+        #         "P76_CONTAS",
+        #         "P76_DATA_INICIAL",
+        #         "P76_DATA_FINAL",
+        #         "P76_SITUACAO",
+        #         "P76_VALOR_MIN",
+        #         "P76_VALOR_MAX",
+        #         "P76_NUMERO_DOCUMENTO",
+        #         "P76_CATEGORIAS",
+        #         "P76_CENTRO_CUSTO",
+        #         "P76_ORIGEM"
+        #     }
+
+
         try:
             btnSalvar = ".t-Button.t-Button--hot.t-Button--simple.t-Button--stretch"
 
             FuncoesUteis.goToPage(init, page)
             seletor = ContasPagar.filterSelector if i == 0 else ContaReceber.filterSelector
 
-            WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
+            FuncoesUteis.guaranteeShowHideFilter(init, seletor, 1)
             FuncoesUteis.setFilters(init, filters)
             if i == 1:
                 time.sleep(1)
@@ -114,9 +133,6 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
             browser.execute_script("confirm()")
             print("confirm Clicado")
 
-            filtersVolta = {}
-
-
             try:
                 alert = browser.switch_to.alert
                 print(f"Alert encontrado: {alert.text}")
@@ -130,6 +146,9 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
                 )
             except NoAlertPresentException:
                 print("Nenhum alert presente.")
+
+            filtersVolta = {}
+            FuncoesUteis.guaranteeShowHideFilter(init, seletor, 1)
 
             for key, value in filters.items():
                 try:

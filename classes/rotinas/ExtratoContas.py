@@ -362,43 +362,27 @@ class ExtratoContas:
                                                 routine="", error_details="")
                     
                     if contaDestino:
-                        values = value if seletor == "P78_CONTA_DESTINO_ID" and isinstance(staticValues,dict) else contaDestinoIdValue
+                        values = value if seletor == "P78_CONTA_DESTINO_ID" and isinstance(staticValues,dict) else 0 if not randomQueries else contaDestinoIdValue
                         Apex.setValue(browser,"P78_CONTA_DESTINO_ID",values)
                         contaDestinoValue =  Apex.getValue(browser,"P78_CONTA_DESTINO_ID")
 
                 origem =   Apex.getValue(browser,"P78_ORIGEM") 
 
-                campos = {
-                        "contaOrigemId" : (apexGetValue["P78_CONTA_ORIGEM_ID"],contaOrigemIdValue),
-                        "contaDestinoId" : (contaDestinoValue,contaDestinoIdValue),
-                        "dataTransferencia": (apexGetValue["P78_DATA_TRANSFERENCIA"],dataValue),
-                        "formaTransferencia":(apexGetValue["P78_FORMA_TRANSFERENCIA"],formaTransferenciaValue),
-                        "numeroDocumento":(apexGetValue["P78_NUMERO_DOCUMENTO"],documento),
-                        "valorTransferencia" : (apexGetValue["P78_VALOR_TRANSFERENCIA"],randomValue),
-                        "formaPagamento": (apexGetValue["P78_FORMA_PAGAMENTO"],formaPagamentoValue),
-                        "origem":(origem,text),
-                        "descricao": (apexGetValue["P78_DESCRICAO"],descricaoText)
-                }
+                # campos = {
+                #         "contaOrigemId" : (apexGetValue["P78_CONTA_ORIGEM_ID"],contaOrigemIdValue),
+                #         "contaDestinoId" : (contaDestinoValue,values),
+                #         "dataTransferencia": (apexGetValue["P78_DATA_TRANSFERENCIA"],dataValue),
+                #         "formaTransferencia":(apexGetValue["P78_FORMA_TRANSFERENCIA"],formaTransferenciaValue),
+                #         "numeroDocumento":(apexGetValue["P78_NUMERO_DOCUMENTO"],documento),
+                #         "valorTransferencia" : (apexGetValue["P78_VALOR_TRANSFERENCIA"],randomValue),
+                #         "formaPagamento": (apexGetValue["P78_FORMA_PAGAMENTO"],formaPagamentoValue),
+                #         "origem":(origem,text),
+                #         "descricao": (apexGetValue["P78_DESCRICAO"],descricaoText)
+                # }
                 
-                FuncoesUteis.compareValues(init,campos)
+                # FuncoesUteis.compareValues(init,campos)
 
-                btnSaveCadastroTransferenciaResumido = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B89271388586096015")))
-                Log_manager.add_log(
-                        application_type=env_application_type,
-                        level="INFO",
-                        message="o botão btnSaveCadastroTransferenciaResumido foi encontrado",
-                        routine="",
-                        error_details=''
-                    )
-                
-                btnSaveCadastroTransferenciaResumido.click()
-                Log_manager.add_log(
-                        application_type=env_application_type,
-                        level="INFO",
-                        message="o botão btnSaveCadastroTransferenciaResumido foi clicado",
-                        routine="",
-                        error_details=''
-                    )
+                Components.btnClick(init,"#B5886099528185118")
                 
                 Components.has_alert(init)
                 Components.has_alert_sucess(init)
@@ -1115,34 +1099,36 @@ class ExtratoContas:
         env_application_type = getEnv.get("WEB")    
         dataId = "data id não encontrado"  
         try:
-           
-            edit = WebDriverWait(browser,120).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit")))
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="INFO",
-                message="Extrato de Conta editavel encontrada",
-                routine="ContaPagar",
-                error_details=''
-            )
 
-            dataId = edit.get_attribute("data-id")
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="INFO",
-                message="Extrato de Conta data-id capturado",
-                routine="ContaPagar",
-                error_details=''
-            )
+            hasSpin = Components.has_spin(init)
+            if hasSpin:
+                edit = WebDriverWait(browser,120).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit.icon-color.edit")))
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message="Extrato de Conta editavel encontrada",
+                    routine="ContaPagar",
+                    error_details=''
+                )
 
-            edit.click()
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="INFO",
-                message="Extrato de Conta editavel clicada. Inicio da edição da conta!",
-                routine="ContaPagar",
-                error_details=''
-            )
-         
+                dataId = edit.get_attribute("data-id")
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message="Extrato de Conta data-id capturado",
+                    routine="ContaPagar",
+                    error_details=''
+                )
+
+                edit.click()
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message="Extrato de Conta editavel clicada. Inicio da edição da conta!",
+                    routine="ContaPagar",
+                    error_details=''
+                )
+            
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))

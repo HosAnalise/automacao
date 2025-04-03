@@ -25,13 +25,14 @@ def test_ExportarCotacao(init):
     
     try:
         time.sleep(2)
-        print("Parou Aqui 1")
+
         Components.btnClick(init, "#cotacoesFinalizadas_tab")
-        print("Parou Aqui 2")
+
+        FuncoesUteis.guaranteeShowHideFilter(init, "#P1_DATA_INICIO", 1)
         FuncoesUteis.setFilters(init, filters)
-        print("Parou Aqui 3")
+
         Components.btnClick(init, "#btnFiltrar")
-        print("Parou Aqui 4")
+
         Components.btnClick(init, ".fa.fa-edit")
 
         PortalCotacoes.exportCotacao(init)
