@@ -3,8 +3,9 @@ from classes.rotinas.ContasPagar import ContasPagar
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.Components import Components
 from classes.utils.FuncoesUteis import FuncoesUteis
+import pytest
 
-
+@pytest.mark.docker
 def test_contaPagar_insereConta_despesas(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
@@ -36,7 +37,6 @@ def test_contaPagar_insereConta_despesas(init):
         ]      
 
         filterValues = FuncoesUteis.combine_lists_to_dict(ContasPagar.filters,values)
-        print(f"valor dos filtros {filterValues}")
         FuncoesUteis.setFilters(init,filterValues)
         seletor = "#filtrar"
         Components.btnClick(init,seletor)

@@ -1,6 +1,9 @@
 from datetime import datetime,timedelta
+import os
 import random
 import time
+import pandas as pd
+import requests
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -10,6 +13,8 @@ from classes.utils.GerarDados import GeradorDados
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
+from pypdf import PdfReader
+
 
 
 
@@ -593,75 +598,139 @@ class ExtratoContas:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")            
+        env_application_type = getEnv.get("WEB")      
 
 
         try:    
-
-            btnGerarRelatorio = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B131918532644441921")))
-            btnText = btnGerarRelatorio.text
-            
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Botão {btnText} encontrado",
-                    routine="",
-                    error_details=''
-                )
-            btnGerarRelatorio.click()
-            Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Botão {btnText} clicado",
-                    routine="",
-                    error_details=''
-                )
+            original_window = browser.current_window_handle
+            Components.btnClick(init,"#B131918532644441921")
             
             seletor = "[title='Gerar Relatório Extrato de Contas']"
             has_frame = Components.has_frame(init,seletor)
 
             if has_frame:
-                btnGerarPdf = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".t-Cards-item.gerarPDF")))
-                btnGerarExcel = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".t-Cards-item.gerarXLSX")))
+               
+                btnSelector =  ".t-Cards-item.gerarPDF" if pdfOrExcel == "PDF" else ".t-Cards-item.gerarXLSX"   if pdfOrExcel == "Excel" else None
+                Components.btnClick(init,btnSelector)
 
-                if pdfOrExcel:
-                    btnText = btnGerarPdf.text
-                    
-                    Log_manager.add_log(
-                            application_type=env_application_type,
-                            level="INFO",
-                            message=f"Botão {btnText} encontrado",
-                            routine="",
-                            error_details=''
-                        )
-                    btnGerarPdf.click()
-                    Log_manager.add_log(
-                            application_type=env_application_type,
-                            level="INFO",
-                            message=f"Botão {btnText} clicado",
-                            routine="",
-                            error_details=''
-                        )
-                else:
-                    btnText = btnGerarExcel.text
-                    
-                    Log_manager.add_log(
-                            application_type=env_application_type,
-                            level="INFO",
-                            message=f"Botão {btnText} encontrado",
-                            routine="",
-                            error_details=''
-                        )
-                    btnGerarExcel.click()
-                    Log_manager.add_log(
-                            application_type=env_application_type,
-                            level="INFO",
-                            message=f"Botão {btnText} clicado",
-                            routine="",
-                            error_details=''
-                        )
+                browser.switch_to.default_content()
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message="Voltando pro contexto principal", routine="", error_details='')
 
-            
+                WebDriverWait(browser,30).until(EC.number_of_windows_to_be(2))
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"janelas encontradas", routine="", error_details='')
+                
+                nextStep = False
+                for window_handle in browser.window_handles:
+                    if window_handle != original_window:
+                        browser.switch_to.window(window_handle)                    
+                        nextStep = True
+                        break                
+
+                        
+                if nextStep:
+                    if pdfOrExcel == "PDF":
+                        WebDriverWait(browser,120).until(EC.url_contains("JasperReportsIntegration"))                   
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", message="URL contém 'JasperReportsIntegration'", routine="", error_details='')
+
+                        url = browser.current_url
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"URL do arquivo: {url}", routine="", error_details='')
+
+                        archive = "mypdf.pdf"  
+                        response = requests.get(url, stream=True)
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Fazendo download do arquivo: {archive}", routine="", error_details='')
+
+                        if response.status_code == 200:
+                            with open(archive, 'wb') as f:
+                                f.write(response.content)
+                            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Arquivo {archive} salvo com sucesso", routine="", error_details='')      
+
+                        else:
+                            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=f"Falha ao baixar o arquivo {archive}", routine="", error_details='')
+
+                    
+                    # elif pdfOrExcel == "Excel":
+                    #     print("caiua aqui")
+                    #     # Busca a requisição com base no content-type
+                    #     for request in browser.requests:
+                    #         print("caiu dentro do for")
+                    #         if request.response:
+                    #             content_type = request.response.headers.get("Content-Type", "")
+                    #             print(f"conteudo js :{content_type}")
+                    #             if "application/vnd.openxmlformats" in content_type:
+                    #                 # Salva o conteúdo
+                    #                 with open(download_dir + r"\relatorio.xlsx", 'wb') as f:
+                    #                     f.write(request.response.body)
+                    #                 print("Arquivo salvo com sucesso!")
+                    #                 break
+
+                    
+
+                    if pdfOrExcel == "PDF":
+                        reader = PdfReader(archive)
+                        text = reader.pages[0].extract_text() or ""
+
+                        if not text.strip():
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message="O PDF está vazio",
+                                routine="",
+                                error_details=""
+                            )
+                        else:
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"PDF contém texto: {text}",
+                                routine="",
+                                error_details=""
+                            )
+
+                    elif pdfOrExcel == "Excel":
+                        
+                        df = pd.read_excel(archive,engine="openpyxl")
+
+
+                        if df.empty:
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="ERROR",
+                                message="O DataFrame está vazio",
+                                routine="",
+                                error_details=""
+                            )
+                        else:
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"DataFrame lido do Excel:\n{df.iloc[:5, :5]}",
+                                routine="",
+                                error_details=""
+                            )
+                    
+                    try:
+                        os.remove(archive)
+                        Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"{archive} excluido",
+                                routine="",
+                                error_details=""
+                            )
+                    except Exception as e:    
+                        Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="ERROR",
+                                message=f"{archive} não foi excluido",
+                                routine="",
+                                error_details=""
+                            )  
+                        
+
+
+                
+
+
 
     
         except (TimeoutException, NoSuchElementException, Exception) as e:

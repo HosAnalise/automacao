@@ -337,7 +337,7 @@ class FuncoesUteis:
 
 #Oculta ou mostra barra de filtros
     @staticmethod
-    def showHideFilter(init,seletor,showHide):
+    def showHideFilter(init,seletor):
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -345,8 +345,8 @@ class FuncoesUteis:
 
         try:
 
-            if showHide:
-                WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
+            if seletor:
+                WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
                 
            
             script ="$('button#t_Button_rightControlButton > span').click()"
@@ -413,36 +413,16 @@ class FuncoesUteis:
                     error_details=str(e)
                 )
 
-        except Exception as e:  # Captura qualquer outro erro inesperado
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="Erro desconhecido ao acessar a página",
-                routine="",
-                error_details=str(e)
-            )
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
             screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
             if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
-#END showHideFilter(init,seletor,showHide)
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="Prestador/Empresa", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="Prestador/Empresa", application_type=env_application_type, error_details=str(e))
+#END showHideFilter(init,seletor)
 
 
 

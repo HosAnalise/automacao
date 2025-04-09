@@ -8,7 +8,9 @@ from classes.utils.FuncoesUteis import FuncoesUteis
 
 
 
+import pytest
 
+@pytest.mark.docker
 def test_contaPagar_insereConta_detalhes(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init

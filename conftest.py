@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import os
 import socket
+import tempfile
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -123,9 +124,10 @@ def get_browser_options(browser_name,headless):
         options.add_argument("--disable-dev-shm-usage")  # Uso de memória compartilhada
         options.add_argument("--disable-gpu") 
         if headless == "Yes":
-            options.add_argument("--headless")  
+            options.add_argument("--headless=new")  
 
-        
+        user_data_dir = tempfile.mkdtemp()
+        options.add_argument(f"--user-data-dir={user_data_dir}")
 
     elif browser_name.lower() == "firefox":
         options = webdriver.FirefoxOptions()

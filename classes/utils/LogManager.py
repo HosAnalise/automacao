@@ -62,17 +62,18 @@ class LogManager:
         # Adiciona o log ao array de logs
         self.logs.append(log_entry)
 
-    def insert_logs_for_execution(self, execution_id=None):
+    def insert_logs_for_execution(self,logName=None):
         """
         Insere todos os logs coletados durante a execução em um único documento no banco de dados.
         
         :param execution_id: ID único da execução do script (opcional)
         """
-        if not execution_id:
-            execution_id = self._generate_execution_id()  # Gerar novo ID caso não seja fornecido
+       
+        execution_id = self._generate_execution_id()  # Gerar novo ID caso não seja fornecido
 
         execution_entry = {
-            "execution_id": execution_id,  # ID da execução
+            
+            "execution_id": f"{logName}_{execution_id}",  # ID da execução
             "dev": self.dev,
             "logs": self.logs,  # Lista de logs
             "timestamp": timestamp

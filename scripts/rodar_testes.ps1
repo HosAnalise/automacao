@@ -9,7 +9,9 @@ $timeToRunScripts = 20  # Número de repetições
 
 # Define as paths dos testes
 $paths = @(
-	"testesWeb\ContasReceber\test_contaReceber.py::test_module_contasReceber"
+	"testes\Web\ContasReceber\",
+	"testes\Web\ContasPagar\"
+
 )
 
 # Executa os testes pelo número de vezes definido
