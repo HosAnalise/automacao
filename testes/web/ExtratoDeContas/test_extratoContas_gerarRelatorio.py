@@ -1,9 +1,10 @@
 import time
+import pytest
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.rotinas.ExtratoContas import ExtratoContas
 
-
+@pytest.mark.docker
 def test_gerarRelatorio(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init

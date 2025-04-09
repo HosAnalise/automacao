@@ -1,5 +1,6 @@
 from datetime import datetime
 import locale
+from multiprocessing.spawn import prepare
 import socket
 import time
 import pytest
@@ -346,8 +347,17 @@ class FuncoesUteis:
         try:
 
             if seletor:
-                WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
-                
+                try:
+                    WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
+                except (TimeoutException,NoSuchElementException,Exception) as e:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="ERROR",
+                        message=f"Erro: {str(e)}",
+                        routine="",
+                        error_details=str(e)
+                    )
+                    
            
             script ="$('button#t_Button_rightControlButton > span').click()"
             browser.execute_script(script)   
@@ -827,7 +837,6 @@ class FuncoesUteis:
         return campos
 
 
-
     
 # END setValue(init,seletor,value)
 
@@ -856,8 +865,8 @@ class FuncoesUteis:
 
         try:
             # Verifica se o filtro lateral já está aberto
-            elemento = browser.find_elements(By.CSS_SELECTOR, seletor)  
-            if elemento and elemento[0].is_displayed():
+            elemento = WebDriverWait(browser,10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, seletor)))  
+            if elemento:
                 open = 1
                 status = "Aberto"
             else:

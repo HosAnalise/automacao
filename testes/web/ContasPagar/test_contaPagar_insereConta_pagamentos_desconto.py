@@ -16,7 +16,7 @@ def test_contaPagar_insereConta_pagamentos_desconto(init):
         FuncoesUteis.goToPage(init,ContasPagar.url)
         query = FuncoesUteis.getQueryResults(init,ContasPagar.queries)
         
-        FuncoesUteis.showHideFilter(init,ContasPagar.filterSelector,False)
+        FuncoesUteis.showHideFilter(init,ContasPagar.filterSelector)
         ContasPagar.insereContaPagar(init,query)
         ContasPagar.pagamentosContaPagar(init)
         ContasPagar.lancarDescontoCondicional(init)

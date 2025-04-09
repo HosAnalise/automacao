@@ -24,7 +24,7 @@ def test_contaReceber_insereConta_repeticao(init):
 
         FuncoesUteis.goToPage(init,ContaReceber.url)
         query = FuncoesUteis.getQueryResults(init,ContaReceber.queries)
-        FuncoesUteis.showHideFilter(init,ContaReceber.filterSelector,True)
+        FuncoesUteis.showHideFilter(init,ContaReceber.filterSelector)
         insereContaReceber = ContaReceber.insereContaReceber(init,query)
         ContaReceber.salvaContaReceber(init)
         if insereContaReceber == 1:
