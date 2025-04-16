@@ -63,7 +63,7 @@ def test_contaReceber_insereConta_repeticao(init):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution("ContaReceber")
 
         browser.quit()
 

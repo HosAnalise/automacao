@@ -349,18 +349,33 @@ class FuncoesUteis:
             if seletor:
                 try:
                     WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Elemento {seletor} encontrado",
+                        routine="",
+                        error_details=''
+                    )
+                
                 except (TimeoutException,NoSuchElementException,Exception) as e:
                     Log_manager.add_log(
                         application_type=env_application_type,
                         level="ERROR",
-                        message=f"Erro: {str(e)}",
+                        message=f"Erro ao localizar seletor {seletor}. Err : {e}",
                         routine="",
                         error_details=str(e)
                     )
-                    
-           
+            
+            messageFilter = "Filtro Lateral fechado" if seletor else "Filtro Lateral aberto"  
             script ="$('button#t_Button_rightControlButton > span').click()"
-            browser.execute_script(script)   
+            browser.execute_script(script)  
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=messageFilter,
+                routine="",
+                error_details=''
+            ) 
             
     
         except TimeoutException as e:
@@ -429,9 +444,9 @@ class FuncoesUteis:
             if screenshot_path:
                 success = browser.save_screenshot(screenshot_path)
                 if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="Prestador/Empresa", application_type=env_application_type, error_details=str(e))
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
                 else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="Prestador/Empresa", application_type=env_application_type, error_details=str(e))
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 #END showHideFilter(init,seletor)
 
 

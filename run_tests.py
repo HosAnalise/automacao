@@ -3,8 +3,8 @@ import subprocess
 import time as time_module
 
 # Configuração do horário permitido
-HORA_INICIO = time(16, 0)
-HORA_FIM = time(8, 0)
+HORA_INICIO = time(00, 0)
+HORA_FIM = time(6, 0)
 INTERVALO_VERIFICACAO = 1800  # Intervalo de verificação em segundos (30 minutos)
 
 def dentro_do_horario(hora_inicio, hora_fim):
