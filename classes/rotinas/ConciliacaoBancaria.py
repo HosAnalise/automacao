@@ -1,14 +1,20 @@
 
+from calendar import c
+import faker
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from sqlalchemy import true
 from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
 from classes.rotinas.ExtratoContas import ExtratoContas
-
+from classes.rotinas.ContasReceber import ContaReceber
+from time import sleep
+import random
+from faker import Faker as fake
 
 
 class ConciliacaoBancaria:
@@ -18,11 +24,27 @@ class ConciliacaoBancaria:
         "P154_FILTRO_CONTA",
         "P154_FILTRO_PERIODO_POR",
         "P154_DATA_INICIAL",
-        "P154_DATA_INICIAL",
+        "P154_DATA_FINAL",
         "P154_FILTRO_SITUACAO"
     ]
-        
-    
+
+    camposRegra = {
+        "P268_DESCRICAO_REGRA",
+        "P268_TIPO_LANCAMENTO",
+        "P268_CONTA",
+        "P268_TIPO_SELECAO",
+        "P268_DESCRICAO_LANCAMENTO_BANCARIO",
+        "P268_TIPO_TRATAMENTO",
+        "P268_TRANSFERENCIA_CONTA_ORIGEM_ID",
+        "P268_TRANSFERENCIA_CONTA_DESTINO_ID",
+        "P268_TRANSFERENCIA_FORMA_TRANSFERENCIA_ID",
+	    "P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO",
+        "P268_CONTA_PAGAR_PESSOA_ID",
+        "P268_TRANSFERENCIA_DESCRICAO",
+        "P268_CONTA_PAGAR_CATEGORIA_FINANCEIRA_ID",
+        "P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO",
+        "P268_CONTA_PAGAR_DESCRICAO"
+    }
 
     @staticmethod
     def insereConciliacao(init):
@@ -812,9 +834,7 @@ class ConciliacaoBancaria:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
         
-        
-
-        
+#END conciliarLancamento(init)
 
     @staticmethod
     def processaConciliacaoAutomatica(init,yesNot):
@@ -971,4 +991,349 @@ class ConciliacaoBancaria:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
         
+#END desconciliaLancamento(init,especifico)
+
+    @staticmethod
+    def criarRegraConciliacao(init:tuple, dictConfigRecebido:dict):
+        """
+        :params init :
         
+        :params dictConfigRecebido :
+        Dicionário contendo as configurações recebidas para a criação da regra de conciliação bancária.
+        """
+        #deve ser chamada apenas quando estiver na aba "Regras da Conciliação Bancária" e com o filtro lateral fechado.
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        try:
+
+            query = { "conta1": """
+                                SELECT CONTA.CONTA_ID
+                                FROM ERP.CONTA
+                                JOIN ERP.CONTA_ESPECIFICACAO ON CONTA.CONTA_ID = CONTA_ESPECIFICACAO.CONTA_ID
+                                LEFT JOIN ERP.LOJA ON LOJA.LOJA_ID = CONTA_ESPECIFICACAO.LOJA_ID
+                                WHERE CONTA_ESPECIFICACAO.GRUPO_LOJA_ID = 1501
+                                    AND CONTA.TIPO_CONTA_ID IN (1, 2)
+                                    AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
+                                    AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
+                            """,
+            "conta2": """
+                                        SELECT CONTA.CONTA_ID
+                                        FROM ERP.CONTA
+                                        JOIN ERP.CONTA_ESPECIFICACAO ON CONTA.CONTA_ID = CONTA_ESPECIFICACAO.CONTA_ID
+                                        LEFT JOIN ERP.LOJA ON LOJA.LOJA_ID = CONTA_ESPECIFICACAO.LOJA_ID
+                                        WHERE CONTA_ESPECIFICACAO.GRUPO_LOJA_ID = 1501
+                                            AND CONTA.TIPO_CONTA_ID IN (1, 2)
+                                            AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
+                                            AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
+                                    """}
+
+            queryConta = FuncoesUteis.getQueryResults(init, query)
+
+            queryContaReceber = FuncoesUteis.getQueryResults(init, ContaReceber.queries)
+
+
+
+            #gera configurações aleatorias para o dicionario de configurações default, os campos gerados fora de dicionarios influenciam na criação de outros campos
+            if dictConfigRecebido["tipoLancamento"] is None:
+                tipoLancamento = random.randint(1, 2)
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"tipoLancamento gerado aleatóriamente: {tipoLancamento}",
+                    routine="",
+                    error_details=""
+                )
+            else:
+                tipoLancamento = dictConfigRecebido["tipoLancamento"]
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"tipoLancamento recebido: {tipoLancamento}",
+                    routine="",
+                    error_details=""
+                )
+
+            if dictConfigRecebido["tipoTratamento"] is None:
+                tipoTratamento = random.choice([1, 2, 5]) if tipoLancamento == 1 else random.choice([2, 4, 5])
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"tipoTratamento gerado aleatóriamente: {tipoTratamento}",
+                    routine="",
+                    error_details=""
+                )
+            else:
+                tipoTratamento = dictConfigRecebido["tipoTratamento"]
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"tipoTratamento recebido: {tipoTratamento}",
+                    routine="",
+                    error_details=""
+                )
+            
+            if tipoTratamento in [1,4]: #Conta a Receber / Pagar
+                dictConfigEspecificDefault = { #apenas os campos que aparecem dependendo do tipo de tratamento, será mergado com a dictConfigTelaDefault depois para gerar o dictConfigDefault
+                "cliente" : queryContaReceber["Query_queryCliente"],
+                "categFinanceira" : queryContaReceber["Query_queryCategoriaFinanceira"],
+                "utilizarDescricao" : random.randint(0, 1)
+                }
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"cliente gerado aleatóriamente: {dictConfigEspecificDefault['cliente']} | categFinanceira gerada aleatóriamente: {dictConfigEspecificDefault['categFinanceira']} | utilizarDescricao gerada aleatóriamente: {dictConfigEspecificDefault['utilizarDescricao']}",
+                    routine="",
+                    error_details=""
+                )
+
+            elif tipoTratamento == 2: #Transferencia
+                dictConfigEspecificDefault = {
+                "conta2" : queryConta["Query_conta2"],
+                "formaTransferencia" : random.randint(1, 5),
+                "utilizarDescricao" : random.randint(0, 1)
+                }
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"conta2 gerada aleatóriamente: {dictConfigEspecificDefault['conta2']} | formaTransferencia gerada aleatóriamente: {dictConfigEspecificDefault['formaTransferencia']} | utilizarDescricao gerada aleatóriamente: {dictConfigEspecificDefault['utilizarDescricao']}",
+                    routine="",
+                    error_details=""
+                )
+
+            try:
+                if dictConfigEspecificDefault["utilizarDescricao"] == 1 or dictConfigRecebido["utilizarDescricao"] == 1:
+                    dictConfigEspecificDefault["descricaoTratamento"] = GeradorDados.simpleRandString(init, 20, 36, "descricaoTratamento")
+
+                else:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"utilizarDescricao não será utilizado, logo não terá descricaoTratamento",
+                        routine="",
+                        error_details=""
+                    )
+            except:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"dictConfigEspecificDefault não foi criado, logo não terá descricaoTratamento",
+                    routine="",
+                    error_details=""
+                )
+
+            dictConfigTelaDefault = { #apenas os campos que apararecem ao abrir na tela
+            "descricaoRegra" : GeradorDados.simpleRandString(init, 20, 36, "descricaoRegra"),
+            "status" : random.randint(1, 2),
+            "tipoLancamento" : tipoLancamento,
+            "conta1" : queryConta["Query_conta1"],
+            "tipoSelecao" : random.randint(1, 2),
+            "descricaoLancamento" : GeradorDados.simpleRandString(init, 20, 36, "descricaoLancamento"),
+            "tipoTratamento" : tipoTratamento,
+            "salvar" : 0
+            }
+
+            try:
+                """
+                #recebe os valores default e os valores aleatorios, vai receber 2 dicionarios, um com os campos que tem em tela, e outros que são dependentes
+                caso a dictConfigEspecificDefault não existir, o dicionario default será apenas do dictConfigTelaDefault
+                """
+                dictConfigDefault = dictConfigTelaDefault | dictConfigEspecificDefault 
+            except NameError:
+                dictConfigDefault = dictConfigTelaDefault
+
+            # é construido com base nos valores defaults, porém pode ser sobreescrito por possiveis valores inseridos manualmente quando metodo for chamado
+            dictConfigFinal = {}
+
+            # Primeiro: adiciona tudo da dictConfigRecebido, desde que o valor seja diferente de None
+            for key, value in dictConfigRecebido.items():
+                if value is not None:
+                    dictConfigFinal[key] = value
+
+            # Segundo: adiciona valores do default apenas se a key já não existir na dictConfigFinal
+            for key, value in dictConfigDefault.items():
+                if key not in dictConfigFinal:
+                    dictConfigFinal[key] = value
+
+
+            dicionarioEscrito = { #dicionario incompleto, apenas as informações que aparecem quando o "Tipo de Tratamento" for "Ignorar Lançamento" / Default e seletores iguais
+            "P268_DESCRICAO_REGRA" : dictConfigFinal["descricaoRegra"],
+            "P268_DESCRICAO_LANCAMENTO_BANCARIO" : dictConfigFinal["descricaoLancamento"]
+            }
+
+            dicionarioPopup = { #dicionario incompleto, apenas as informações que aparecem quando o "Tipo de Tratamento" for "Ignorar Lançamento" / Default
+                "P268_TIPO_LANCAMENTO" : dictConfigFinal["tipoLancamento"], 
+                "P268_CONTA" : dictConfigFinal["conta1"],
+                "P268_TIPO_SELECAO" : dictConfigFinal["tipoSelecao"],
+                "P268_TIPO_TRATAMENTO" : dictConfigFinal["tipoTratamento"],
+                "P268_STATUS" : dictConfigFinal["status"]
+            }
+
+            #adicionando aos dicionarios dependendo de certos valores e seletores{
+            if dicionarioPopup["P268_TIPO_TRATAMENTO"] == 2: #Lançamento de Transferência
+                dicionarioPopup["P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO"] = dictConfigFinal["utilizarDescricao"]
+                dicionarioPopup["P268_TRANSFERENCIA_FORMA_TRANSFERENCIA_ID"] = dictConfigFinal["formaTransferencia"]
+
+                if(dicionarioPopup["P268_TIPO_LANCAMENTO"] == 1): #Entrada
+                    dicionarioPopup["P268_TRANSFERENCIA_CONTA_ORIGEM_ID"] = dictConfigFinal["conta2"]
+
+                else: #Saida
+                    dicionarioPopup["P268_TRANSFERENCIA_CONTA_DESTINO_ID"] = dictConfigFinal["conta2"]
+
+                if dicionarioPopup["P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO"] == 1:
+                    dicionarioEscrito["P268_TRANSFERENCIA_DESCRICAO"] = dictConfigFinal["descricaoTratamento"]
+
+
+            elif dicionarioPopup["P268_TIPO_TRATAMENTO"] == 1 or dicionarioPopup["P268_TIPO_TRATAMENTO"] == 4: #Lançamento de Conta a Receber ou Conta a Pagar
+
+                if dicionarioPopup["P268_TIPO_LANCAMENTO"] == 1: #Entrada -> Conta a Receber
+                    dicionarioPopup["P268_CONTA_RECEBER_UTILIZAR_DESCRICAO_LANCAMENTO"] = dictConfigFinal["utilizarDescricao"]
+                    dicionarioPopup["P268_CONTA_RECEBER_PESSOA_ID"] = dictConfigFinal["cliente"]
+                    dicionarioPopup["P268_CONTA_RECEBER_CATEGORIA_FINANCEIRA_ID"] = dictConfigFinal["categFinanceira"]
+
+                    if dicionarioPopup["P268_CONTA_RECEBER_UTILIZAR_DESCRICAO_LANCAMENTO"] == 1:
+                        dicionarioEscrito["P268_CONTA_RECEBER_DESCRICAO"] = dictConfigFinal["descricaoTratamento"]
+
+                elif dicionarioPopup["P268_TIPO_LANCAMENTO"] == 2: #Saida -> Conta a Pagar
+                    dicionarioPopup["P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO"] = dictConfigFinal["utilizarDescricao"]
+                    dicionarioPopup["P268_CONTA_PAGAR_PESSOA_ID"] = dictConfigFinal["cliente"]
+                    dicionarioPopup["P268_CONTA_PAGAR_CATEGORIA_FINANCEIRA_ID"] = dictConfigFinal["categFinanceira"]
+
+                    if dicionarioPopup["P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO"] == 1:
+                        dicionarioEscrito["P268_CONTA_PAGAR_DESCRICAO"] = dictConfigFinal["descricaoTratamento"]
+            # }
+
+
+            Components.btnClick(init, "#adicionaRegra")
+            
+            hasFrame = Components.has_frame(init,"[title='Cadastro de Regra para Conciliação Bancária']")
+            if hasFrame:
+
+                dictCompareOne = {
+                    "P268_TIPO_LANCAMENTO" : dicionarioPopup["P268_TIPO_LANCAMENTO"]
+                }
+                del dicionarioPopup["P268_TIPO_LANCAMENTO"]
+
+                tipoLancamento = FuncoesUteis.prepareToCompareValues(init, dictCompareOne)
+                sleep(2)
+                FuncoesUteis.compareValues(init, tipoLancamento)
+
+                dictCompareOne = {
+                    "P268_TIPO_TRATAMENTO" : dicionarioPopup["P268_TIPO_TRATAMENTO"]
+                }
+                del dicionarioPopup["P268_TIPO_TRATAMENTO"]
+
+                tipoTratamento = FuncoesUteis.prepareToCompareValues(init, dictCompareOne)
+                FuncoesUteis.compareValues(init, tipoTratamento)
+
+                if dicionarioPopup.get("P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO") or dicionarioPopup.get("P268_CONTA_RECEBER_UTILIZAR_DESCRICAO_LANCAMENTO") or dicionarioPopup.get("P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO"):
+                    campos = [
+                    "P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO",
+                    "P268_CONTA_RECEBER_UTILIZAR_DESCRICAO_LANCAMENTO",
+                    "P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO"
+                    ]
+
+                    for seletor in campos:
+                        if seletor in dicionarioPopup:
+                            Apex.setValue(browser, seletor, 0)
+                            
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"Desmarcado a checkbox {seletor}",
+                                routine="",
+                                error_details=""
+                            )
+                            del dicionarioPopup[seletor]
+
+                            break
+                        else:
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"Não encontrado nenhum seletor no dicionario",
+                                routine="",
+                                error_details=""
+                            )
+
+                campos = FuncoesUteis.prepareToCompareValues(init, dicionarioPopup)
+                FuncoesUteis.compareValues(init, campos)
+
+
+                campos = FuncoesUteis.prepareToCompareValues(init, dicionarioEscrito, True)
+                FuncoesUteis.compareValues(init, campos)
+                    
+                camposEscritos = {}
+                for seletor,value in dicionarioEscrito.items():
+
+                    try:
+                        element = browser.find_element(By.CSS_SELECTOR, f"#{seletor}")
+                        size_value = element.get_attribute("size")
+                        camposEscritos[seletor] = int(size_value)
+
+                        Log_manager.add_log(
+                            application_type=env_application_type,
+                            level="INFO",
+                            message=f"Campo {seletor} encontrado com valor {size_value}",
+                            routine="",
+                            error_details=""
+                        )
+
+                    except Exception as e:
+                        Log_manager.add_log(
+                            application_type=env_application_type,
+                            level="ERROR",
+                            message=f"Erro ao buscar o campo {seletor}: {str(e)}",
+                            routine="",
+                            error_details=str(e)
+                        )
+                        continue
+                    
+                    for key, value in camposEscritos.items():
+                        try:
+                            valorCampo = Apex.getValue(browser, key)
+                            tamanho = len(valorCampo)
+                            if tamanho > value:
+                                Log_manager.add_log(
+                                    application_type=env_application_type,
+                                    level="INFO",
+                                    message=f"Valor do campo {key} recebeu {valorCampo} de tamanho({tamanho}), é maior que o permitido ({value})",
+                                    routine="",
+                                    error_details=""
+                                )
+                            else:
+                                Log_manager.add_log(
+                                    application_type=env_application_type,
+                                    level="INFO",
+                                    message=f"Valor do campo {key} recebeu {valorCampo} de tamanho({tamanho}), dentro do permitido ({value})",
+                                    routine="",
+                                    error_details=""
+                                )
+                        except Exception as e:
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="ERROR",
+                                message=f"Erro ao verificar o valor do campo {key}: {str(e)}",
+                                routine="",
+                                error_details=str(e)
+                            )
+
+                botaoFinal = "#B170903369717813403" if dictConfigFinal["salvar"] else "#B170903131900813401"
+                Components.btnClick(init, botaoFinal)
+
+
+                browser.switch_to.default_content()
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+
+#END criarRegraConciliacao(init, dictConfigRecebido)

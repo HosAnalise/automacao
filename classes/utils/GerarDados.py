@@ -85,3 +85,52 @@ class GeradorDados:
     def gerar_caracteres_especiais(qtd=1):
         caracteres = "!@#$%^&*()_+[]{}|;:,.<>?/~"
         return ''.join(random.choices(caracteres, k=qtd))
+    
+    @staticmethod
+    def simpleRandString(init, min:int, max:int, nome_variavel: str = None) -> string:
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        tamanho = random.randint(min, max)
+        chars = string.ascii_letters + string.digits
+
+        stringGerada = ''.join(random.choices(chars, k=tamanho))
+
+        log_msg = f"Gerado a string aleatória : {stringGerada}"
+        if nome_variavel:
+            log_msg += f" | Variável: {nome_variavel}"
+
+        Log_manager.add_log(
+            level="INFO",
+            message=log_msg,
+            routine="",
+            application_type=env_application_type,
+            error_details=""
+        )
+
+        return stringGerada
+#END simpleRandString(min, max)
+
+    @staticmethod
+    def simpleRandDate(init) -> string:
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        dia = str(random.randint(1, 28)).zfill(2)
+        mes = str(random.randint(1, 12)).zfill(2)
+        ano = random.randint(2019, 2024)
+
+        data = f"{dia}/{mes}/{ano}"
+
+        Log_manager.add_log(
+            level="INFO", 
+            message=f"Gerado a data aleatoria : {data}", 
+            routine="",
+            application_type=env_application_type, 
+            error_details=""
+        )
+
+        return data
+#END simpleRandDate()

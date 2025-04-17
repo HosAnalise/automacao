@@ -347,12 +347,12 @@ class FuncoesUteis:
 
             if seletor:
                 WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, seletor)))
-                
-           
+
+
             script ="$('button#t_Button_rightControlButton > span').click()"
             browser.execute_script(script)   
-            
-    
+
+
         except TimeoutException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
@@ -858,10 +858,10 @@ class FuncoesUteis:
             # Verifica se o filtro lateral já está aberto
             elemento = browser.find_elements(By.CSS_SELECTOR, seletor)  
             if elemento and elemento[0].is_displayed():
-                open = 1
+                open = True
                 status = "Aberto"
             else:
-                open = 0
+                open = False
                 status = "Fechado"
 
             #Ou o filtro deve ficar aberto, porém não está. Ou o filtro deve ficar fechado porém está aberto
@@ -1051,49 +1051,3 @@ class FuncoesUteis:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 #END getURL(init)
-
-    @staticmethod
-    def simpleRandString(init, min, max):
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
-        getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
-
-        tamanho = random.randint(min, max)
-        chars = string.ascii_letters + string.digits
-
-        stringGerada = ''.join(random.choices(chars, k=tamanho))
-
-        Log_manager.add_log(
-            level="INFO", 
-            message=f"Gerado a string aleatoria : {stringGerada}", 
-            routine="",
-            application_type=env_application_type, 
-            error_details=""
-        )
-
-        return stringGerada
-#END simpleRandString(min, max)
-
-    @staticmethod
-    def simpleRandDate(init):
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
-        getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
-
-        dia = str(random.randint(1, 28)).zfill(2)
-        mes = str(random.randint(1, 12)).zfill(2)
-        ano = random.randint(2019, 2024)
-
-        data = f"{dia}/{mes}/{ano}"
-
-        Log_manager.add_log(
-            level="INFO", 
-            message=f"Gerado a data aleatoria : {data}", 
-            routine="",
-            application_type=env_application_type, 
-            error_details=""
-        )
-
-        return data
-#END simpleRandDate()
-
