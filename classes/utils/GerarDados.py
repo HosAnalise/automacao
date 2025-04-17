@@ -1,6 +1,9 @@
 import random
 import string
 
+
+#Class legada, agora usamos faker um biblioteca py que gera varios conteudos aleatorios
+
 class GeradorDados:
     @staticmethod
     def gerar_chave_aleatoria(tamanho=32):

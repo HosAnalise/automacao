@@ -6,25 +6,53 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 class Components:
     @staticmethod
-    def has_alert_sucess(init):
+    def has_alert_success(init: tuple) -> bool:
+        """
+        Verifica se há um alerta de sucesso na página.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection)
+        :return: True se o alerta de sucesso for encontrado, False caso contrário.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
+
         try:
+            alert = WebDriverWait(browser, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, "#t_Alert_Success"))
+            )
+            content = alert.text.strip() if alert else ""
+            Log_manager.add_log(
+                application_type="Web",
+                level="INFO",
+                message=f"Alerta de sucesso encontrado: {content}",
+                routine="",
+                error_details=""
+            )
+            return True
 
-            alert = WebDriverWait(browser,10).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#t_Alert_Success")))
-            if alert:
-                content = alert.text    
-                Log_manager.add_log(application_type ="Web",level= "INFO", message = f" Alert de sucesso encontrado! :{content}", routine="", error_details ="" )
-                return True
-    
-
-        except (TimeoutException, NoSuchElementException, Exception) as e :
-            Log_manager.add_log(application_type ="Web",level= "INFO", message = f"Alert de sucesso não encontrado", routine="", error_details =f"{e}" )   
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(
+                application_type="Web",
+                level="INFO",
+                message="Alerta de sucesso não encontrado",
+                routine="",
+                error_details=str(e)
+            )
             return False
 # verifica se há um alert de sucesso, captura seu texto e insere o log com seu conteudo.       
 
     @staticmethod
-    def has_form(init):
+    def has_form(init:tuple) -> bool:
+        """
+        Verifica se há um form na página.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection)
+        :return: True se o alerta de sucesso for encontrado, False caso contrário.
+        """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -45,6 +73,14 @@ class Components:
 
     @staticmethod
     def has_frame(init, seletor):
+        """
+        Verifica se há um iframe na página.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection)
+        :return: True se o alerta de sucesso for encontrado, False caso contrário.
+        """
         browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
         
         env_application_type = env_vars.get("WEB")  
@@ -81,7 +117,15 @@ class Components:
         
         
     @staticmethod
-    def has_alert(init):
+    def has_alert(init:tuple):
+        """
+        Verifica se há um alerta na página.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection)
+        :return: True se o alerta de sucesso for encontrado, False caso contrário.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         try:
@@ -100,6 +144,14 @@ class Components:
 
     @staticmethod
     def has_spin(init):
+        """
+        Verifica se há um spin de carregamento na página.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection)
+        :return: True se o alerta de sucesso for encontrado, False caso contrário.
+        """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         env_application_type = env_vars.get("WEB")  
@@ -123,6 +175,15 @@ class Components:
 
     @staticmethod
     def url_contains(init,url):
+        """
+        Verifica se a url contem o trecho passado por parametro.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection)
+        :param url: trecho da url a ser verificada .             
+        :return: True se o alerta de sucesso for encontrado, False caso contrário.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         env_application_type = env_vars.get("WEB")  
             
@@ -136,6 +197,15 @@ class Components:
 
     @staticmethod
     def btnClick(init,seletor):
+        """
+        Executa o click de um botão na pagina e gera logs de sucesso e falha caso haja.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection)
+        :param seletor: seletor css que ira identificar o botão a ser clicado na pagina.              
+        :return: True se o alerta de sucesso for encontrado, False caso contrário.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         env_application_type = env_vars.get("WEB")  
             

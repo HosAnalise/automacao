@@ -25,15 +25,15 @@ class ConciliacaoBancaria:
     
 
     @staticmethod
-    def insereConciliacao(init):
+    def insereConciliacao(init:tuple,pathArquivo:str):
         """
         Realiza o processo de conciliação bancária automatizada.
         
         Esta função interage com a interface da aplicação web para importar um arquivo OFX
         e confirmar a conciliação bancária. O progresso é registrado em logs.
         
-        Parâmetros:
-        init : tuple
+        
+        :param init: tuple
             Tupla contendo os objetos necessários para a automação:
             - browser: Instância do WebDriver do Selenium.
             - login: Objeto de login (não utilizado diretamente nesta função).
@@ -44,6 +44,7 @@ class ConciliacaoBancaria:
             - screenshots: Caminho para salvar capturas de tela em caso de erro.
             - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
         
+        ##    
         Fluxo da Função:
         1. Aguarda e clica no botão "Nova Conciliação".
         2. Verifica se há um frame para importação do extrato.
@@ -53,7 +54,7 @@ class ConciliacaoBancaria:
         6. Em caso de erro, captura logs e salva um screenshot.
         7. Retorna ao contexto principal do navegador.
         
-        Exceções Tratadas:
+        :raises:
         - TimeoutException: Se algum elemento não for encontrado dentro do tempo limite.
         - NoSuchElementException: Se algum elemento esperado não existir na página.
         - Exception: Captura outros erros inesperados.
@@ -88,7 +89,7 @@ class ConciliacaoBancaria:
             has_frame = Components.has_frame(init,seletor)
 
             if has_frame:
-                filePath = (r"C:\Users\Hos_Gabriel\Desktop\Automatização web\assets\teste0,50.ofx")
+                filePath = (rf"{pathArquivo}")
                 WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".apex-item-filedrop-action.a-Button.a-Button--hot")))
                 dropZone = WebDriverWait(browser,30).until(EC.presence_of_element_located((By.CSS_SELECTOR,"#P156_ARQUIVO_OFX")))
                 Log_manager.add_log(
@@ -173,13 +174,15 @@ class ConciliacaoBancaria:
 #END insereConciliacao(init)
 
     @staticmethod
-    def inluiRecebimentoContaExistente(init,filter):
+    def inluiRecebimentoContaExistente(init:tuple,filter:dict):
         """
         Automatiza a inclusão de um recebimento em uma conta existente no sistema web.
 
-        Parâmetros:
-        - init (tuple): Contém os objetos e configurações necessárias para a automação.
-        - filter (dict): Filtros a serem aplicados para localizar os lançamentos desejados.
+       
+        :param init:
+         (tuple): Contém os objetos e configurações necessárias para a automação.
+        :param filter:
+         (dict): Filtros a serem aplicados para localizar os lançamentos desejados.
 
         Fluxo da Função:
         1. Aguarda e clica no botão "Incluir Recebimento".

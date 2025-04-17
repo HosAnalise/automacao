@@ -22,14 +22,14 @@ class FuncoesUteis:
    
 
     @staticmethod
-    def stringToFloat(element):
+    def stringToFloat(element) -> float|None:
         """
         Converte uma string de número formatado para um float.
         
-        Parâmetros:
-            element (str): String contendo o número a ser convertido.
+        :param element:
+            String contendo o número a ser convertido.
         
-        Retorna:
+        :return:
             float: Número convertido ou None se a conversão falhar.
         """
         if not isinstance(element, str):
@@ -41,29 +41,44 @@ class FuncoesUteis:
             return None  
 
     @staticmethod
-    def formatBrCurrency(value):
+    def formatBrCurrency(value: int | float) -> str:
         """
         Formata um número para o padrão de moeda brasileiro.
-        
-        Parâmetros:
-            value (int, float): Valor numérico a ser formatado.
-        
-        Retorna:
-            str: Valor formatado como moeda brasileira.
-        
-        Lança:
-            ValueError: Se o valor não for um número.
+
+        :param value: Valor numérico a ser formatado (int ou float).
+        :return: Valor formatado como moeda brasileira, sem símbolo (ex: 1.234,56).
+        :raises ValueError: Se o valor não for numérico.
         """
         if not isinstance(value, (int, float)):
-            raise ValueError("O valor deve ser um número (int ou float).")
+            raise ValueError("O valor deve ser numérico (int ou float).")
 
-        locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")  
-        return locale.currency(value, grouping=True, symbol=False)  
+        try:
+            locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
+        except locale.Error:
+            # Fallback comum no Windows
+            try:
+                locale.setlocale(locale.LC_ALL, "Portuguese_Brazil.1252")
+            except locale.Error:
+                raise RuntimeError("Locale brasileiro não está instalado no sistema.")
+
+        return locale.currency(value, grouping=True, symbol=False)
 
     
 # Realiza as queries necessarias para preencher as lovs com valor aleatorio recebe um dicinario py. Exemplo: 'queries  = {"nomeDaQuery":"""Select * from dual"""}'    
     @staticmethod
-    def getQueryResults(init, queries, limit=10, random_choice=True):
+    def getQueryResults(init:tuple, queries:dict, limit:int=10, random_choice:bool=True)-> dict:
+        """
+        Retorna o resultado de uma query, ou se o usurio quiser apenas um valor aleatorio dessa query.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection).
+        :param queries: Dict contendo todas as queries a serem realizadas. 
+        :param limit: int limita os resultados das queryes 
+        :param random_choice: bool permite o usuario escolher se a query vem com o valor total ou apenas um valor aleatorio
+        :return: Retorna um dicionario {"Query_nomeQuery": valor}
+
+        """
         browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -90,14 +105,8 @@ class FuncoesUteis:
                 return queryResults
         
         except Exception as e:
-            return {"error": str(e)}
-
-
-    
-
-        except Exception as e:
             Log_manager.add_log(application_type =env_application_type,level= "Error", message = f"Erro na excução das queries ", routine="", error_details =f"{e}" )
-
+            return {"error": str(e)}
         finally:
             endTime = time.time()
             executionTime = endTime - start
@@ -113,6 +122,12 @@ class FuncoesUteis:
                 routine="",
                 error_details=''
             )
+
+
+    
+
+      
+
             
 #End RandomQueries(init,queries)
 
@@ -121,22 +136,21 @@ class FuncoesUteis:
         """
         Retorna um timestamp formatado.
         
-        Retorna:
-            str: Timestamp no formato 'dd-mm-yyyy HH-MM-SS-ffffff'.
+        :return     str: Timestamp no formato 'dd-mm-yyyy HH-MM-SS-ffffff'.
         """
         return datetime.now().strftime("%d-%m-%Y %H-%M-%S-%f")
 
     @staticmethod
-    def compareValues(init, obj):
+    def compareValues(init:tuple, obj:dict) -> bool:
         """
         Compara pares de valores em um dicionário e registra logs de sucesso ou erro.
 
-        Args:
-            init (tuple): Variáveis do ambiente extraídas no início.
-            obj (dict): Dicionário onde cada chave mapeia para uma tupla (valor_esperado, valor_atual).
+      
+            :param init: (tuple): Variáveis do ambiente extraídas no início.
+            :param obj: (dict): Dicionário onde cada chave mapeia para uma tupla (valor_esperado, valor_atual).
 
-        Returns:
-            bool: True se todos os valores forem iguais, False se houver diferenças.
+        :return:
+            bool: True se todos os valores forem iguais, False se houver diferenças.Também cria logs que mostram os valores com diferenças
         """
         
         browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
@@ -186,7 +200,16 @@ class FuncoesUteis:
 
 # Redireciona para uma pagina especifica
     @staticmethod
-    def goToPage(init,url):
+    def goToPage(init:tuple,url:str):
+        """
+        Redireciona pra pagina especifica
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection).
+        :param url: str Url pra onde deseja ir              
+
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -201,7 +224,17 @@ class FuncoesUteis:
 
 # Metodo que aplica filtros essa função recebe um dicionario py. Exemplo : "var = {seletor:value}", use o id do page item e o valor que deseja inserir nos filtros
     @staticmethod
-    def aplyFilter(init,apexValues):
+    def aplyFilter(init:tuple,apexValues:dict):
+        """
+        Aplica valores a componentes apex baseados em um dicionario {seletor:valor} e aplica os filtro na pagina.
+
+        :param init: Tupla contendo os objetos necessários:
+                     browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection.
+
+        :param apexValues: dict com itens de pagina apex {seletor:item}         
+
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -338,7 +371,21 @@ class FuncoesUteis:
 
 #Oculta ou mostra barra de filtros
     @staticmethod
-    def showHideFilter(init,seletor):
+    def showHideFilter(init:tuple,seletor:str|bool=False):
+        
+
+        """
+        Mostra ou esconde o filtro lateral na página com base no seletor.
+
+        Se um seletor for passado, o filtro será fechado (verificando a presença do seletor).
+        Se nenhum seletor for passado, o filtro será aberto.
+
+        :param init: Tupla contendo os objetos necessários:
+                     (browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection).
+        :param seletor: Seletor CSS (str) usado para validar presença do filtro antes de ocultar.
+                        Se não for passado, o filtro será exibido.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -454,7 +501,17 @@ class FuncoesUteis:
 
 #Limpa Filtros 
     @staticmethod
-    def clearFilter(init,apexValues):
+    def clearFilter(init:tuple,apexValues:dict):
+        """
+        Limpa os filtros da página e compara os valores antes e depois da limpeza.
+
+        :param init: Tupla contendo os objetos necessários:
+                     browser, login, Log_manager, get_ambiente, env_vars,
+                      seletor_ambiente, screenshots, oracle_db_connection.
+
+        :param apexValues: Dicionário onde as chaves são os seletores Apex dos filtros
+                           e os valores são os valores esperados podem ser vazios.
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -597,154 +654,109 @@ class FuncoesUteis:
 #END clearFilter(init,apexValues)
 
     @staticmethod
-    def setFilters(init,apexValues):
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+    def setFilters(init: tuple, apexValues: dict):
+        """
+        Seta os valores nos campos Apex informados no dicionário.
 
-        getEnv = env_vars
-        env_application_type = getEnv.get("WEB")        
-        isDictAndNotNull =  isinstance(apexValues, dict) and apexValues
-        if isDictAndNotNull:
+        :param init: Tupla contendo os objetos necessários:
+                    (browser, login, Log_manager, get_ambiente, env_vars,
+                    seletor_ambiente, screenshots, oracle_db_connection).
+        :param apexValues: Dicionário onde:
+                        - Chaves são os seletores Apex dos campos.
+                        - Valores são os valores a serem inseridos.
+        """
+        (browser, login, Log_manager, get_ambiente,
+        env_vars, seletor_ambiente, screenshots, oracle_db_connection) = init
 
+        env_application_type = env_vars.get("WEB", "Web")
+
+        if not isinstance(apexValues, dict) or not apexValues:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="WARNING",
+                message="Nenhum filtro foi passado para preenchimento.",
+                routine="",
+                error_details=""
+            )
+            return
+
+        for selector, value in apexValues.items():
             try:
-
-
-                for seletor,value in apexValues.items():
-                    Apex.setValue(browser,seletor,value)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", 
-                                            message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="", error_details="")
-
-                        
-
-            except TimeoutException as e:
+                Apex.setValue(browser, selector, value)
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Valor '{value}' setado com sucesso no seletor '{selector}'.",
+                    routine="",
+                    error_details=""
+                )
+            except Exception as e:
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="ERROR",
-                    message="Erro: Tempo limite excedido ao acessar a página",
+                    message=f"Erro ao setar valor no seletor '{selector}'.",
                     routine="",
                     error_details=str(e)
                 )
-                screenshot_path = screenshots
-                
-                # Verifica se o screenshot foi tirado corretamente
-                if screenshot_path:
-                    sucess  = browser.save_screenshot(screenshot_path)
-                    if sucess:            
-                        Log_manager.add_log(
-                            level="INFO", 
-                            message=f"Screenshot salvo em: {screenshot_path}", 
-                            routine="",
-                            application_type=env_application_type, 
-                            error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR", 
-                        message="Falha ao salvar screenshot", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                    )
 
-            except NoSuchElementException as e:
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="ERROR",
-                    message="Erro: Elemento não encontrado na página",
-                    routine="",
-                    error_details=str(e)
-                )
-                screenshot_path = screenshots
-                
-                # Verifica se o screenshot foi tirado corretamente
-                if screenshot_path:
-                    sucess  = browser.save_screenshot(screenshot_path)
-                    if sucess:  
-                        Log_manager.add_log(
-                            level="INFO", 
-                            message=f"Screenshot salvo em: {screenshot_path}", 
-                            routine="",
-                            application_type=env_application_type, 
-                            error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR", 
-                        message="Falha ao salvar screenshot", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                    )
-
-            except Exception as e:  # Captura qualquer outro erro inesperado
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="ERROR",
-                    message="Erro desconhecido ao acessar a página",
-                    routine="",
-                    error_details=str(e)
-                )
-                screenshot_path = screenshots
-                
-                # Verifica se o screenshot foi tirado corretamente
-                if screenshot_path:
-                    sucess  = browser.save_screenshot(screenshot_path)
-                    if sucess:  
-                        Log_manager.add_log(
-                            level="INFO", 
-                            message=f"Screenshot salvo em: {screenshot_path}", 
-                            routine="",
-                            application_type=env_application_type, 
-                            error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR", 
-                        message="Falha ao salvar screenshot", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                    )
     #END setFilters(init,apexValues)
 
     
     @staticmethod
-    def combine_lists_to_dict(keys_list, values_list):
+    def combine_lists_to_dict(keys_list:list, values_list:list)->dict:
+        """
+        Combina duas Lists e transforma em um Dict
+
+        :param keys_list: lista com as chaves que vão compor o dict.
+        :param values_list: lista com os valores que vão compor o dict.
+
+        :return: Retorna um dicionario no formato {keys_list : values_list}
+        """
+
        
         return dict(zip(keys_list, values_list))
 
 #END combine_lists_to_dict(keys_set, values_set)
    
     @staticmethod
-    def has_connection():
+    def has_connection() -> bool:
+        """
+        Verifica se há conexão com a internet utilizando dois métodos:
+        1. Tentativa de conexão via socket (DNS do Google).
+        2. Requisição HTTP para o Google.com.
 
-        def _has_connection_socket():
-
+        :return: True se ambos os testes forem bem-sucedidos, False caso contrário.
+        """
+        
+        def check_socket_connection() -> bool:
             try:
                 socket.create_connection(("8.8.8.8", 53), timeout=3)
                 return True
             except OSError:
                 return False
-            
 
-
-        def _has_connection_requests():
-        
+        def check_http_connection() -> bool:
             try:
                 response = requests.get("https://www.google.com", timeout=3)
-                if response.status_code == 200:
-                    return True
-                else:
-                    return False
-            except requests.ConnectionError:
-                return False    
-            
-        return _has_connection_socket() and _has_connection_requests()
+                return response.status_code == 200
+            except (requests.RequestException, Exception):
+                return False
+
+        return check_socket_connection() and check_http_connection()
 # END has_connection()
 
 
     @staticmethod
-    def setValue(init,seletor,value):
+    def setValue(init:tuple,seletor:str,value:str|int):
+        """
+        Insere um valor em um campo localizado pelo seletor CSS.
+
+        :param init: Tupla contendo os objetos necessários:
+                    (browser, login, Log_manager, get_ambiente, env_vars,
+                    seletor_ambiente, screenshots, oracle_db_connection).
+        :param seletor: Seletor CSS do campo que receberá o valor.
+        :param value: Valor a ser inserido no campo.
+        """
 
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
@@ -774,7 +786,17 @@ class FuncoesUteis:
 
         
     @staticmethod
-    def prepareToCompareValues(init,apexValues,sendKeys = False):
+    def prepareToCompareValues(init:tuple,apexValues:dict,sendKeys:bool = False):
+        """
+        Prepara valores em campos APEX e retorna um dicionário com os valores esperados e encontrados.
+
+        :param init: Tupla contendo:
+            (browser, login, Log_manager, get_ambiente, env_vars,
+            seletor_ambiente, screenshots, oracle_db_connection).
+        :param apexValues: Dicionário com seletores como chaves e valores a serem inseridos.
+        :param sendKeys: Se True, usa FuncoesUteis.setValue (com send_keys); caso contrário usa Apex.setValue.
+        :return: Dicionário {seletor: (valor_encontrado, valor_esperado)}
+        """
         browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
         apexGetValue = {}
 
@@ -856,11 +878,14 @@ class FuncoesUteis:
 # END setValue(init,seletor,value)
 
     @staticmethod
-    def guaranteeShowHideFilter(init,seletor,showHide):
-        '''
-        Usando o próprio showHide, pode definir para abrir ou fechar o filtro lateral definitivamente.
-        O método anterior poderia causar falhas caso seja alterado um filtro que vinha aberto para começar a vir fechado, e vice-versa.
-        '''
+    def guaranteeShowHideFilter(init:tuple,seletor:str,showHide:bool):
+        """
+        Garante que o filtro lateral esteja visível ou oculto, de acordo com `showHide`.
+        
+        :param init: Tupla com parâmetros do ambiente.
+        :param seletor: Seletor CSS para verificar a visibilidade atual do filtro.
+        :param showHide: True para abrir o filtro, False para fechar.
+        """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -1001,7 +1026,14 @@ class FuncoesUteis:
 #END guaranteeShowHideFilter(init,seletor,showHide)
 
     @staticmethod
-    def getURL(init):
+    def getURL(init:tuple)->str:
+        """
+        Recupera a url da Window atual.
+        
+        :param init: Tupla com parâmetros do ambiente.
+
+        :return: str retorna a url da pagina atual
+        """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -1076,48 +1108,4 @@ class FuncoesUteis:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 #END getURL(init)
 
-    @staticmethod
-    def simpleRandString(init, min, max):
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
-        getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
-
-        tamanho = random.randint(min, max)
-        chars = string.ascii_letters + string.digits
-
-        stringGerada = ''.join(random.choices(chars, k=tamanho))
-
-        Log_manager.add_log(
-            level="INFO", 
-            message=f"Gerado a string aleatoria : {stringGerada}", 
-            routine="",
-            application_type=env_application_type, 
-            error_details=""
-        )
-
-        return stringGerada
-#END simpleRandString(min, max)
-
-    @staticmethod
-    def simpleRandDate(init):
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
-        getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
-
-        dia = str(random.randint(1, 28)).zfill(2)
-        mes = str(random.randint(1, 12)).zfill(2)
-        ano = random.randint(2019, 2024)
-
-        data = f"{dia}/{mes}/{ano}"
-
-        Log_manager.add_log(
-            level="INFO", 
-            message=f"Gerado a data aleatoria : {data}", 
-            routine="",
-            application_type=env_application_type, 
-            error_details=""
-        )
-
-        return data
-#END simpleRandDate()
 

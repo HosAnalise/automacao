@@ -1,11 +1,21 @@
 {
     "python.testing.pytestArgs": [
-        "testes"
+      "testes"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.analysis.extraPaths": [
-        "./testes/testes_desktop/FC/modules"
+      "./testes/testes_desktop/FC/modules"
     ],
-    "python.analysis.autoImportCompletions": true
-}
+    "python.analysis.autoImportCompletions": true,
+    "draw.folder.structure.exclude": [
+      "**/__pycache__",
+      "**/.pytest_cache",
+      "**/.vscode",
+      "**/videos",
+      "**/.git",
+      "**/venv"
+    ],
+    "draw.folder.structure.style": "EmojiFun"
+  }
+  

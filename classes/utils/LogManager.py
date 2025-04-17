@@ -47,7 +47,7 @@ class LogManager:
         """
         return str(uuid.uuid4())  # Gerando um ID único para a execução
 
-    def add_log(self,application_type:str, level:str, message:str, routine:str, error_details:str =None):
+    def add_log(self,application_type:str, level:str, message:str, routine:str, error_details:str|None =None):
         """
         Adiciona um log ao array de logs em memória.
         
@@ -69,11 +69,11 @@ class LogManager:
         # Adiciona o log ao array de logs
         self.logs.append(log_entry)
 
-    def insert_logs_for_execution(self,logName:str=None):
+    def insert_logs_for_execution(self,logName:str|None =None):
         """
         Insere todos os logs coletados durante a execução em um único documento no banco de dados.
         
-        :param execution_id: ID único da execução do script (opcional)
+        :param logName: nome do log que será inserido junto com o id de execução
         """
        
         execution_id = self._generate_execution_id()  # Gerar novo ID caso não seja fornecido
@@ -86,7 +86,6 @@ class LogManager:
             "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
         }
 
-        print("Tentando inserir a execução com logs:", execution_entry)  # DEBUG
 
         try:
             # Inserção do documento com logs na coleção do MongoDB
@@ -97,10 +96,11 @@ class LogManager:
 
 
     
-    def get_logs(self, execution_id:str = None)-> list:
+    def get_error_logs(self, execution_id:str = None)-> list:
         """
+        Recupera os logs com level = ERROR e categoriza eles por executionId.
+              
         :param execution_id: id de execução especifico a ser filtrado
-        Recupera os logs com level = ERROR e categoriza eles por executionId       
         
         """
         logs_por_execucao = defaultdict(list)
@@ -143,7 +143,6 @@ class LogManager:
         """
         # Definir a data limite como datetime
         date_limit = datetime.now() - timedelta(days=days)
-        print(f"data limite (datetime) = {date_limit}")
 
         # Buscar logs e converter os timestamps antes da exclusão
         logs_to_delete = []
