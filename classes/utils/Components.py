@@ -72,7 +72,7 @@ class Components:
 
 
     @staticmethod
-    def has_frame(init, seletor):
+    def has_frame(init:tuple, seletor:str)->bool:
         """
         Verifica se há um iframe na página.
 
@@ -117,7 +117,7 @@ class Components:
         
         
     @staticmethod
-    def has_alert(init:tuple):
+    def has_alert(init:tuple)->bool:
         """
         Verifica se há um alerta na página.
 
@@ -143,7 +143,7 @@ class Components:
         
 
     @staticmethod
-    def has_spin(init):
+    def has_spin(init:tuple)->bool:
         """
         Verifica se há um spin de carregamento na página.
 
@@ -174,7 +174,7 @@ class Components:
         
 
     @staticmethod
-    def url_contains(init,url):
+    def url_contains(init:tuple,url:str)->bool:
         """
         Verifica se a url contem o trecho passado por parametro.
 
@@ -196,7 +196,7 @@ class Components:
             return False
 
     @staticmethod
-    def btnClick(init,seletor):
+    def btnClick(init:tuple,seletor:str)->bool:
         """
         Executa o click de um botão na pagina e gera logs de sucesso e falha caso haja.
 

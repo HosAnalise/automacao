@@ -10,6 +10,7 @@ from classes.rotinas.ExtratoContas import ExtratoContas
 from time import sleep
 
 class AbemaRelatorioPrestador:
+    
 
     filterSelector = "#P56_PRESTADOR_1"
     filters =[

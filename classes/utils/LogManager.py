@@ -6,7 +6,6 @@ import uuid  # Para gerar identificadores únicos
 from pymongo import MongoClient  # Importando MongoClient
 from pymongo.server_api import ServerApi
 from collections import defaultdict
-from pydantic import BaseModel
 
 
 
@@ -96,7 +95,7 @@ class LogManager:
 
 
     
-    def get_error_logs(self, execution_id:str = None)-> list:
+    def get_error_logs(self, execution_id:str|None = None)-> dict:
         """
         Recupera os logs com level = ERROR e categoriza eles por executionId.
               
@@ -106,7 +105,7 @@ class LogManager:
         logs_por_execucao = defaultdict(list)
 
         filtro = {}
-        if execution_id:
+        if execution_id is not None:
             filtro["execution_id"] = execution_id
 
         logs_cursor = self.collection.find(filtro)

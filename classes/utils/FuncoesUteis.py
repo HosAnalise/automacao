@@ -22,7 +22,7 @@ class FuncoesUteis:
    
 
     @staticmethod
-    def stringToFloat(element) -> float|None:
+    def stringToFloat(element:str) -> float|None:
         """
         Converte uma string de número formatado para um float.
         
@@ -32,8 +32,7 @@ class FuncoesUteis:
         :return:
             float: Número convertido ou None se a conversão falhar.
         """
-        if not isinstance(element, str):
-            return None  
+       
         
         try:
             return float(element.strip().replace('.', '').replace(',', '.'))
@@ -789,7 +788,6 @@ class FuncoesUteis:
     def prepareToCompareValues(init:tuple,apexValues:dict,sendKeys:bool = False):
         """
         Prepara valores em campos APEX e retorna um dicionário com os valores esperados e encontrados.
-
         :param init: Tupla contendo:
             (browser, login, Log_manager, get_ambiente, env_vars,
             seletor_ambiente, screenshots, oracle_db_connection).
@@ -801,25 +799,9 @@ class FuncoesUteis:
         apexGetValue = {}
 
         for seletor, value in apexValues.items():
+            send = lambda: Apex.setValue(browser, seletor, value) if not sendKeys else FuncoesUteis.setValue(init, f"#{seletor}", value)
             try:
-                if sendKeys:
-                    FuncoesUteis.setValue(init, f"#{seletor}", value)
-                    Log_manager.add_log(
-                        application_type='WEB',
-                        level="INFO",
-                        message=f"{seletor} teve o valor {value} inserido",
-                        routine="ContaReceber",
-                        error_details=""
-                    )
-                else:
-                    Apex.setValue(browser, seletor, value)
-                    Log_manager.add_log(
-                        application_type='WEB',
-                        level="INFO",
-                        message=f"{seletor} teve o valor {value} inserido",
-                        routine="ContaReceber",
-                        error_details=""
-                )
+                send()
 
                 WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
                 apexGetValue[seletor] = Apex.getValue(browser, seletor)
@@ -872,6 +854,7 @@ class FuncoesUteis:
 
         campos = {seletor: (apexGetValue.get(seletor, None), value) for seletor, value in apexValues.items()}
         return campos
+    
 
 
     

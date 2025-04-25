@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from sqlalchemy import false
 from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
@@ -306,7 +307,7 @@ class ConciliacaoBancaria:
 #END incluiRecebimentoContaExistente(init,filter)
 
     @staticmethod
-    def criarNovaContaReceber(init,values):
+    def criarNovaContaReceber(init:tuple,values:dict):
         """
         Cria uma nova conta a receber na aplicação web.
         
@@ -367,7 +368,7 @@ class ConciliacaoBancaria:
 #END criarNovaContaReceber(init,values)
 
     @staticmethod
-    def criarNovaTransferencia(init,query):
+    def criarNovaTransferencia(init:tuple,query:dict):
         """
         Cria uma nova transferência financeira na aplicação.
         
@@ -435,7 +436,7 @@ class ConciliacaoBancaria:
 
 
     @staticmethod
-    def associarRecebimentoExistente(init,filters,contaReceber):
+    def associarRecebimentoExistente(init:tuple,filters:dict,contaReceber:str|bool = False):
         """
         Associa um recebimento existente a um lançamento na aplicação web.
         
@@ -492,7 +493,7 @@ class ConciliacaoBancaria:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
 
-        contaReceber = contaReceber if contaReceber else False
+       
            
         try:       
             seletor ="[acao='associarLancamento']"
@@ -593,7 +594,7 @@ class ConciliacaoBancaria:
     
     
     @staticmethod
-    def associarTransferenciaExistente(init,filters,contaReceber):
+    def associarTransferenciaExistente(init:tuple,filters:dict|bool=False,contaReceber:str|bool=False):
         """
         Associa uma transferência existente a um lançamento na aplicação web.
         
@@ -717,7 +718,7 @@ class ConciliacaoBancaria:
 #END associarTransferemciaExistente(init,filters,contaReceber)
 
     @staticmethod
-    def ingnorarLancamento(init):
+    def ingnorarLancamento(init:tuple):
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -766,7 +767,7 @@ class ConciliacaoBancaria:
 #END ignorarLancamento(init)
 
     @staticmethod
-    def conciliarLancamento(init):
+    def conciliarLancamento(init:tuple):
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -820,7 +821,7 @@ class ConciliacaoBancaria:
         
 
     @staticmethod
-    def processaConciliacaoAutomatica(init,yesNot):
+    def processaConciliacaoAutomatica(init:tuple,yesNot:bool):
         """
         Descrição:
         Este método processa a conciliação automática de lançamentos financeiros na aplicação web. Dependendo do parâmetro yesNot, ele pode confirmar ou cancelar a conciliação automática.
@@ -929,7 +930,7 @@ class ConciliacaoBancaria:
 #END processaConciliacaoAutomatica(init,yesNot) 
 
     @staticmethod
-    def desconciliaLancamento(init,especifico):
+    def desconciliaLancamento(init:tuple,especifico:str|bool=False):
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars

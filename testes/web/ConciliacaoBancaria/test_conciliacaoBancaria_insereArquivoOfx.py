@@ -12,6 +12,7 @@ def test_contaPagar_insereArquivoOfx(init):
 
 
     try:
+        
         FuncoesUteis.goToPage(init,ConciliacaoBancaria.url)
         Components.has_spin(init)
         FuncoesUteis.showHideFilter(init,ConciliacaoBancaria.filterSelector)
