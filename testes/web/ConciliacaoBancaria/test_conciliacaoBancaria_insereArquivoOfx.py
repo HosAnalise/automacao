@@ -12,9 +12,10 @@ def test_contaPagar_insereArquivoOfx(init):
 
 
     try:
+        
         FuncoesUteis.goToPage(init,ConciliacaoBancaria.url)
         Components.has_spin(init)
-        FuncoesUteis.showHideFilter(init,ConciliacaoBancaria.filterSelector,False)
+        FuncoesUteis.showHideFilter(init,ConciliacaoBancaria.filterSelector)
         ConciliacaoBancaria.insereConciliacao(init)
         Components.has_alert(init)
                     
@@ -24,9 +25,9 @@ def test_contaPagar_insereArquivoOfx(init):
         if screenshot_path:
             success = browser.save_screenshot(screenshot_path)
             if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ConciliacaoBancaria", application_type=env_application_type, error_details=str(e))
+                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em : {screenshot_path}", routine="ConciliacaoBancaria", application_type=env_application_type, error_details=str(e))
             else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+                Log_manager.add_log(level="INFO", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 
     finally:
         endTime = time.time()
@@ -44,7 +45,7 @@ def test_contaPagar_insereArquivoOfx(init):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution("ConciliacaoBancaria")
 
         browser.quit()
 

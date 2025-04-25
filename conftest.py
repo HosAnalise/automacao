@@ -1,8 +1,10 @@
+from collections import namedtuple
 from datetime import datetime
 import json
 import os
 import socket
 import tempfile
+from annotated_types import UpperCase
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -23,6 +25,8 @@ from PIL import Image
 import numpy as np
 import time
 from sqlalchemy import create_engine
+from selenium.webdriver.chrome.options import Options
+
 
 
 
@@ -116,6 +120,7 @@ def get_driver(browser_name, options):
     return driver
 
 def get_browser_options(browser_name,headless):
+    
     options = None
     if browser_name.lower() == "chrome":
         options = webdriver.ChromeOptions()
@@ -172,24 +177,53 @@ def screenshots(env_vars,browser):
 
 @pytest.fixture()
 def browser(request):
-    # Pegando o valor do parâmetro da linha de comando
-    browser_name = request.config.getoption("browser")
-    headless = request.config.getoption("headless")
+    envValue = getEnv()
+    mode = envValue.get('MODE', '').upper()
+
+    if mode == "LOCAL":
+
+        # Pegando o valor do parâmetro da linha de comando
+        browser_name = request.config.getoption("browser")
+        headless = request.config.getoption("headless")
+        
+        options = get_browser_options(browser_name,headless)
+        driver = get_driver(browser_name, options)
+
+        driver.implicitly_wait(10)
+
+        # Melhorar o tempo de espera inicial do navegador
+        try:
+            WebDriverWait(driver, 30).until(
+                lambda d: d.execute_script("return document.readyState") == "complete"
+            )
+        except TimeoutException:
+            pytest.exit("Erro crítico: navegador não inicializou corretamente.")
+
+        return driver
     
-    options = get_browser_options(browser_name,headless)
-    driver = get_driver(browser_name, options)
+    elif mode == "SELENOID":
+        browser = envValue.get("BROWSER")
+        version = envValue.get('VERSION')
+        remote_url = envValue.get('SELENOID_URL')
+        remote_url = "http://localhost:4444/wd/hub"
 
-    driver.implicitly_wait(10)
 
-    # Melhorar o tempo de espera inicial do navegador
-    try:
-        WebDriverWait(driver, 30).until(
-            lambda d: d.execute_script("return document.readyState") == "complete"
+
+        options = Options()
+        options.set_capability("browserName", browser)
+        options.set_capability("browserVersion", version)
+        options.set_capability("selenoid:options", {
+            "enableVNC": True,
+            "enableVideo": False,
+            "videoName": "test.mp4",
+            "videoCodec": "mpeg4"
+        })
+
+        return webdriver.Remote(
+            command_executor=remote_url,
+            options=options
         )
-    except TimeoutException:
-        pytest.exit("Erro crítico: navegador não inicializou corretamente.")
 
-    return driver
 
 
 
@@ -264,7 +298,6 @@ def login(browser, request):
 def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente,screenshots):
 
 
-    execution_id = log_manager._generate_execution_id()
     nivel_acesso, ambiente, rede, loja = get_ambiente
 
 
@@ -302,7 +335,7 @@ def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente,screens
         log_manager.add_log(level="INFO", message="Botão Alterar local de trabalho clicado", routine="Login",application_type='WEB')
 
         # Primeiro, aguarde o iframe ficar disponível e depois mude para ele
-        iframe = WebDriverWait(browser, 10).until(
+        WebDriverWait(browser, 10).until(
             EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, '[title="Alterar Local de Trabalho"]'))
         )
         log_manager.add_log(level="INFO", message="Trocado para iframe Alterar Local de Trabalho", routine="Login",application_type='WEB')
@@ -402,7 +435,7 @@ def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente,screens
         
 
     finally:
-        log_manager.insert_logs_for_execution(execution_id)
+        log_manager.insert_logs_for_execution()
         return browser
 
 
@@ -509,7 +542,15 @@ def init(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screen
 
 
 
-
+@pytest.fixture()
+def context(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection):
+    Init = namedtuple("Init", [
+        "browser", "login", "log_manager", "get_ambiente",
+        "env_vars", "seletor_ambiente", "screenshots", "oracle_db_connection"
+    ])
+    
+    # Retornando a estrutura organizada com os valores recebidos como argumentos da fixture
+    return Init(browser, login, log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection)
 
 
 

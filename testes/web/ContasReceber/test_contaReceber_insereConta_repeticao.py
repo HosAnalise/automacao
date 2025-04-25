@@ -24,7 +24,7 @@ def test_contaReceber_insereConta_repeticao(init):
 
         FuncoesUteis.goToPage(init,ContaReceber.url)
         query = FuncoesUteis.getQueryResults(init,ContaReceber.queries)
-        FuncoesUteis.showHideFilter(init,ContaReceber.filterSelector,True)
+        FuncoesUteis.showHideFilter(init,ContaReceber.filterSelector)
         insereContaReceber = ContaReceber.insereContaReceber(init,query)
         ContaReceber.salvaContaReceber(init)
         if insereContaReceber == 1:
@@ -63,7 +63,7 @@ def test_contaReceber_insereConta_repeticao(init):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution("ContaReceber")
 
         browser.quit()
 

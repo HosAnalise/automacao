@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
+from traceback import print_tb
 from dotenv import load_dotenv
 import os
 import uuid  # Para gerar identificadores únicos
 from pymongo import MongoClient  # Importando MongoClient
-from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from collections import defaultdict
 
 
 
@@ -12,7 +13,7 @@ from pymongo.server_api import ServerApi
 
 
 load_dotenv()
-timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
+
 
 class LogManager:
     def __init__(self):
@@ -21,6 +22,8 @@ class LogManager:
         db_name = os.getenv("DB_NAME")
         collection_name = os.getenv("COLLECTION_NAME")
         dev = os.getenv("DEV")
+        dias_pra_deletar_logs = os.getenv('DAYS_TO_DELETE_LOGS')
+        dias_pra_deletar_logs = int(dias_pra_deletar_logs) if dias_pra_deletar_logs else 7 
         
         if not mongodb_uri or not db_name or not collection_name:
             raise ValueError("Faltando variáveis de ambiente: MONGODB_URI, DB_NAME ou COLLECTION_NAME")
@@ -32,16 +35,18 @@ class LogManager:
 
         # Inicializa um array para armazenar logs durante a execução
         self.logs = []
+        self.days = dias_pra_deletar_logs
 
         self.dev = dev
+        
 
-    def _generate_execution_id(self):
+    def _generate_execution_id(self)->str:
         """
         Gera um identificador único para cada execução de script.
         """
         return str(uuid.uuid4())  # Gerando um ID único para a execução
 
-    def add_log(self,application_type, level, message, routine, error_details=None):
+    def add_log(self,application_type:str, level:str, message:str, routine:str, error_details:str|None =None):
         """
         Adiciona um log ao array de logs em memória.
         
@@ -56,17 +61,18 @@ class LogManager:
             "message": message,
             "routine": routine,
             "error_details": error_details,
-            "timestamp": timestamp
+            "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
+
         }
 
         # Adiciona o log ao array de logs
         self.logs.append(log_entry)
 
-    def insert_logs_for_execution(self,logName=None):
+    def insert_logs_for_execution(self,logName:str|None =None):
         """
         Insere todos os logs coletados durante a execução em um único documento no banco de dados.
         
-        :param execution_id: ID único da execução do script (opcional)
+        :param logName: nome do log que será inserido junto com o id de execução
         """
        
         execution_id = self._generate_execution_id()  # Gerar novo ID caso não seja fornecido
@@ -76,10 +82,9 @@ class LogManager:
             "execution_id": f"{logName}_{execution_id}",  # ID da execução
             "dev": self.dev,
             "logs": self.logs,  # Lista de logs
-            "timestamp": timestamp
+            "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
         }
 
-        print("Tentando inserir a execução com logs:", execution_entry)  # DEBUG
 
         try:
             # Inserção do documento com logs na coleção do MongoDB
@@ -88,53 +93,48 @@ class LogManager:
         except Exception as e:
             print(f"Erro ao inserir execução: {e}")
 
-    from datetime import datetime
 
-    def get_logs(self, execution_id=None, limit=10, start_date=None, end_date=None):
+    
+    def get_error_logs(self, execution_id:str|None = None)-> dict:
         """
-        Obtém logs de uma execução específica ou logs gerais filtrados por data.
-
-        :param execution_id: Filtro por ID de execução (opcional)
-        :param limit: Número de documentos a serem retornados
-        :param start_date: Data de início para o filtro (opcional)
-        :param end_date: Data de fim para o filtro (opcional)
+        Recupera os logs com level = ERROR e categoriza eles por executionId.
+              
+        :param execution_id: id de execução especifico a ser filtrado
+        
         """
-        query = {}
-        
-        # Filtro por execution_id, se fornecido
-        if execution_id:
-            query["execution_id"] = execution_id
-        
-        # Filtrar logs por timestamp, se start_date ou end_date forem fornecidos
-        if start_date:
-            # Converter start_date para o formato datetime
-            start_date = datetime.strptime(start_date, "%d/%m/%Y %H:%M:%S:%f")
-            query["timestamp"] = {"$gte": start_date}
-        
-        if end_date:
-            # Converter end_date para o formato datetime
-            end_date = datetime.strptime(end_date, "%d/%m/%Y %H:%M:%S:%f")
-            if "timestamp" in query:
-                query["timestamp"]["$lte"] = end_date
-            else:
-                query["timestamp"] = {"$lte": end_date}
+        logs_por_execucao = defaultdict(list)
 
-        # Buscar os logs no banco com base no filtro
-        executions = self.collection.find(query).limit(limit)
-        
-        for execution in executions:
-            print(f"Execução ID: {execution['execution_id']} - Logs:")
-            for log in execution['logs']:
-                print(log)
+        filtro = {}
+        if execution_id is not None:
+            filtro["execution_id"] = execution_id
+
+        logs_cursor = self.collection.find(filtro)
+
+        for doc in logs_cursor:
+            exec_id = doc.get("execution_id", "sem_execucao")
+
+            for log in doc.get("logs", []):
+                level = str(log.get("level", "")).strip().upper()
+                if level == "ERROR":
+                    logs_por_execucao[exec_id].append(log)
+
+        # Exemplo de print para visualizar agrupado
+        for exec_id, erros in logs_por_execucao.items():
+            print(f"\nExecution ID: {exec_id}")
+            for erro in erros:
+                print(f" - {erro['message']}")
+
+        return logs_por_execucao
 
 
 
 
     
-    dias_pra_deletar_logs = os.getenv('DAYS_TO_DELETE_LOGS')
-    dias_pra_deletar_logs = int(dias_pra_deletar_logs) if dias_pra_deletar_logs else 7 
+    
 
-    def delete_logs_older_than(self, days=dias_pra_deletar_logs):
+    def delete_logs_older_than(self, days:int=None):
+        if days is None:
+            days = self.days
         """
         Exclui logs que são mais antigos do que o número de dias fornecido.
 
@@ -142,7 +142,6 @@ class LogManager:
         """
         # Definir a data limite como datetime
         date_limit = datetime.now() - timedelta(days=days)
-        print(f"data limite (datetime) = {date_limit}")
 
         # Buscar logs e converter os timestamps antes da exclusão
         logs_to_delete = []

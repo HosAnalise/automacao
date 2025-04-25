@@ -51,7 +51,7 @@ def test_contaPagar_insereConta_despesas(init):
         if screenshot_path:
             success = browser.save_screenshot(screenshot_path)
             if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ContaReceber", application_type=env_application_type, error_details=str(e))
+                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ContaPagar", application_type=env_application_type, error_details=str(e))
             else:
                 Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 
@@ -71,7 +71,7 @@ def test_contaPagar_insereConta_despesas(init):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution("ContaPagar")
 
         browser.quit()
 
