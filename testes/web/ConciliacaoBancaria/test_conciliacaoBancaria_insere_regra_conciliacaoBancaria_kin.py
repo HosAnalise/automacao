@@ -16,7 +16,7 @@ from selenium.webdriver.common.alert import Alert
 from selenium.common.exceptions import NoAlertPresentException
 import pytest
 
-@pytest.mark.docker
+@pytest.mark.dockerConciliacaoBancaria
 def test_insere_regra_conciliacao(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init

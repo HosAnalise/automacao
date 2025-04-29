@@ -1,10 +1,11 @@
 import time
+import pytest
 from classes.rotinas.ConciliacaoBancaria import ConciliacaoBancaria
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
 
-
+@pytest.mark.dockerConciliacaoBancaria
 def test_contaPagar_insereArquivoOfx(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
