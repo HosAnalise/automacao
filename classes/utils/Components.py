@@ -163,9 +163,9 @@ class Components:
             Log_manager.add_log(application_type=env_application_type, level="INFO", message="Loading...", routine="", error_details='')
 
 
-            WebDriverWait(browser,30).until(EC.staleness_of(spin))
+            has = WebDriverWait(browser,30).until(EC.staleness_of(spin))
             Log_manager.add_log(application_type=env_application_type, level="INFO", message="fim do Loading...", routine="", error_details='')
-            return True
+            return has
     
 
         except (TimeoutException, NoSuchElementException, Exception) as e :

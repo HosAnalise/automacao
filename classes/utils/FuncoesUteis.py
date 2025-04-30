@@ -11,9 +11,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import random
 from classes.utils.ApexUtil import Apex
-import string
+from classes.utils.LogManager import LogManager
+from conftest import env_vars
 
-
+Log_manager = LogManager()
 class FuncoesUteis:
     """
     Classe contendo funções utilitárias para automação de testes.
@@ -761,28 +762,20 @@ class FuncoesUteis:
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
+        item = None
+        item = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
+        textItem = item.text
+        item.send_keys(value)
+        Log_manager.add_log(
+                application_type="WEB",
+                level="INFO",
+                message=f"Valor {value}, inserido no {textItem}",
+                routine="",
+                error_details=""
+            )
 
-        try:
-            item = None
-            item = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
-            textItem = item.text
-            item.send_keys(value)
-            Log_manager.add_log(
-                    application_type="WEB",
-                    level="INFO",
-                    message=f"Valor {value}, inserido no {textItem}",
-                    routine="",
-                    error_details=""
-                )
-        except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type="WEB", level="ERROR", message=f"item não encontrado {item}", routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type="WEB", error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type="WEB", error_details=str(e))
+    
+       
 
         
     @staticmethod
@@ -1107,5 +1100,62 @@ class FuncoesUteis:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 #END getURL(init)
+
+
+
+
+    @staticmethod
+    def compareValuesDesktop(obj:dict) -> bool:
+        """
+        Compara pares de valores em um dicionário e registra logs de sucesso ou erro.
+
+        :param obj: (dict): Dicionário onde cada chave mapeia para uma tupla (valor_esperado, valor_atual).
+
+        :return:
+            bool: True se todos os valores forem iguais, False se houver diferenças.Também cria logs que mostram os valores com diferenças
+        """
+        
+        env_application_type = env_vars.get("WEB")
+
+        if not isinstance(obj, dict):
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="compareValues - O objeto passado não é um dicionário válido.",
+                routine="",
+                error_details=""
+            )
+            return False
+
+        valoresDiferentes = {chave: (v1, v2) for chave, (v1, v2) in obj.items() if v1 != v2}
+
+        if not valoresDiferentes:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Todos valores foram inseridos corretamente.",
+                routine="",
+                error_details=""
+            )
+            return True
+        else:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="Alguns valores foram inseridos incorretamente.",
+                routine="",
+                error_details=""
+            )
+            
+            for chave, (v1, v2) in valoresDiferentes.items():
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Valor incorreto - {chave}: {v1} (esperado) ≠ {v2} (atual)",
+                    routine="",
+                    error_details=""
+                )
+
+            return False
 
 
