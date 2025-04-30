@@ -1,0 +1,42 @@
+name: Multi Docker Build and Push
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  build-and-push:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build e Push - conta_pagar
+        run: |
+          # Build da imagem
+          docker build -f Dockerfile.contaPagar -t ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest .
+          
+          # Rodar a imagem (opcional)
+          docker run --rm ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest
+          
+          # Push para o Docker Hub
+          docker push ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest
+
+      - name: Build e Push - conta_receber
+        run: |
+          # Build da imagem
+          docker build -f Dockerfile.contaReceber -t ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest .
+          
+          # Rodar a imagem (opcional)
+          docker run --rm ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest
+          
+          # Push para o Docker Hub
+          docker push ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest
