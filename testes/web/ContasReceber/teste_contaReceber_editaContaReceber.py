@@ -13,7 +13,7 @@ import pytest
 
 
 
-@pytest.mark.docker
+@pytest.mark.dockercontaReceber
 def test_contaReceber_editaContaReceber(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
