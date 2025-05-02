@@ -1,42 +1,33 @@
-name: Multi Docker Build and Push
+name: Docker Compose Build and Push
 
 on:
   push:
     branches:
       - prod
+    paths:
+      - 'docker-compose.yml'
+     
 
 jobs:
   build-and-push:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout código
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Login no Docker Hub
+      - name: Login Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build e Push - conta_pagar
-        run: |
-          # Build da imagem
-          docker build -f dockerfiles/Dockerfile.contaPagar -t ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest .
-          
-          # Rodar a imagem (opcional)
-          docker run -d --name conta_pagar ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest
-          
-          # Push para o Docker Hub
-          docker push ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest
+      - name: Build todas imagens com docker-compose
+        run: docker-compose build
 
-      - name: Build e Push - conta_receber
+      - name: Push imagens do docker-compose
         run: |
-          # Build da imagem
-          docker build -f dockerfiles/Dockerfile.contaReceber -t ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest .
-          
-          # Rodar a imagem (opcional)
-          docker run -d --name conta_receber ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest
-          
-          # Push para o Docker Hub
-          docker push ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest
+          IMAGES=$(docker-compose config | grep 'image:' | awk '{print $2}')
+          for IMAGE in $IMAGES; do
+            docker push $IMAGE
+          done
