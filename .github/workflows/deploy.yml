@@ -22,7 +22,7 @@ jobs:
       - name: Build e Push - conta_pagar
         run: |
           # Build da imagem
-          docker build -f Dockerfile.contaPagar -t ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest .
+          docker build -f dockerfiles/Dockerfile.contaPagar -t ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest .
           
           # Rodar a imagem (opcional)
           docker run --rm ${{ secrets.DOCKERHUB_USER }}/conta_pagar:latest
@@ -33,7 +33,7 @@ jobs:
       - name: Build e Push - conta_receber
         run: |
           # Build da imagem
-          docker build -f Dockerfile.contaReceber -t ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest .
+          docker build -f dockerfiles/Dockerfile.contaReceber -t ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest .
           
           # Rodar a imagem (opcional)
           docker run --rm ${{ secrets.DOCKERHUB_USER }}/conta_receber:latest
