@@ -16,3 +16,4 @@ services:
         TESTS_DIR: ContasReceber
         PYTESTMARK: dockerContaReceber  # Ajuste para passar o valor correto para o pytest
     image: HosAnalise/conta_receber:latest
+
