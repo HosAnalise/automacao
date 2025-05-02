@@ -28,7 +28,12 @@ jobs:
       - name: Push imagens do docker-compose
         run: |
           $IMAGES = docker-compose config | Select-String -Pattern 'image:' | ForEach-Object { $_.Line.Split(":")[1].Trim() }
+
           foreach ($IMAGE in $IMAGES) {
+              # Adicionando o prefixo 'docker.io/' se necessário
+              if ($IMAGE -notmatch '^docker.io/') {
+                  $IMAGE = "docker.io/$IMAGE"
+              }
               Write-Host "Fazendo push de $IMAGE"
               docker push $IMAGE
           }
