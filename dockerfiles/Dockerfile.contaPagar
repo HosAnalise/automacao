@@ -8,7 +8,7 @@ WORKDIR /app
 COPY classes/utils /app/classes/utils
 COPY classes/rotinas /app/classes/rotinas
 COPY conftest.py /app/conftest.py
-COPY run_tests_contaPagar.py /app/run_tests_contaPagar.py
+COPY scripts/run_tests_contaPagar.py /app/run_tests_contaPagar.py
 COPY testes/web/ContasPagar /app/testes/web/ContasPagar
 COPY .env.docker .env
 COPY pytest.ini /app/pytest.ini
