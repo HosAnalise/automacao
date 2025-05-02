@@ -16,7 +16,6 @@ services:
         TESTS_DIR: ContasReceber
         PYTESTMARK: dockerContaReceber  # Ajuste para passar o valor correto para o pytest
     image: hosanalise/conta_receber:latest
-
     
   conciliacao_bancaria:
     build:
@@ -27,8 +26,6 @@ services:
         PYTESTMARK: dockerConciliacaoBancaria  # Ajuste para passar o valor correto para o pytest
     image: hosanalise/conciliacao_bancaria:latest
 
-
-
   extrato_contas:
     build:
       context: .
@@ -37,3 +34,4 @@ services:
         TESTS_DIR: ExtratoDeContas
         PYTESTMARK: dockerExtratoDeContas  # Ajuste para passar o valor correto para o pytest
     image: hosanalise/extrato_contas:latest
+
