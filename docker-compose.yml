@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  conta_pagar:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile
+      args:
+        TESTS_DIR: testes/web/ContasPagar
+        PYTESTMARK: dockerContaPagar  # Ajuste para passar o valor correto para o pytest
+    image: ${DOCKERHUB_USER}/conta_pagar:latest
+
+  conta_receber:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile
+      args:
+        TESTS_DIR: testes/web/ContasReceber
+        PYTESTMARK: dockerContaReceber  # Ajuste para passar o valor correto para o pytest
+    image: ${DOCKERHUB_USER}/conta_receber:latest
