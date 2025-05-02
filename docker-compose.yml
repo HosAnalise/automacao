@@ -5,15 +5,15 @@ services:
       context: .
       dockerfile: dockerfiles/Dockerfile
       args:
-        TESTS_DIR: testes/web/ContasPagar
+        TESTS_DIR: ContasPagar
         PYTESTMARK: dockerContaPagar  # Ajuste para passar o valor correto para o pytest
-    image: ${DOCKERHUB_USER}/conta_pagar:latest
+    image: HosAnalise/conta_pagar:latest
 
   conta_receber:
     build:
       context: .
       dockerfile: dockerfiles/Dockerfile
       args:
-        TESTS_DIR: testes/web/ContasReceber
+        TESTS_DIR: ContasReceber
         PYTESTMARK: dockerContaReceber  # Ajuste para passar o valor correto para o pytest
-    image: ${DOCKERHUB_USER}/conta_receber:latest
+    image: HosAnalise/conta_receber:latest
