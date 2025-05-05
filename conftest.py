@@ -1,3 +1,4 @@
+from collections import namedtuple
 from datetime import datetime
 import json
 import os
@@ -297,7 +298,6 @@ def login(browser, request):
 def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente,screenshots):
 
 
-    execution_id = log_manager._generate_execution_id()
     nivel_acesso, ambiente, rede, loja = get_ambiente
 
 
@@ -335,7 +335,7 @@ def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente,screens
         log_manager.add_log(level="INFO", message="Botão Alterar local de trabalho clicado", routine="Login",application_type='WEB')
 
         # Primeiro, aguarde o iframe ficar disponível e depois mude para ele
-        iframe = WebDriverWait(browser, 10).until(
+        WebDriverWait(browser, 10).until(
             EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, '[title="Alterar Local de Trabalho"]'))
         )
         log_manager.add_log(level="INFO", message="Trocado para iframe Alterar Local de Trabalho", routine="Login",application_type='WEB')
@@ -435,7 +435,7 @@ def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente,screens
         
 
     finally:
-        log_manager.insert_logs_for_execution(execution_id)
+        log_manager.insert_logs_for_execution()
         return browser
 
 
@@ -542,7 +542,15 @@ def init(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screen
 
 
 
-
+@pytest.fixture()
+def context(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection):
+    Init = namedtuple("Init", [
+        "browser", "login", "log_manager", "get_ambiente",
+        "env_vars", "seletor_ambiente", "screenshots", "oracle_db_connection"
+    ])
+    
+    # Retornando a estrutura organizada com os valores recebidos como argumentos da fixture
+    return Init(browser, login, log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection)
 
 
 

@@ -1,14 +1,24 @@
+import random
 
+from calendar import c
+import faker
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from sqlalchemy import false
+from sqlalchemy import true
 from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
 from classes.rotinas.ExtratoContas import ExtratoContas
-
+from classes.rotinas.ContasReceber import ContaReceber
+from time import sleep
+from classes.rotinas.ContasReceber import ContaReceber
+from time import sleep
+import random
+from faker import Faker as fake
 
 
 class ConciliacaoBancaria:
@@ -18,11 +28,27 @@ class ConciliacaoBancaria:
         "P154_FILTRO_CONTA",
         "P154_FILTRO_PERIODO_POR",
         "P154_DATA_INICIAL",
-        "P154_DATA_INICIAL",
+        "P154_DATA_FINAL",
         "P154_FILTRO_SITUACAO"
     ]
-        
-    
+
+    camposRegra = {
+        "P268_DESCRICAO_REGRA",
+        "P268_TIPO_LANCAMENTO",
+        "P268_CONTA",
+        "P268_TIPO_SELECAO",
+        "P268_DESCRICAO_LANCAMENTO_BANCARIO",
+        "P268_TIPO_TRATAMENTO",
+        "P268_TRANSFERENCIA_CONTA_ORIGEM_ID",
+        "P268_TRANSFERENCIA_CONTA_DESTINO_ID",
+        "P268_TRANSFERENCIA_FORMA_TRANSFERENCIA_ID",
+	    "P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO",
+        "P268_CONTA_PAGAR_PESSOA_ID",
+        "P268_TRANSFERENCIA_DESCRICAO",
+        "P268_CONTA_PAGAR_CATEGORIA_FINANCEIRA_ID",
+        "P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO",
+        "P268_CONTA_PAGAR_DESCRICAO"
+    }
 
     @staticmethod
     def insereConciliacao(init:tuple,pathArquivo:str):
@@ -306,7 +332,7 @@ class ConciliacaoBancaria:
 #END incluiRecebimentoContaExistente(init,filter)
 
     @staticmethod
-    def criarNovaContaReceber(init,values):
+    def criarNovaContaReceber(init:tuple,values:dict):
         """
         Cria uma nova conta a receber na aplicação web.
         
@@ -367,7 +393,7 @@ class ConciliacaoBancaria:
 #END criarNovaContaReceber(init,values)
 
     @staticmethod
-    def criarNovaTransferencia(init,query):
+    def criarNovaTransferencia(init:tuple,query:dict):
         """
         Cria uma nova transferência financeira na aplicação.
         
@@ -435,7 +461,7 @@ class ConciliacaoBancaria:
 
 
     @staticmethod
-    def associarRecebimentoExistente(init,filters,contaReceber):
+    def associarRecebimentoExistente(init:tuple,filters:dict,contaReceber:str|bool = False):
         """
         Associa um recebimento existente a um lançamento na aplicação web.
         
@@ -492,7 +518,7 @@ class ConciliacaoBancaria:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
 
-        contaReceber = contaReceber if contaReceber else False
+       
            
         try:       
             seletor ="[acao='associarLancamento']"
@@ -593,7 +619,7 @@ class ConciliacaoBancaria:
     
     
     @staticmethod
-    def associarTransferenciaExistente(init,filters,contaReceber):
+    def associarTransferenciaExistente(init:tuple,filters:dict|bool=False,contaReceber:str|bool=False):
         """
         Associa uma transferência existente a um lançamento na aplicação web.
         
@@ -717,7 +743,7 @@ class ConciliacaoBancaria:
 #END associarTransferemciaExistente(init,filters,contaReceber)
 
     @staticmethod
-    def ingnorarLancamento(init):
+    def ingnorarLancamento(init:tuple):
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -766,7 +792,7 @@ class ConciliacaoBancaria:
 #END ignorarLancamento(init)
 
     @staticmethod
-    def conciliarLancamento(init):
+    def conciliarLancamento(init:tuple):
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -815,12 +841,10 @@ class ConciliacaoBancaria:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
         
-        
-
-        
+#END conciliarLancamento(init)
 
     @staticmethod
-    def processaConciliacaoAutomatica(init,yesNot):
+    def processaConciliacaoAutomatica(init:tuple,yesNot:bool):
         """
         Descrição:
         Este método processa a conciliação automática de lançamentos financeiros na aplicação web. Dependendo do parâmetro yesNot, ele pode confirmar ou cancelar a conciliação automática.
@@ -929,7 +953,7 @@ class ConciliacaoBancaria:
 #END processaConciliacaoAutomatica(init,yesNot) 
 
     @staticmethod
-    def desconciliaLancamento(init,especifico):
+    def desconciliaLancamento(init:tuple,especifico:str|bool=False):
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
@@ -974,4 +998,680 @@ class ConciliacaoBancaria:
                 else:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
         
+#END processaConciliacaoAutomatica(init,yesNot) 
+
+    @staticmethod
+    def desconciliaLancamento(init,especifico):
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        try: 
+            seletor = especifico if especifico else ".buttonsConciliacao"
+
+            desconciliaLancamento= WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,seletor)))
+            desconciliaLancamentoId = desconciliaLancamento.get_attribute("lancamentoid")
+
+            seletor = "[acao='desconciliarLancamento']"
+
+            Components.btnClick(init,seletor)
+
+            seletor = "#SR_pendentesReport_tab"
+            Components.btnClick(init,seletor)
+
+            lancamentoDesconciliado = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,f"[lancamentobancarioid={desconciliaLancamentoId}]")))
+            
+            if lancamentoDesconciliado :
+                Log_manager.add_log(application_type=env_application_type,
+                                    level="ERROR",
+                                    message="Lançamento bancario desconciliado com sucesso",
+                                    routine="",
+                                    error_details="")
+            else:
+                Log_manager.add_log(application_type=env_application_type,
+                                    level="ERROR",
+                                    message="Lançamento bancario não desconciliado",
+                                    routine="",
+                                    error_details="")
+
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
         
+#END desconciliaLancamento(init,especifico)
+
+    @staticmethod
+    def criarRegraConciliacao(init:tuple, dictConfigRecebido:dict):
+        """
+        Cria uma nova regra de conciliação bancária.
+
+        Método recebe um dicionario com os campos preenchidos com valores especificos
+        ou None, nesse caso o método irá gerar valores válidos e aleatórios para os campos, respeitando a lógica da rotina.
+
+        :params init :
+            Tupla contendo os objetos necessários para a automação:
+
+            - browser: Instância do WebDriver do Selenium.
+            - login: Objeto de login (não utilizado diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar eventos e erros.
+            - get_ambiente: Função ou objeto para obter informações do ambiente.
+            - env_vars: Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
+            - screenshots: Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
+        
+        :params dictConfigRecebido :
+            - Dicionário contendo as configurações recebidas para a criação da regra de conciliação bancária.
+        """
+        #deve ser chamada apenas quando estiver na aba "Regras da Conciliação Bancária" e com o filtro lateral fechado.
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        try:
+
+            query = { "conta1": """
+                                SELECT CONTA.CONTA_ID
+                                FROM ERP.CONTA
+                                JOIN ERP.CONTA_ESPECIFICACAO ON CONTA.CONTA_ID = CONTA_ESPECIFICACAO.CONTA_ID
+                                LEFT JOIN ERP.LOJA ON LOJA.LOJA_ID = CONTA_ESPECIFICACAO.LOJA_ID
+                                WHERE CONTA_ESPECIFICACAO.GRUPO_LOJA_ID = 1501
+                                    AND CONTA.TIPO_CONTA_ID IN (1, 2)
+                                    AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
+                                    AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
+                            """,
+            "conta2": """
+                                        SELECT CONTA.CONTA_ID
+                                        FROM ERP.CONTA
+                                        JOIN ERP.CONTA_ESPECIFICACAO ON CONTA.CONTA_ID = CONTA_ESPECIFICACAO.CONTA_ID
+                                        LEFT JOIN ERP.LOJA ON LOJA.LOJA_ID = CONTA_ESPECIFICACAO.LOJA_ID
+                                        WHERE CONTA_ESPECIFICACAO.GRUPO_LOJA_ID = 1501
+                                            AND CONTA.TIPO_CONTA_ID IN (1, 2)
+                                            AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
+                                            AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
+                                    """}
+
+            queryConta = FuncoesUteis.getQueryResults(init, query)
+
+            queryContaReceber = FuncoesUteis.getQueryResults(init, ContaReceber.queries)
+
+
+
+            #gera configurações aleatorias para o dicionario de configurações default, os campos gerados fora de dicionarios influenciam na criação de outros campos
+            if dictConfigRecebido["tipoLancamento"] is None:
+                tipoLancamento = random.randint(1, 2)
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"tipoLancamento gerado aleatóriamente: {tipoLancamento}",
+                    routine="",
+                    error_details=""
+                )
+            else:
+                tipoLancamento = dictConfigRecebido["tipoLancamento"]
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"tipoLancamento recebido: {tipoLancamento}",
+                    routine="",
+                    error_details=""
+                )
+
+            if dictConfigRecebido["tipoTratamento"] is None:
+                tipoTratamento = random.choice([1, 2, 5]) if tipoLancamento == 1 else random.choice([2, 4, 5])
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"tipoTratamento gerado aleatóriamente: {tipoTratamento}",
+                    routine="",
+                    error_details=""
+                )
+            else:
+                tipoTratamento = dictConfigRecebido["tipoTratamento"]
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"tipoTratamento recebido: {tipoTratamento}",
+                    routine="",
+                    error_details=""
+                )
+            
+            if tipoTratamento in [1,4]: #Conta a Receber / Pagar
+                dictConfigEspecificDefault = { #apenas os campos que aparecem dependendo do tipo de tratamento, será mergado com a dictConfigTelaDefault depois para gerar o dictConfigDefault
+                "cliente" : queryContaReceber["Query_queryCliente"],
+                "categFinanceira" : queryContaReceber["Query_queryCategoriaFinanceira"],
+                "utilizarDescricao" : random.randint(0, 1)
+                }
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"cliente gerado aleatóriamente: {dictConfigEspecificDefault['cliente']} | categFinanceira gerada aleatóriamente: {dictConfigEspecificDefault['categFinanceira']} | utilizarDescricao gerada aleatóriamente: {dictConfigEspecificDefault['utilizarDescricao']}",
+                    routine="",
+                    error_details=""
+                )
+
+            elif tipoTratamento == 2: #Transferencia
+                dictConfigEspecificDefault = {
+                "conta2" : queryConta["Query_conta2"],
+                "formaTransferencia" : random.randint(1, 5),
+                "utilizarDescricao" : random.randint(0, 1)
+                }
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"conta2 gerada aleatóriamente: {dictConfigEspecificDefault['conta2']} | formaTransferencia gerada aleatóriamente: {dictConfigEspecificDefault['formaTransferencia']} | utilizarDescricao gerada aleatóriamente: {dictConfigEspecificDefault['utilizarDescricao']}",
+                    routine="",
+                    error_details=""
+                )
+
+            try:
+                if dictConfigEspecificDefault["utilizarDescricao"] == 1 or dictConfigRecebido["utilizarDescricao"] == 1:
+                    dictConfigEspecificDefault["descricaoTratamento"] = GeradorDados.simpleRandString(init, 20, 36, "descricaoTratamento")
+
+                else:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"utilizarDescricao não será utilizado, logo não terá descricaoTratamento",
+                        routine="",
+                        error_details=""
+                    )
+            except:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"dictConfigEspecificDefault não foi criado, logo não terá descricaoTratamento",
+                    routine="",
+                    error_details=""
+                )
+
+            dictConfigTelaDefault = { #apenas os campos que apararecem ao abrir na tela
+            "descricaoRegra" : GeradorDados.simpleRandString(init, 20, 36, "descricaoRegra"),
+            "status" : random.randint(1, 2),
+            "tipoLancamento" : tipoLancamento,
+            "conta1" : queryConta["Query_conta1"],
+            "tipoSelecao" : random.randint(1, 2),
+            "descricaoLancamento" : GeradorDados.simpleRandString(init, 20, 36, "descricaoLancamento"),
+            "tipoTratamento" : tipoTratamento,
+            "salvar" : 0
+            }
+
+            try:
+                """
+                #recebe os valores default e os valores aleatorios, vai receber 2 dicionarios, um com os campos que tem em tela, e outros que são dependentes
+                caso a dictConfigEspecificDefault não existir, o dicionario default será apenas do dictConfigTelaDefault
+                """
+                dictConfigDefault = dictConfigTelaDefault | dictConfigEspecificDefault 
+            except NameError:
+                dictConfigDefault = dictConfigTelaDefault
+
+            # é construido com base nos valores defaults, porém pode ser sobreescrito por possiveis valores inseridos manualmente quando metodo for chamado
+            dictConfigFinal = {}
+
+            # Primeiro: adiciona tudo da dictConfigRecebido, desde que o valor seja diferente de None
+            for key, value in dictConfigRecebido.items():
+                if value is not None:
+                    dictConfigFinal[key] = value
+
+            # Segundo: adiciona valores do default apenas se a key já não existir na dictConfigFinal
+            for key, value in dictConfigDefault.items():
+                if key not in dictConfigFinal:
+                    dictConfigFinal[key] = value
+
+
+            dicionarioEscrito = { #dicionario incompleto, apenas as informações que aparecem quando o "Tipo de Tratamento" for "Ignorar Lançamento" / Default e seletores iguais
+            "P268_DESCRICAO_REGRA" : dictConfigFinal["descricaoRegra"],
+            "P268_DESCRICAO_LANCAMENTO_BANCARIO" : dictConfigFinal["descricaoLancamento"]
+            }
+
+            dicionarioPopup = { #dicionario incompleto, apenas as informações que aparecem quando o "Tipo de Tratamento" for "Ignorar Lançamento" / Default
+                "P268_TIPO_LANCAMENTO" : dictConfigFinal["tipoLancamento"], 
+                "P268_CONTA" : dictConfigFinal["conta1"],
+                "P268_TIPO_SELECAO" : dictConfigFinal["tipoSelecao"],
+                "P268_TIPO_TRATAMENTO" : dictConfigFinal["tipoTratamento"],
+                "P268_STATUS" : dictConfigFinal["status"]
+            }
+
+            #adicionando aos dicionarios dependendo de certos valores e seletores{
+            if dicionarioPopup["P268_TIPO_TRATAMENTO"] == 2: #Lançamento de Transferência
+                dicionarioPopup["P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO"] = dictConfigFinal["utilizarDescricao"]
+                dicionarioPopup["P268_TRANSFERENCIA_FORMA_TRANSFERENCIA_ID"] = dictConfigFinal["formaTransferencia"]
+
+                if(dicionarioPopup["P268_TIPO_LANCAMENTO"] == 1): #Entrada
+                    dicionarioPopup["P268_TRANSFERENCIA_CONTA_ORIGEM_ID"] = dictConfigFinal["conta2"]
+
+                else: #Saida
+                    dicionarioPopup["P268_TRANSFERENCIA_CONTA_DESTINO_ID"] = dictConfigFinal["conta2"]
+
+                if dicionarioPopup["P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO"] == 1:
+                    dicionarioEscrito["P268_TRANSFERENCIA_DESCRICAO"] = dictConfigFinal["descricaoTratamento"]
+
+
+            elif dicionarioPopup["P268_TIPO_TRATAMENTO"] == 1 or dicionarioPopup["P268_TIPO_TRATAMENTO"] == 4: #Lançamento de Conta a Receber ou Conta a Pagar
+
+                if dicionarioPopup["P268_TIPO_LANCAMENTO"] == 1: #Entrada -> Conta a Receber
+                    dicionarioPopup["P268_CONTA_RECEBER_UTILIZAR_DESCRICAO_LANCAMENTO"] = dictConfigFinal["utilizarDescricao"]
+                    dicionarioPopup["P268_CONTA_RECEBER_PESSOA_ID"] = dictConfigFinal["cliente"]
+                    dicionarioPopup["P268_CONTA_RECEBER_CATEGORIA_FINANCEIRA_ID"] = dictConfigFinal["categFinanceira"]
+
+                    if dicionarioPopup["P268_CONTA_RECEBER_UTILIZAR_DESCRICAO_LANCAMENTO"] == 1:
+                        dicionarioEscrito["P268_CONTA_RECEBER_DESCRICAO"] = dictConfigFinal["descricaoTratamento"]
+
+                elif dicionarioPopup["P268_TIPO_LANCAMENTO"] == 2: #Saida -> Conta a Pagar
+                    dicionarioPopup["P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO"] = dictConfigFinal["utilizarDescricao"]
+                    dicionarioPopup["P268_CONTA_PAGAR_PESSOA_ID"] = dictConfigFinal["cliente"]
+                    dicionarioPopup["P268_CONTA_PAGAR_CATEGORIA_FINANCEIRA_ID"] = dictConfigFinal["categFinanceira"]
+
+                    if dicionarioPopup["P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO"] == 1:
+                        dicionarioEscrito["P268_CONTA_PAGAR_DESCRICAO"] = dictConfigFinal["descricaoTratamento"]
+            # }
+
+
+            Components.btnClick(init, "#adicionaRegra")
+            
+            hasFrame = Components.has_frame(init,"[title='Cadastro de Regra para Conciliação Bancária']")
+            if hasFrame:
+
+                dictCompareOne = {
+                    "P268_TIPO_LANCAMENTO" : dicionarioPopup["P268_TIPO_LANCAMENTO"]
+                }
+                del dicionarioPopup["P268_TIPO_LANCAMENTO"]
+
+                tipoLancamento = FuncoesUteis.prepareToCompareValues(init, dictCompareOne)
+                sleep(2)
+                FuncoesUteis.compareValues(init, tipoLancamento)
+
+                dictCompareOne = {
+                    "P268_TIPO_TRATAMENTO" : dicionarioPopup["P268_TIPO_TRATAMENTO"]
+                }
+                del dicionarioPopup["P268_TIPO_TRATAMENTO"]
+
+                tipoTratamento = FuncoesUteis.prepareToCompareValues(init, dictCompareOne)
+                FuncoesUteis.compareValues(init, tipoTratamento)
+
+                if dicionarioPopup.get("P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO") or dicionarioPopup.get("P268_CONTA_RECEBER_UTILIZAR_DESCRICAO_LANCAMENTO") or dicionarioPopup.get("P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO"):
+                    campos = [
+                    "P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO",
+                    "P268_CONTA_RECEBER_UTILIZAR_DESCRICAO_LANCAMENTO",
+                    "P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO"
+                    ]
+
+                    for seletor in campos:
+                        if seletor in dicionarioPopup:
+                            Apex.setValue(browser, seletor, 0)
+                            
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"Desmarcado a checkbox {seletor}",
+                                routine="",
+                                error_details=""
+                            )
+                            del dicionarioPopup[seletor]
+
+                            break
+                        else:
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"Não encontrado nenhum seletor no dicionario",
+                                routine="",
+                                error_details=""
+                            )
+
+                campos = FuncoesUteis.prepareToCompareValues(init, dicionarioPopup)
+                FuncoesUteis.compareValues(init, campos)
+
+
+                campos = FuncoesUteis.prepareToCompareValues(init, dicionarioEscrito, True)
+                FuncoesUteis.compareValues(init, campos)
+                    
+                camposEscritos = {}
+                for seletor,value in dicionarioEscrito.items():
+
+                    try:
+                        element = browser.find_element(By.CSS_SELECTOR, f"#{seletor}")
+                        size_value = element.get_attribute("size")
+                        camposEscritos[seletor] = int(size_value)
+
+                        Log_manager.add_log(
+                            application_type=env_application_type,
+                            level="INFO",
+                            message=f"Campo {seletor} encontrado com valor {size_value}",
+                            routine="",
+                            error_details=""
+                        )
+
+                    except Exception as e:
+                        Log_manager.add_log(
+                            application_type=env_application_type,
+                            level="ERROR",
+                            message=f"Erro ao buscar o campo {seletor}: {str(e)}",
+                            routine="",
+                            error_details=str(e)
+                        )
+                        continue
+
+                for key, value in camposEscritos.items():
+                    try:
+                        valorCampo = Apex.getValue(browser, key)
+                        tamanho = len(valorCampo)
+                        if tamanho > value:
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"Valor do campo {key} recebeu {valorCampo} de tamanho({tamanho}), é maior que o permitido ({value})",
+                                routine="",
+                                error_details=""
+                            )
+                        else:
+                            Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message=f"Valor do campo {key} recebeu {valorCampo} de tamanho({tamanho}), dentro do permitido ({value})",
+                                routine="",
+                                error_details=""
+                            )
+                    except Exception as e:
+                        Log_manager.add_log(
+                            application_type=env_application_type,
+                            level="ERROR",
+                            message=f"Erro ao verificar o valor do campo {key}: {str(e)}",
+                            routine="",
+                            error_details=str(e)
+                        )
+
+                botaoFinal = "#B170903369717813403" if dictConfigFinal["salvar"] else "#B170903131900813401"
+                Components.btnClick(init, botaoFinal)
+
+
+                browser.switch_to.default_content()
+
+        except (TimeoutException, NoSuchElementException, Exception) as e:
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
+            screenshot_path = screenshots
+            if screenshot_path:
+                success = browser.save_screenshot(screenshot_path)
+                if success:
+                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
+                else:
+                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+
+#END criarRegraConciliacao(init, dictConfigRecebido)
+
+    @staticmethod
+    def criarContaReceberResumido(init:tuple, dictRecebido:dict = None, procuraConta:bool = True) -> dict:
+        """
+        Clica na Opção de Lançamento "Criar Nova Conta a Receber" e
+        cria uma Conta a Receber resumida via conciliação bancária.
+
+        :params init :
+            Tupla contendo os objetos necessários para a automação:
+
+            - browser: Instância do WebDriver do Selenium.
+            - login: Objeto de login (não utilizado diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar eventos e erros.
+            - get_ambiente: Função ou objeto para obter informações do ambiente.
+            - env_vars: Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
+            - screenshots: Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
+
+        :params dictRecebido :
+            - Dicionário opcional contendo os campos e valores a serem preenchidos na Conta a Receber Resumida.
+
+            - Caso não seja passado, o método irá gerar valores válidos e aleatórios para os campos, respeitando a lógica da rotina.
+        
+        :params procuraConta :
+            - Booleano que define se o método ira procurar pela Conta a Receber criada,
+            verificando se os valores colocados nos campos estão sendo colocados corretamente na criação.
+
+            - True = Procura a conta criada.
+            - False = Não procura a conta criada.
+
+        :return camposFiltros:
+            - Dicionário contendo os campos e valores da Conta a Receber criada necessarias pra procura-lá.
+        """
+        
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        queryContaReceber = FuncoesUteis.getQueryResults(init, ContaReceber.queries)
+        
+        if dictRecebido is None:
+            dictContaReceber = {
+                "P199_PESSOA_ID" : queryContaReceber["Query_queryCliente"],
+                "P199_DATA_EMISSAO" : GeradorDados.simpleRandDate(init),
+                "P199_CATEGORIA_FINANCEIRA_ID" : queryContaReceber["Query_queryCategoriaFinanceira"]
+            }
+
+            contaReceberDescricao = {
+                "P199_DESCRICAO" : GeradorDados.simpleRandString(init, 20, 36, "P199_DESCRICAO")
+            }
+        else:
+            cliente = dictRecebido["cliente"] if dictRecebido["cliente"] is not None else queryContaReceber["Query_queryCliente"]
+            dataEmissao = dictRecebido["dataEmissao"] if dictRecebido["dataEmissao"] is not None else GeradorDados.simpleRandDate(init)
+            categFinanceira = dictRecebido["categFinanceira"] if dictRecebido["categFinanceira"] is not None else queryContaReceber["Query_queryCategoriaFinanceira"]
+            descricaoConta = dictRecebido["descricao"] if dictRecebido["descricao"] is not None else GeradorDados.simpleRandString(init, 20, 36, "P199_DESCRICAO")
+
+            dictContaReceber = {
+                "P199_PESSOA_ID" : cliente,
+                "P199_DATA_EMISSAO" : dataEmissao,
+                "P199_CATEGORIA_FINANCEIRA_ID" : categFinanceira
+            }
+
+            contaReceberDescricao = {
+                "P199_DESCRICAO" : descricaoConta
+            }
+
+        Components.btnClick(init, 'p[acao="novoLancamento"]')
+
+        hasFrame = Components.has_frame(init,"[title='Cadastro de Contas a Receber Resumido']")
+        if hasFrame:
+            
+            campos = FuncoesUteis.prepareToCompareValues(init, dictContaReceber)
+            FuncoesUteis.compareValues(init, campos)
+
+            campos = FuncoesUteis.prepareToCompareValues(init, contaReceberDescricao)
+            FuncoesUteis.compareValues(init, campos)
+
+            for seletor, value in contaReceberDescricao.items():
+
+                element = browser.find_element(By.CSS_SELECTOR, f"#{seletor}")
+                tamMax = element.get_attribute("maxlength")
+
+                tamanhoEscrito = len(contaReceberDescricao[seletor])
+
+                valorCampo = Apex.getValue(browser, seletor)
+                tamanhoEncontrado = len(valorCampo)
+
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Campo {seletor} escrito com tamanho = {tamanhoEscrito}, encontrado com tamanho = {tamanhoEncontrado}",
+                    routine="",
+                    error_details=""
+                )
+
+            mapeamentoFiltro = {
+                "P199_CONTA_ID": "P84_CONTA",
+                "P199_VALOR": "P84_VALOR_INICIAL",
+                "P199_PESSOA_ID": "P84_CLIENTE",
+                "P199_DATA_EMISSAO": "P84_DATA_INICIAL",
+                "P199_CATEGORIA_FINANCEIRA_ID": "P84_CATEGORIA"
+            }
+            
+            valoresInseridos = [
+                Apex.getValue(browser, "P199_CONTA_ID"),
+                Apex.getValue(browser, "P199_VALOR"),
+                "Dinheiro", # Apex.getValue(browser, "P199_FORMA_RECEBIMENTO"),
+                Apex.getValue(browser, "P199_PESSOA_ID"),
+                Apex.getValue(browser, "P199_DATA_EMISSAO"),
+                Apex.getValue(browser, "P199_DATA_RECEBIMENTO"),
+                Apex.getValue(browser, "P199_CATEGORIA_FINANCEIRA_ID"),
+                Apex.getValue(browser, "P199_DESCRICAO")
+            ]
+
+            valorFinal = Apex.getValue(browser, "P199_VALOR")
+            dataFinal = Apex.getValue(browser, "P199_DATA_EMISSAO")
+
+            camposFiltros = {}
+            for seletor, seletorFinal in mapeamentoFiltro.items():
+
+                camposFiltros[seletorFinal] = Apex.getValue(browser, seletor)
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Inserido o valor do campo {seletor} para o seletor {seletorFinal}",
+                    routine="",
+                    error_details=""
+                )
+            
+            camposFiltros["P84_VALOR_FINAL"] = valorFinal
+            camposFiltros["P84_DATA_FINAL"] = dataFinal
+            camposFiltros["P84_TIPO_PERIODO"] = "EMISSAO"
+
+            Components.btnClick(init, "#save")
+
+            if not Components.has_alert(init) and int(tamanhoEncontrado) > int(tamMax):
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="ERROR",
+                    message=f"Campo {seletor} não respeitou o tamanho máximo permitido ({tamMax})",
+                    routine="",
+                    error_details=""
+                )
+
+            if procuraConta: #verifica se a conta foi criada corretamente
+
+                camposFiltros["P84_SITUACAO"] = "recebida"
+
+                FuncoesUteis.goToPage(init,ContaReceber.url)
+
+                FuncoesUteis.setFilters(init, camposFiltros)
+
+                Components.btnClick(init, "#filtrar")
+
+                ContaReceber.editaContaReceber(init)
+
+                valoresNaConta = [
+                    Apex.getValue(browser, "P85_CONTA_ID"),
+                    Apex.getValue(browser, "P85_VALOR"),
+                    None, #P199_FORMA_RECEBIMENTO
+                    Apex.getValue(browser, "P85_PESSOA_CLIENTE_ID"),
+                    Apex.getValue(browser, "P85_DATA_EMISSAO"),
+                    Apex.getValue(browser, "P85_DATA_PREVISAO_RECEBIMENTO"),
+                    Apex.getValue(browser, "P85_CATEGORIA_FINANCEIRA"),
+                    Apex.getValue(browser, "P85_DESCRICAO")
+                ]
+
+                sleep(1)
+
+                Components.btnClick(init, "#recebimento_tab")
+
+                sleep(1)
+
+                formaPagamento = browser.find_element(By.CSS_SELECTOR, 'td[headers="C5662823473090224"]').text
+
+                valoresNaConta[2] = formaPagamento
+
+                compareInsertContaBase = {#dicionario segue o padrão : "(nome da informação)-(nome do seletor da conta a receber resumida) : (valor na conta), (valor inserido)"
+                    "Conta-P199_CONTA_ID": None,
+                    "Valor-P199_VALOR": None,
+                    "FormaRecebimento-P199_FORMA_RECEBIMENTO": None,
+                    "Cliente-P199_PESSOA_ID": None,
+                    "DataEmissao-P199_DATA_EMISSAO": None,
+                    "DataRecebimento-P199_DATA_RECEBIMENTO": None,
+                    "CategoriaFinanceira-P199_CATEGORIA_FINANCEIRA_ID": None,
+                    "Descricao-P199_DESCRICAO": None,
+                    "FormaRecebimento-P199_FORMA_RECEBIMENTO": None
+                }
+                compareInsertConta = {
+                    key: (valoresInseridos[i], valoresNaConta[i])
+                    for i, key in enumerate(compareInsertContaBase)
+                }
+
+                FuncoesUteis.compareValues(init, compareInsertConta)
+
+            print(f"CAMPOSFILTROS============\n{camposFiltros}")
+            print(f"COMPAREINSERTCONTA========\n{compareInsertConta}")
+
+            return camposFiltros
+
+#END criarContaReceberResumido(init, procuraConta)
+
+    @staticmethod
+    def clickOpcoesLancamento(init:tuple, filtros:dict):
+        """
+        Procura por um OFX pela data, espera o botão da "Situação" terminar de carregar
+        e clica para abrir as opções de lançamento.
+
+        :params init :
+            Tupla contendo os objetos necessários para a automação:
+
+            - browser: Instância do WebDriver do Selenium.
+            - login: Objeto de login (não utilizado diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar eventos e erros.
+            - get_ambiente: Função ou objeto para obter informações do ambiente.
+            - env_vars: Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
+            - screenshots: Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
+
+        :params data :
+            Dicionário contendo os dados necessários para a busca do OFX.
+
+            - Data inicial e final.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        FuncoesUteis.aplyFilter(init, filtros)
+        Components.btnClick(init, ".fa.fa-edit")
+        sleep(1)
+        browser.execute_script("$('.ui-button.ui-corner-all.ui-widget').click()") 
+
+        spin = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".fa.fa-spinner.fa-anim-spin")))
+        Log_manager.add_log(application_type=env_application_type, level="INFO", message="Loading...", routine="", error_details='')
+
+        if spin:
+
+            var = WebDriverWait(browser,90).until(EC.staleness_of(spin))
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message="fim do Loading...", routine="", error_details='')
+
+        if var:
+
+            try:
+                element = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".d.fa.fa-times-circle.iconGrey")))
+                btn = ".d.fa.fa-times-circle.iconGrey"
+            except:
+                try:
+                    element = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".fa.fa-check-circle.iconGreen")))
+                    btn = ".fa.fa-check-circle.iconGreen"
+                except:
+                    element = None
+
+            if element:
+                browser.execute_script("""
+                    arguments[0].scrollIntoView({behavior: 'auto', block: 'nearest', inline: 'center'});
+                """, element)
+                Components.btnClick(init, btn)
+            else:
+                print("Nenhum dos elementos foi encontrado.")
+
+        else:
+            Log_manager.insert_logs_for_execution()
+            browser.quit()
+#END clickOpcoesLancamento(init, data)

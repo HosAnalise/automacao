@@ -30,10 +30,10 @@ def test_DevolverTransferencia(init):
 
         #fazendo a transferencia
         contaOrigem = "5290"
-        data = FuncoesUteis.simpleRandDate(init)
+        data = GeradorDados.simpleRandDate(init)
         valorTransf = f"{random.uniform(10, 230):.2f}".replace(".", ",")
-        numDoc = FuncoesUteis.simpleRandString(init, 5, 8)
-        desc = FuncoesUteis.simpleRandString(init, 7, 15)
+        numDoc = GeradorDados.simpleRandString(init, 5, 8)
+        desc = GeradorDados.simpleRandString(init, 7, 15)
 
         contaTransf = {
             "P78_CONTA_ORIGEM_ID" : contaOrigem,
