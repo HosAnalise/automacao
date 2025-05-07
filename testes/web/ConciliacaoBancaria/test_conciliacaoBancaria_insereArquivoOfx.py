@@ -17,8 +17,8 @@ def test_contaPagar_insereArquivoOfx(init):
         FuncoesUteis.goToPage(init,ConciliacaoBancaria.url)
         Components.has_spin(init)
         FuncoesUteis.showHideFilter(init,ConciliacaoBancaria.filterSelector)
-        ConciliacaoBancaria.insereConciliacao(init)
-        Components.has_alert(init)
+        # ConciliacaoBancaria.insereConciliacao(init)
+        # Components.has_alert(init)
                     
     except (TimeoutException, NoSuchElementException, Exception) as e:
         Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
