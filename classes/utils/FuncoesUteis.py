@@ -871,7 +871,7 @@ class FuncoesUteis:
         Garante que o filtro lateral esteja visível ou oculto, de acordo com `showHide`.
         
         :param init: Tupla com parâmetros do ambiente.
-        :param seletor: Seletor CSS para verificar a visibilidade atual do filtro.
+        :param seletor: Seletor CSS para verificar a visibilidade atual do filtro, necessita do '#', porém não é obrigatorio passar, pois possui validação interna.
         :param showHide: True para abrir o filtro, False para fechar.
         """
 
