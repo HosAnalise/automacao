@@ -1611,7 +1611,7 @@ class ConciliacaoBancaria:
 #END criarContaReceberResumido(init, procuraConta)
 
     @staticmethod
-    def clickOpcoesLancamento(init:tuple, filtros:dict):
+    def clickOpcoesLancamento(init:tuple, filtros:dict = None):
         """
         Procura por um OFX pela data, espera o botão da "Situação" terminar de carregar
         e clica para abrir as opções de lançamento.
@@ -1629,10 +1629,14 @@ class ConciliacaoBancaria:
             - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
 
         :params data :
-            Dicionário contendo os dados necessários para a busca do OFX.
-
-            - Data inicial e final.
+            Dicionário opcional contendo os dados necessários para a busca do OFX, caso não seja passado será utilizado um default.
         """
+
+        if filtros is None:
+            filtros = {
+            "P154_DATA_INICIAL" : "12/01/2025",
+            "P154_DATA_FINAL" : "12/01/2025"
+            }
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
