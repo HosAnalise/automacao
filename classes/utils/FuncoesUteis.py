@@ -1111,4 +1111,165 @@ class FuncoesUteis:
                     Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 #END getURL(init)
 
+    @staticmethod
+    def recuperaValores(init:tuple, seletores:set)->dict:
+        """
+        Recebe um conjunto de seletores e retorna um dicionario com os campos e valores encontrados nos seletores correspondentes.
 
+        :params init :
+            Tupla contendo os objetos necessários para a automação:
+
+            - browser: Instância do WebDriver do Selenium.
+            - login: Objeto de login (não utilizado diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar eventos e erros.
+            - get_ambiente: Função ou objeto para obter informações do ambiente.
+            - env_vars: Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
+            - screenshots: Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
+
+        :params seletores :
+            - Conjunto de seletores que serão utilizados para localizar e retornar os campos na página.
+
+        :return camposFiltros:
+            - Dicionário contendo os campos e valores dos seletores especificados da Conta a Receber.
+        """
+        
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        valoresDict = {}
+        for seletor in seletores:
+            WebDriverWait(browser, 15).until(
+                lambda driver: driver.execute_script(
+                    f"return typeof apex.item('{seletor}') !== 'undefined' && apex.item('{seletor}') !== null"
+                )
+            )
+            # WebDriverWait(browser, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, f"#{seletor}")))
+            valoresDict[seletor] = Apex.getValue(browser, seletor)
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"Capturado valor do seletor {seletor}: {valoresDict[seletor]}",
+                routine="Prestador/Empresa",
+                error_details=''
+            )
+
+        return valoresDict
+#END recuperaValores(init, dict)
+
+    @staticmethod
+    def scrollIntoView(init:tuple, seletor:str, clica:bool = False):
+        """
+        Recebe um seletor, é arrastado a tela até o seletor estiver em vista.
+
+        :params init :
+            Tupla contendo os objetos necessários para a automação:
+
+            - browser: Instância do WebDriver do Selenium.
+            - login: Objeto de login (não utilizado diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar eventos e erros.
+            - get_ambiente: Função ou objeto para obter informações do ambiente.
+            - env_vars: Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
+            - screenshots: Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
+
+        :params seletor :
+            - String de seletor utilizado para dar scroll até acha-lo. Deve ser passado sem o '#'.
+
+        :params clica :
+            - Booleano que indica se o elemento deve ser clicado após o scroll.
+        """
+        
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        campo = WebDriverWait(browser,30).until(EC.presence_of_element_located((By.CSS_SELECTOR, f"#{seletor}")))
+        browser.execute_script("arguments[0].scrollIntoView(true);", campo)
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Scroll até o seletor {seletor} realizado com sucesso.",
+            routine="",
+            error_details=''
+        )
+
+        Components.btnClick(init, f"#{seletor}") if clica else None
+#END scrollIntoView(init, seletor)
+
+    @staticmethod
+    def geraValoresRandom(init:tuple, dictRecebido:dict[str, type | tuple[type, int, int]]) -> dict[str, Any]:
+        """
+        Recebe um dicionário contendo Seletores como chave e Types como valores, é possivel mandar uma tupla como valor, que 
+        sobrepõem o range default, passando (type, valor minimo e maximo).
+
+        Retorna um dicionário com os mesmos seletores e valores gerados aleatoriamente para cada tipo especificado.
+
+        Types Recebiveis (range default):
+            - str: String aleatória entre 5 e 30 caracteres alfanuméricos.
+            - int: Número inteiro aleatório entre 5 e 30.
+            - float: Número decimal aleatório entre 5 e 30 com duas casas decimais.
+            - bool: Valor booleano aleatório (True ou False).
+            - "date": Data aleatória no formato 'dd/mm/yyyy', não é possivel passar configuração por parametro.
+
+        :params init :
+            Tupla contendo os objetos necessários para a automação:
+
+            - browser: Instância do WebDriver do Selenium.
+            - login: Objeto de login (não utilizado diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar eventos e erros.
+            - get_ambiente: Função ou objeto para obter informações do ambiente.
+            - env_vars: Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
+            - screenshots: Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
+        
+        :params dictRecebido :
+            - Dicionário contendo seletores como chave e tipos como valores.
+
+        Exemplos de dictRecebido e Returns:
+            - "P85_DATA_VENCIMENTO": "date" = data aleatoria "04/08/2021"
+            - "P85_VALOR": float = float aleatorio "1234,56"
+            - "P84_ORIGEM": (int, 30, 50) = int aleatorio entre 30 e 50 "39"
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        resultados = {}
+
+        for seletor, config in dictRecebido.items():
+            if isinstance(config, tuple):
+                tipo, x, y = config
+            else:
+                tipo, x, y = config, None, None
+
+            tipo_str = tipo if isinstance(tipo, str) else tipo.__name__.lower()
+
+            if tipo_str == "str":
+                valor = GeradorDados.simpleRandString(init, x if x is not None else 10, y if y is not None else 50, seletor)
+
+            elif tipo_str == "int":
+                valor = random.randint(x if x is not None else 5, y if y is not None else 30)
+
+            elif tipo_str == "float":
+                parte_inteira = random.randint(x if x is not None else 5, y if y is not None else 30)
+                valor = (f"{parte_inteira},{random.randint(0, 99):02d}")
+
+            elif tipo_str == "bool":
+                valor = random.choice([True, False])
+
+            elif tipo_str == "date":
+                valor = GeradorDados.simpleRandDate(init, seletor)
+
+            else:
+                raise ValueError(f"Tipo não suportado: {tipo}")
+
+            resultados[seletor] = valor
+
+        return resultados
+#END geraValoresRandom(init, dictRecebido)
