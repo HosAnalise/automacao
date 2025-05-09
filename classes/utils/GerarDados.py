@@ -116,7 +116,7 @@ class GeradorDados:
 #END simpleRandString(min, max)
 
     @staticmethod
-    def simpleRandDate(init) -> string:
+    def simpleRandDate(init, nome_variavel: str = None) -> string:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
