@@ -891,11 +891,26 @@ class FuncoesUteis:
                 "Fechado"
             ]
 
+        if not seletor.startswith("#"):
+            seletor = f"#{seletor}"
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"O seletor foi corrigido automaticamente para '{seletor}', adicionando '#' ao inicio.",
+                routine="guaranteeShowHideFilter",
+                error_details=""
+            )
+
         try:
             # Verifica se o filtro lateral já está aberto
-            elemento = WebDriverWait(browser,10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, seletor)))  
+            try:
+                WebDriverWait(browser,5).until(EC.visibility_of_element_located((By.CSS_SELECTOR, seletor)))  
+                elemento = True
+            except:
+                elemento = False
+
             if elemento:
-                open = 1
+                open = True
                 status = "Aberto"
             else:
                 open = False
