@@ -1462,7 +1462,7 @@ class ContaReceber:
 
             Components.has_spin(init)
             Components.has_alert(init)
-            Components.has_alert_sucess(init)
+            Components.has_alert_success(init)
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
