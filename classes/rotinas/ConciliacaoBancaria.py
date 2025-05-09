@@ -1679,3 +1679,102 @@ class ConciliacaoBancaria:
             Log_manager.insert_logs_for_execution()
             browser.quit()
 #END clickOpcoesLancamento(init, data)
+
+    @staticmethod
+    def incluiRecebimentoContaExistente(init:tuple, dictRecebido:dict, verificaConta:bool = True):
+        """
+        Clica na Opção de Lançamento "Incluir Recebimento em Conta Existente" e
+        inclui um recebimento para uma Conta a Receber existente, pesquisando via o dicionario recebido.
+
+        :params init :
+            Tupla contendo os objetos necessários para a automação:
+
+            - browser: Instância do WebDriver do Selenium.
+            - login: Objeto de login (não utilizado diretamente nesta função).
+            - Log_manager: Gerenciador de logs para registrar eventos e erros.
+            - get_ambiente: Função ou objeto para obter informações do ambiente.
+            - env_vars: Dicionário contendo variáveis do ambiente.
+            - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
+            - screenshots: Caminho para salvar capturas de tela em caso de erro.
+            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
+
+        :params dictRecebido :
+            - Dicionário contendo os campos e valores a serem utilizados para a pesquisa da Conta a Receber existente.
+
+            - É obrigatório sua passagem, caso contrário o método não irá funcionar corretamente.
+
+        :params verificaConta :
+            - Booleano que define se o método ira verificar, pós inclusão, se a Conta a Receber foi recebida.
+
+        :return bool:
+            - Apenas caso verificaConta for True, método retorna True se a Conta a Receber foi recebida com sucesso, False caso contrário.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        Components.btnClick(init, 'p[acao="novoLancamentoExistente"]')
+
+        hasFrame = Components.has_frame(init,"[title='Incluir Lançamento em Conta Existente']")
+        if hasFrame:
+            sleep(1)
+            Components.btnClick(init, "#SR_filtros_tab")
+            # sleep(1)
+
+            FuncoesUteis.setFilters(init, dictRecebido)
+            # sleep(10)
+            
+            Components.btnClick(init, "#B111432143494655101")
+
+            Components.has_spin(init)
+
+            Components.btnClick(init, ".selecaoConta.form-check-input")
+
+            Components.btnClick(init, "#conciliarButton")
+
+            if verificaConta:
+                camposFiltros = {
+                    "P84_DATA_INICIAL" : dictRecebido["P157_DATA_INICIAL"],
+                    "P84_DATA_FINAL" : dictRecebido["P157_DATA_INICIAL"],
+                    "P84_NUMERO_DOCUMENTO" : dictRecebido["P157_NUMERO_DOCUMENTO"],
+                    "P84_NUMERO_PEDIDO" : dictRecebido["P157_NUMERO_PEDIDO"],
+                    "P84_VALOR_INICIAL" : dictRecebido["P157_VALOR_MIN"],
+                    "P84_VALOR_FINAL" : dictRecebido["P157_VALOR_MAX"]
+                }
+                
+                camposFiltros["P84_SITUACAO"] = "recebida"
+                
+                FuncoesUteis.goToPage(init,ContaReceber.url)
+                FuncoesUteis.guaranteeShowHideFilter(init, "#P84_TIPO_PERIODO", True)
+
+                # FuncoesUteis.setFilters(init, camposFiltros)
+                FuncoesUteis.aplyFilter(init, camposFiltros)
+                Components.has_spin(init)
+
+                # Components.btnClick(init, "#filtrar")
+
+                ContaReceber.editaContaReceber(init)
+
+                WebDriverWait(browser, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#P85_RECEBIDO_1")))
+
+                recebido = Apex.getValue(browser, "P85_RECEBIDO_1")
+                if recebido:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Conta a Receber foi recebida com sucesso!",
+                        routine="",
+                        error_details=""
+                    )
+                    return True
+                else:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Conta a Receber não foi recebida!",
+                        routine="",
+                        error_details=""
+                    )
+                    return False
+#END incluiRecebimentoContaExistente(init, dictRecebido, verificaConta)
