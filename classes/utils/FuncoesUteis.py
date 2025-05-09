@@ -9,10 +9,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from classes.utils.GerarDados import GeradorDados
+from classes.utils.Components import Components
 import random
 from classes.utils.ApexUtil import Apex
 import string
-
+from typing import Any
 
 class FuncoesUteis:
     """
