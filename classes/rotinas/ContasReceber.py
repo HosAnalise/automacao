@@ -183,7 +183,7 @@ class ContaReceber:
         try:
 
             browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
-            randomQueries =  query
+            
             getEnv = env_vars
             env_application_type = getEnv.get("WEB")
             
@@ -213,16 +213,18 @@ class ContaReceber:
             bigText500 = GeradorDados.gerar_texto(500)
 
 
-
-            recebidovalue = has_receipt if has_contaReceber  else 0 if randomNumber != 0 else zeroOrOne if randomNumber == 4 else 1
-            valorValue = randomValue if randomNumber != 0 else randomText
-            contaIdValue = randomQueries["Query_queryContaId"] if randomNumber != 0 else randomText
-            pessoaClienteId = randomQueries["Query_queryCliente"] if randomNumber != 0 else randomText
-            dataVencimentoValue = dataVencimento if randomNumber != 0 else randomText
-            dataPrevisaoRecebimento = dataPrevisao if randomNumber != 0 else randomText
-            categoriaFinanceiraValue  = randomQueries["Query_queryCategoriaFinanceira"]
-            lojaIdValue = randomQueries["Query_queryEmpresa"] if randomNumber != 0 else randomText
-            descricaoValue = randomText if randomNumber != 0 else bigText500
+            if not staticValues:
+                randomQueries =  query
+                
+                recebidovalue = has_receipt if has_contaReceber  else 0 if randomNumber != 0 else zeroOrOne if randomNumber == 4 else 1
+                valorValue = randomValue if randomNumber != 0 else randomText
+                contaIdValue = randomQueries["Query_queryContaId"] if randomNumber != 0 else randomText
+                pessoaClienteId = randomQueries["Query_queryCliente"] if randomNumber != 0 else randomText
+                dataVencimentoValue = dataVencimento if randomNumber != 0 else randomText
+                dataPrevisaoRecebimento = dataPrevisao if randomNumber != 0 else randomText
+                categoriaFinanceiraValue  = randomQueries["Query_queryCategoriaFinanceira"]
+                lojaIdValue = randomQueries["Query_queryEmpresa"] if randomNumber != 0 else randomText
+                descricaoValue = randomText if randomNumber != 0 else bigText500
 
 
             apexValues = staticValues if isinstance(staticValues,dict) else {
@@ -338,7 +340,7 @@ class ContaReceber:
                 )
 
         finally:
-            return recebidovalue        
+            if not staticValues: return recebidovalue
 #END insereContaReceber(init,query)
 
 
