@@ -127,11 +127,15 @@ class GeradorDados:
 
         data = f"{dia}/{mes}/{ano}"
 
+        log_msg = f"Gerado a data aleatória : {data}"
+        if nome_variavel:
+            log_msg += f" | Variável: {nome_variavel}"
+
         Log_manager.add_log(
-            level="INFO", 
-            message=f"Gerado a data aleatoria : {data}", 
+            level="INFO",
+            message=log_msg,
             routine="",
-            application_type=env_application_type, 
+            application_type=env_application_type,
             error_details=""
         )
 
