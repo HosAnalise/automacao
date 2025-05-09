@@ -191,7 +191,10 @@ class FuncoesUteis:
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="INFO",
-                    message=f"Valor incorreto - {chave}: {v1} (esperado) ≠ {v2} (atual)",
+                    message=(
+                        f"Valor incorreto - {chave}: {v1} (esperado, tipo {type(v1).__name__}) "
+                        f"≠ {v2} (atual, tipo {type(v2).__name__})"
+                    ),
                     routine="",
                     error_details=""
                 )
