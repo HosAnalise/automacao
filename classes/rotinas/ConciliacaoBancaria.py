@@ -1603,9 +1603,6 @@ class ConciliacaoBancaria:
 
                 FuncoesUteis.compareValues(init, compareInsertConta)
 
-            print(f"CAMPOSFILTROS============\n{camposFiltros}")
-            print(f"COMPAREINSERTCONTA========\n{compareInsertConta}")
-
             return camposFiltros
 
 #END criarContaReceberResumido(init, procuraConta)
