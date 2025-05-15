@@ -1257,13 +1257,34 @@ class FuncoesUteis:
 
             elif tipo_str == "int":
                 valor = random.randint(x if x is not None else 5, y if y is not None else 30)
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Gerado o int aleatório : {valor} | Variável {seletor}",
+                        routine="",
+                        error_details=""
+                    )
 
             elif tipo_str == "float":
                 parte_inteira = random.randint(x if x is not None else 5, y if y is not None else 30)
                 valor = (f"{parte_inteira},{random.randint(0, 99):02d}")
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Gerado o float aleatório : {valor} | Variável {seletor}",
+                        routine="",
+                        error_details=""
+                    )
 
             elif tipo_str == "bool":
                 valor = random.choice([True, False])
+                Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Gerado boolean {valor} para o seletor {seletor}",
+                        routine="",
+                        error_details=""
+                    )
 
             elif tipo_str == "date":
                 valor = GeradorDados.simpleRandDate(init, seletor)
