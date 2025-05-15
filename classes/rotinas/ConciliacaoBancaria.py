@@ -1777,4 +1777,6 @@ class ConciliacaoBancaria:
                         error_details=""
                     )
                     return False
+
+            return None
 #END incluiRecebimentoContaExistente(init, dictRecebido, verificaConta)
