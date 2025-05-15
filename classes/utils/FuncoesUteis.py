@@ -1148,13 +1148,12 @@ class FuncoesUteis:
                     f"return typeof apex.item('{seletor}') !== 'undefined' && apex.item('{seletor}') !== null"
                 )
             )
-            # WebDriverWait(browser, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, f"#{seletor}")))
             valoresDict[seletor] = Apex.getValue(browser, seletor)
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Capturado valor do seletor {seletor}: {valoresDict[seletor]}",
-                routine="Prestador/Empresa",
+                routine="",
                 error_details=''
             )
 
