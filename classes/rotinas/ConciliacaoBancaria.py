@@ -17,8 +17,8 @@ from classes.rotinas.ContasReceber import ContaReceber
 from time import sleep
 from classes.rotinas.ContasReceber import ContaReceber
 from time import sleep
-import random
 from faker import Faker as fake
+from typing import Optional
 
 
 class ConciliacaoBancaria:
