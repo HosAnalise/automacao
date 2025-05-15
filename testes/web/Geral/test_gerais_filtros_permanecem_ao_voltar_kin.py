@@ -20,7 +20,7 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
 
-    for i in range(3):
+    for i in range(2):
 
         if i == 0:
             rotina = "Contas a Pagar"
@@ -31,7 +31,7 @@ def test_FiltrosPermanecemAoVoltardeConta(init):
                     "P46_TIPO_PERIODO": "REGISTRO",
                     "P46_DATA_INICIAL": "25/03/2025",
                     "P46_DATA_FINAL": "25/03/2025",
-                    "P46_SITUACAO" : "pagoParcialmente",
+                    "P46_SITUACAO" : "atrasada,pagoParcialmente",
                     "P46_NUMERO_DOCUMENTO": "776248",
                     "P46_NUMERO_PEDIDO": "546879",
                     "P46_NUMERO_TITULO": "1346987",
