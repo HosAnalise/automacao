@@ -1780,3 +1780,88 @@ class ConciliacaoBancaria:
 
             return None
 #END incluiRecebimentoContaExistente(init, dictRecebido, verificaConta)
+
+    @staticmethod
+    def cadastraTransferencia(init:tuple, dictRecebido:dict = None, verificaTransf:bool = True):
+        """
+        Clica na opção de lançamento "Criar Nova Transferência" e cria uma transferência
+        usando valores aleatórios caso os mesmos não sejam passados via dicionário.
+
+        :params init:
+            Tupla com parâmetros do ambiente.
+
+        :params dictRecebido:
+            Dicionario opcional com os valores à serem inseridos, caso não seja passado, o próprio método irá cria-los aleatóriamente.
+
+        :params verificaTransf:
+            Booleano, caso True, chama um método que verifica se a Transferência foi criada corretamente.
+
+        :return bool:
+            Apenas caso verificaTransf for True, método retorna True se a Transferência foi criada com sucesso, False caso contrário.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        queries = {
+            "queryContaId": """
+                                SELECT CONTA.CONTA_ID  
+                                FROM ERP.CONTA
+                                JOIN ERP.CONTA_ESPECIFICACAO ON CONTA.CONTA_ID = CONTA_ESPECIFICACAO.CONTA_ID
+                                LEFT JOIN ERP.LOJA ON LOJA.LOJA_ID = CONTA_ESPECIFICACAO.LOJA_ID
+                                WHERE CONTA_ESPECIFICACAO.GRUPO_LOJA_ID = 1501
+                                    AND CONTA.TIPO_CONTA_ID IN (1, 2)
+                                    AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
+                                    AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
+                            """
+        }
+
+        queryContaReceber = FuncoesUteis.getQueryResults(init, queries)
+
+        transfValues = {
+            "P78_CONTA_ORIGEM_ID" : queryContaReceber["Query_queryContaId"],
+            "P78_FORMA_PAGAMENTO" : random.choice([1, 8])
+        }
+
+        valoresRandom = {
+            "P78_FORMA_TRANSFERENCIA" : (int, 1, 5),
+            "P78_NUMERO_DOCUMENTO" : (str, 15, 30),
+            "P78_DESCRICAO" : (str, 20, 40)
+        }
+
+        campos = FuncoesUteis.geraValoresRandom(init, valoresRandom)
+
+        transfValues.update(campos)
+
+        if dictRecebido:
+            for seletor in transfValues:
+                if seletor in dictRecebido and dictRecebido[seletor] is not None:
+                    transfValues[seletor] = dictRecebido[seletor]
+
+        Components.btnClick(init, 'p[acao="novoLancamentoTransferencia"]')
+
+        hasFrame = Components.has_frame(init,"[title='Cadastro de Transferência']")
+        if hasFrame:
+            FuncoesUteis.setFilters(init, transfValues)
+
+            if verificaTransf:
+                todosCampos = {
+                    "P78_CONTA_ORIGEM_ID",
+                    "P78_CONTA_DESTINO_ID",
+                    "P78_DATA_TRANSFERENCIA",
+                    "P78_VALOR_TRANSFERENCIA",
+                    "P78_FORMA_TRANSFERENCIA",
+                    "P78_FORMA_PAGAMENTO",
+                    "P78_NUMERO_DOCUMENTO",
+                    "P78_ORIGEM",
+                    "P78_DESCRICAO"
+                }
+
+                todosCamposPreenchidos = FuncoesUteis.recuperaValores(init, todosCampos)
+
+            Components.btnClick(init, "#B5886099528185118")
+        
+            if verificaTransf:
+                return ExtratoContas.verificaTransfCriada(init, todosCamposPreenchidos)
+#END cadastraTransferencia(init, dictRecebido, verificaTransf)
