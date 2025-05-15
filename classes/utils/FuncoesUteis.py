@@ -1253,6 +1253,7 @@ class FuncoesUteis:
 
             if tipo_str == "str":
                 valor = GeradorDados.simpleRandString(init, x if x is not None else 10, y if y is not None else 50, seletor)
+                # método já cria logs
 
             elif tipo_str == "int":
                 valor = random.randint(x if x is not None else 5, y if y is not None else 30)
@@ -1266,6 +1267,7 @@ class FuncoesUteis:
 
             elif tipo_str == "date":
                 valor = GeradorDados.simpleRandDate(init, seletor)
+                # método já cria logs
 
             else:
                 raise ValueError(f"Tipo não suportado: {tipo}")
