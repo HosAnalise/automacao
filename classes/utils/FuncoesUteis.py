@@ -1131,8 +1131,10 @@ class FuncoesUteis:
         :params seletores :
             - Conjunto de seletores que serão utilizados para localizar e retornar os campos na página.
 
+            - Ex. de Envio: seletores = {"P76_CONTA_ORIGEM", "P76_CONTA_DESTINO"}
+
         :return camposFiltros:
-            - Dicionário contendo os campos e valores dos seletores especificados da Conta a Receber.
+            - Dicionário contendo os campos e valores dos seletores especificados.
         """
         
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
