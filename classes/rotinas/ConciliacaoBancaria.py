@@ -1678,7 +1678,7 @@ class ConciliacaoBancaria:
 #END clickOpcoesLancamento(init, data)
 
     @staticmethod
-    def incluiRecebimentoContaExistente(init:tuple, dictRecebido:dict, verificaConta:bool = True):
+    def incluiRecebimentoContaExistente(init:tuple, dictRecebido:dict, verificaConta:bool = True) -> Optional[bool]:
         """
         Clica na Opção de Lançamento "Incluir Recebimento em Conta Existente" e
         inclui um recebimento para uma Conta a Receber existente, pesquisando via o dicionario recebido.
