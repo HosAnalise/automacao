@@ -1219,3 +1219,97 @@ class ExtratoContas:
                 error_details=''
             )    
 #END editaExtratoConta(init)
+
+    @staticmethod
+    def verificaTransfCriada(init:tuple, transfCriada:dict) -> bool:
+        """
+        Método que verifica se a transferência incluida foi criada corretamete.
+
+        :params init:
+        Tupla com parâmetros do ambiente.
+
+        :params transfCriada:
+        Dicionario com os seletores e valores utilizados para a criação da transferência.
+
+        :return bool:
+        Retorna True caso a transferência está igual à como foi criado, False caso contrário.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")  
+
+        filtragem = {
+            "P76_DATA_INICIAL" : transfCriada["P78_DATA_TRANSFERENCIA"],
+            "P76_DATA_FINAL" : transfCriada["P78_DATA_TRANSFERENCIA"],
+            "P76_VALOR_MIN" : transfCriada["P78_VALOR_TRANSFERENCIA"],
+            "P76_VALOR_MAX" : transfCriada["P78_VALOR_TRANSFERENCIA"],
+        }
+
+        if "P78_NUMERO_DOCUMENTO" in transfCriada:
+            filtragem["P76_NUMERO_DOCUMENTO"] = transfCriada["P78_NUMERO_DOCUMENTO"]
+
+        FuncoesUteis.goToPage(init, ExtratoContas.url)
+
+        FuncoesUteis.aplyFilter(init, filtragem)
+
+        Components.btnClick(init, ".fa.fa-edit")
+        hasFrame = Components.has_frame(init,"[title='Cadastro de Transferência']")
+        if hasFrame:
+
+            camposARecuperar = {
+                "P78_CONTA_ORIGEM_ID",
+                "P78_CONTA_DESTINO_ID",
+                "P78_DATA_TRANSFERENCIA",
+                "P78_VALOR_TRANSFERENCIA",
+                "P78_FORMA_TRANSFERENCIA",
+                "P78_FORMA_PAGAMENTO",
+                "P78_NUMERO_DOCUMENTO",
+                "P78_ORIGEM",
+                "P78_DESCRICAO"
+            }
+
+            camposRecuperados = FuncoesUteis.recuperaValores(init, camposARecuperar)
+
+            camposFiltrados = {}
+
+            for seletor, value in camposRecuperados.items():
+                if value is not None and value != '':
+                    camposFiltrados[seletor] = value
+
+            compareInsertConta = {
+                key: (camposFiltrados.get(key), transfCriada.get(key))
+                for key in transfCriada
+            }
+
+            igual = FuncoesUteis.compareValues(init, compareInsertConta)
+
+            if igual:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Transferência Foi Encontrada Igual Como Foi Criada!",
+                    routine="",
+                    error_details=""
+                )
+            else:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Transferência Não Está Como Foi Criada!",
+                    routine="",
+                    error_details=""
+                )
+            
+            return igual
+        
+        else:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message="Não foi possível confirmar se a transferência foi criada — frame de edição não carregado.",
+                routine="CadastroTransferencia",
+                error_details=""
+            )
+            return False
+#END compareTransferencia(init, transfCriada)
