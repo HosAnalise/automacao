@@ -1703,8 +1703,11 @@ class ConciliacaoBancaria:
         :params verificaConta :
             - Booleano que define se o método ira verificar, pós inclusão, se a Conta a Receber foi recebida.
 
-        :return bool:
-            - Apenas caso verificaConta for True, método retorna True se a Conta a Receber foi recebida com sucesso, False caso contrário.
+        :return:
+            - True se a Conta a Receber foi marcada como recebida com sucesso (quando`verificaConta = True`).
+
+            - False se a Conta a Receber não foi marcada como recebida (quando `verificaConta=True`).
+            - None caso`verificaConta`seja`False`.
         """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
