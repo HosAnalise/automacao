@@ -1,0 +1,40 @@
+name: Docker Compose Build and Push
+
+on:
+  push:
+    branches:
+      - prod
+    paths:
+      - 'docker-compose.yml'
+     
+
+jobs:
+  build-and-push:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build todas imagens com docker-compose
+        run: docker-compose up --build -d
+
+      - name: Push imagens do docker-compose
+        run: |
+          $IMAGES = docker-compose config | Select-String -Pattern 'image:' | ForEach-Object { $_.Line.Split(":")[1].Trim() }
+
+          foreach ($IMAGE in $IMAGES) {
+              # Adicionando o prefixo 'docker.io/' se necessário
+              if ($IMAGE -notmatch '^docker.io/') {
+                  $IMAGE = "docker.io/$IMAGE"
+              }
+              Write-Host "Fazendo push de $IMAGE"
+              docker push $IMAGE
+          }
+
