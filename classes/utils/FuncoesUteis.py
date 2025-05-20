@@ -16,6 +16,8 @@ from classes.utils.ApexUtil import Apex
 from classes.utils.LogManager import LogManager
 from conftest import env_vars
 from typing import Any
+from pydantic import BaseModel
+
 Log_manager = LogManager()
 class FuncoesUteis:
     """
