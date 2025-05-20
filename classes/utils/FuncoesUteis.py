@@ -1349,3 +1349,105 @@ class FuncoesUteis:
 
         return resultados
 #END geraValoresRandom(init, dictRecebido)
+
+    @staticmethod
+    def objToDictObrigatorio(init:tuple, objRecebido:BaseModel, camposObrigatorios:dict) -> dict:
+        """
+        Recebe um objeto e um dicionario, compara os valores do objeto com o dicionario, criando um novo dicionario.
+        Caso o objeto possua valor nos campos obrigatórios, tais valores serão utilizados no dicionário, caso contrário, será utilizado os valores recebidos no dicionário.
+        Retorna o dicionário criado para manipulação.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :param objRecebido:
+            Objeto Pydantic a ser convertido em dicionário.
+
+        :param camposObrigatorios:
+            Dicionário com os campos obrigatórios como chaves, e os valores aleatórios como valores.
+
+        :return:
+            Dicionário resultante com campos preenchidos a partir do objeto e/ou campos obrigatórios.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        dictObjeto = objRecebido.model_dump(exclude_none=True)
+        for chave, valor in camposObrigatorios.items():
+            if dictObjeto.get(chave) is None:
+                dictObjeto[chave] = valor
+
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Valor no seletor '{chave}' não encontrado no objeto recebido. Valor default utilizado: '{valor}'.",
+                    routine="objToDictObrigatorio",
+                    error_details=""
+                )
+                
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Dicionário final criado com {len(dictObjeto)} campos.",
+            routine="objToDictObrigatorio",
+            error_details=""
+        )
+        
+        return dictObjeto
+#END objToDictObrigatorio(init, objRecebido, cmaposObrigatorios)
+
+    @staticmethod
+    def mapearObjeto(init:tuple, objRecebido:BaseModel, mapa:dict[str, str | list[str]]) -> dict[str, str]:
+        """
+        Recebe um objeto BaseModel e um dicionário de mapeamento de chaves.
+        Retorna um novo dicionario, com as chaves alteradas e valores recebidos pelo objeto.
+        Um seletor só estara no dicionário final caso o mesmo esteja tanto no Objeto quanto no dicionario de mapeamento.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :param objRecebido:
+            Objeto Pydantic contendo os seletores de origem e valores a serem mapeados.
+
+        :param mapa:
+            Dicionário com os nomes dos campos de origem (objeto) como chave e os nomes desejados como valor.
+
+        :return:
+            Dicionário com os nomes mapeados e respectivos valores do objeto original.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        dictObjeto = objRecebido.model_dump(exclude_none=True)
+        dictFinal = {}
+
+        for chaveObjeto, chaveFinal in mapa.items():
+            if chaveObjeto in dictObjeto:
+                valor = dictObjeto[chaveObjeto]
+                if isinstance(chaveFinal, list):
+                    for chave in chaveFinal:
+                        dictFinal[chave] = valor
+                else:
+                    dictFinal[chaveFinal] = valor
+            else:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Campo '{chaveObjeto}' não encontrado no objeto recebido. Ignorado no mapeamento.",
+                    routine="mapearObjeto",
+                    error_details=""
+                )
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Mapeamento concluído com sucesso. Total de {len(dictFinal)} campos mapeados.",
+            routine="mapearObjeto",
+            error_details=""
+        )
+
+        return dictFinal
+#END mapearObjeto(init, objRecebido, mapa)
