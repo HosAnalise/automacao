@@ -171,3 +171,72 @@ class CreditoCliente:
 
         return False
 #END insereCreditoCliente(init, valores)
+
+    @staticmethod
+    def procuraCreditoCliente(init:tuple, credito:Optional[Credito] = None) -> bool:
+        """
+        Procura filtrando por um crédito de cliente via informações passadas pelo objeto Credito.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+        
+        :param credito:
+            Objeto Credito opcional que será utilizado para pesquisar pelo crédito via filtragem.
+            Caso não passado, sera chamado o método insereCreditoCliente para criar um.
+
+        :return:
+            True caso tenha sido encontrado a credito, False caso contrário.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        if credito is None:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Crédito não passado, criando um novo para utilizar.",
+                routine="",
+                error_details=""
+            )
+            FuncoesUteis.showHideFilter(init, CreditoCliente.filterSelector)
+            credito = CreditoCliente.insereCreditoCliente(init)
+        else:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Crédito para filtragem recebido.",
+                routine="",
+                error_details=""
+            )
+
+        dictFiltro = FuncoesUteis.mapearObjeto(init, credito, CreditoCliente.mapeamentoObjToFiltros)
+        dictFiltro["P163_TIPO_VALOR"] = '1'
+        dictFiltro["P163_TIPO_DATA"] = '1'
+
+        FuncoesUteis.aplyFilter(init, dictFiltro)
+
+        achou = bool(browser.find_elements(By.CSS_SELECTOR, ".fa.fa-edit.icon-color.edit")) > 0
+
+        if achou:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Crédito informado achado!",
+                routine="",
+                error_details=""
+            )
+
+            return True
+        
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message="Crédito informado não achado!",
+            routine="",
+            error_details=""
+        )
+
+        return False
+#END procuraCreditoCliente(init, credito)
