@@ -52,6 +52,15 @@ class CreditoCliente:
             return str(v) if v is not None else None
 
 
+    mapeamentoObjToFiltros = {
+        "P164_CLIENTE": ["P163_CLIENTE"],
+        "P164_VALOR": ["P163_VALOR_MIN", "P163_VALOR_MAX"],
+        "P164_DATA_RECEBIMENTO": ["P163_DATA_INICIAL", "P163_DATA_FINAL"],
+        "P164_EMPRESA": ["P163_EMPRESA"],
+        "P164_MOTIVO": ["P163_MOTIVO"]
+    }
+
+
     @staticmethod
     def insereCreditoCliente(init:tuple, valores:Credito = None) -> Credito | bool:
         """
