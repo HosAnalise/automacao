@@ -5,19 +5,21 @@ from classes.utils.GerarDados import GeradorDados
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
-
-
-
-
-
-
 import pytest
+from classes.utils.decorators import com_visual
 
+
+
+
+
+
+
+@com_visual()
 @pytest.mark.dockercontaReceber
-def test_contaReceber_insereConta_detalhes(init):
+def test_contaReceber_insereConta_detalhes(init,validator=None):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
-    env_application_type = env_vars['WEB']
+    env_application_type = env_vars['APPLICATION_TYPE']
 
 
     try:
@@ -57,7 +59,11 @@ def test_contaReceber_insereConta_detalhes(init):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution("ContaReceber")
+        Log_manager.insert_logs_for_execution("ContaPagar")
+
+        if validator:
+            validator.check_window("Após inserção")
+
 
         browser.quit()
 
