@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from traceback import print_tb
 from dotenv import load_dotenv
 import os
 import uuid  # Para gerar identificadores únicos
@@ -186,3 +185,15 @@ if __name__ == "__main__":
         start_date="01/02/2025 00:00:00:000000", 
         end_date="05/02/2025 23:59:59:999999"
     )
+
+
+# ✅ Estratégia recomendada
+# 📌 Níveis de severidade
+# Use a hierarquia comum:
+
+# Level	Quando usar
+# DEBUG	Informações técnicas detalhadas (usado em desenvolvimento ou troubleshooting)
+# INFO	Ações esperadas (ex: "Campo preenchido com sucesso")
+# WARNING	Algo deu errado, mas o processo seguiu normalmente
+# ERROR	Algo falhou e impediu o fluxo normal
+# CRITICAL	Situação grave que requer atenção imediata (pode ser opcional no seu caso)
