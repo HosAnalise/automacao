@@ -2,11 +2,11 @@ from applitools.selenium import Eyes, Target, BatchInfo
 from selenium.webdriver.remote.webdriver import WebDriver
 import os
 
+
 class VisualValidator:
     """
     Classe responsável por gerenciar testes visuais com o Applitools Eyes.
     """
-
     def __init__(self, app_name: str = "Minha Aplicação", batch_name: str = "Testes Visuais"):
         """
         Inicializa o VisualValidator com nome do app e nome do batch.
@@ -54,7 +54,7 @@ class VisualValidator:
         Args:
             label (str): Descrição do ponto de verificação.
             selector (str): Seletor CSS da região a ser validada.
-        """
+        """      
         self.eyes.check(label, Target.region(selector))
 
     def close(self) -> None:
