@@ -1387,7 +1387,7 @@ class FuncoesUteis:
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="INFO",
-                    message=f"Valor no seletor '{chave}' não encontrado no objeto recebido. Valor default utilizado: '{valor}'.",
+                    message=f"Valor no seletor '{chave}' não encontrado ou estava None no objeto recebido. Valor default utilizado: '{valor}'.",
                     routine="objToDictObrigatorio",
                     error_details=""
                 )
