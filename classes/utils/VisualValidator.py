@@ -1,6 +1,9 @@
+from re import Match
 from applitools.selenium import Eyes, Target, BatchInfo
 from selenium.webdriver.remote.webdriver import WebDriver
 import os
+from applitools.common import MatchLevel
+
 
 
 class VisualValidator:
@@ -22,9 +25,12 @@ class VisualValidator:
         self.eyes.api_key = os.getenv("APPLITOOLS_API_KEY")
         if not self.eyes.api_key:
             raise ValueError("APPLITOOLS_API_KEY não está definida no ambiente!")
+        
+        MATCH_LEVEL = os.getenv("APPLITOOLS_MATCH_LEVEL", "LAYOUT")
 
         self.app_name: str = app_name
         self.batch: BatchInfo = BatchInfo(name=batch_name)
+        self.eyes.match_level = MatchLevel[MATCH_LEVEL]
 
     def open(self, driver: WebDriver, test_name: str, viewport_size: tuple[int, int] = (1280, 720)) -> None:
         """
