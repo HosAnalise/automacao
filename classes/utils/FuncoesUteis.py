@@ -1378,9 +1378,10 @@ class FuncoesUteis:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
 
-        dictObjeto = objRecebido.model_dump(exclude_none=True)
+        dictObjeto = objRecebido.model_dump(exclude_none=False)
+
         for chave, valor in camposObrigatorios.items():
-            if dictObjeto.get(chave) is None:
+            if chave not in dictObjeto or dictObjeto[chave] is None:
                 dictObjeto[chave] = valor
 
                 Log_manager.add_log(
