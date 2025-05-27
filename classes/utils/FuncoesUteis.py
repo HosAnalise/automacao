@@ -772,7 +772,9 @@ class FuncoesUteis:
 
         item = None
         item = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,seletor)))
-        textItem = item.text
+        
+        textItem = item.text if item.text else item.get_attribute("name") or item.get_attribute("id") or seletor
+
         item.send_keys(value)
         Log_manager.add_log(
                 application_type="WEB",
