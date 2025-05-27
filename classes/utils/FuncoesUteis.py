@@ -1466,10 +1466,13 @@ class FuncoesUteis:
             - "num".
             - "letras".
             - "alfanum".
+            - "text".
             - "valor".
             - "date".
             - "cnpj".
             - "cpf".
+            - "telefone".
+            - "celular".
 
         :param init:
             Tupla com parâmetros do ambiente.
