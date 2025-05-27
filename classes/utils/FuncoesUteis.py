@@ -15,8 +15,10 @@ import random
 from classes.utils.ApexUtil import Apex
 from classes.utils.LogManager import LogManager
 from conftest import env_vars
-from typing import Any
+from typing import Any, Tuple
 from pydantic import BaseModel
+import re
+
 
 Log_manager = LogManager()
 class FuncoesUteis:
@@ -1451,3 +1453,292 @@ class FuncoesUteis:
 
         return dictFinal
 #END mapearObjeto(init, objRecebido, mapa)
+
+    @staticmethod
+    def validaCamposPorRegex(init:tuple, camposAVerificar:dict[str, str | Tuple[str, str]]) -> bool:
+        """
+        Valida os campos não popuplov da tela com base no tipo definido no dicionário recebido.
+
+        Tipos de validação aceitos:
+            - "num".
+            - "letras".
+            - "alfanum".
+            - "valor".
+            - "date".
+            - "cnpj".
+            - "cpf".
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :param camposAVerificar: 
+            - Dicionário com as chaves sendo os seletores dos campos e os valores os tipos para validação ("num", "letras", "", "date", etc.)
+
+            - String: tipo único (ex.: "num")
+            - Tupla de dois tipos (ex.: ("cpf", "cnpj"))
+
+        :return:
+            Booleano. True se todos forem válidos, False se pelo menos um for inválido.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        # Regex padrões
+        regexTipos = {
+            "num": r"^\d+$",
+            "letras": r"^[A-Za-zÀ-ÿ\s]+$",
+            "alfanum": r"^[A-Za-zÀ-ÿ0-9\s]+$",
+            "text" : r"^[^\n\r]+$",
+            "valor": r"^(\d{1,3}(\.\d{3})*|\d+)(,\d{2})?$",
+            "date" : r"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$",
+            "cnpj": r"^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$",
+            "cpf": r"^\d{3}\.\d{3}\.\d{3}-\d{2}$"
+        }
+
+        totalTrue = 0
+        totalFalse = 0
+
+        for seletor, tipo in camposAVerificar.items():
+            valor = Apex.getValue(browser, seletor)
+
+            if not valor:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message=f"O campo {seletor} não foi encontrado ou está vazio.",
+                    routine="validaCamposPorRegex",
+                    error_details=""
+                )
+                continue
+            # se o valor recebido é uma tupla
+            if isinstance(tipo, tuple) and len(tipo) == 2:
+                padrao1 = regexTipos.get(tipo[0])
+                padrao2 = regexTipos.get(tipo[1])
+
+                if not padrao1 or not padrao2:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="WARNING",
+                        message=f"Tipo {tipo} do campo {seletor} não implementado para validação.",
+                        routine="validaCamposPorRegex",
+                        error_details=""
+                    )
+                    totalFalse += 1
+                    continue
+
+                if re.fullmatch(padrao1, valor) or re.fullmatch(padrao2, valor):
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"O campo {seletor} possui valor '{valor}' válido para os tipos '{tipo[0]}' ou '{tipo[1]}'.",
+                        routine="validaCamposPorRegex",
+                        error_details=""
+                    )
+                    totalTrue += 1
+                else:
+                    totalFalse += 1
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="WARNING",
+                        message=f"O campo {seletor} possui valor inválido: '{valor}' para os tipos '{tipo[0]}' ou '{tipo[1]}'.",
+                        routine="validaCamposPorRegex",
+                        error_details=""
+                    )
+
+            # Se for um tipo único (string)
+            else:
+                padrao = regexTipos.get(tipo)
+
+                if not padrao:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="WARNING",
+                        message=f"Tipo {tipo} do campo {seletor} não implementado para validação.",
+                        routine="validaCamposPorRegex",
+                        error_details=""
+                    )
+                    totalFalse += 1
+                    continue
+
+                if re.fullmatch(padrao, valor):
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"O campo {seletor} possui valor '{valor}' válido para o tipo '{tipo}'.",
+                        routine="validaCamposPorRegex",
+                        error_details=""
+                    )
+                    totalTrue += 1
+                else:
+                    totalFalse += 1
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="WARNING",
+                        message=f"O campo {seletor} possui valor inválido: '{valor}' para o tipo '{tipo}'.",
+                        routine="validaCamposPorRegex",
+                        error_details=""
+                    )
+
+        # Log final com resumo
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Validação concluída. Total válidos (True): {totalTrue}. Total inválidos (False): {totalFalse}.",
+            routine="validaCamposPorRegex",
+            error_details=""
+        )
+
+        return False if totalFalse > 0 else True
+#END validaCamposPorRegex(init, camposAVerificar)
+
+    @staticmethod
+    def preencheCamposComunsEPopUp(init:tuple, objRecebido:BaseModel | None, camposObrigatorios:dict[str, Any], camposObrigatoriosPopUp:dict[str, Any]) -> dict[str, str]:
+        """
+        A partir de um possivel objeto gera um dicionário final, combinando ambos campos comuns e campos PopUpLov como seletores, e seus valores aleatórios como values.
+        Para o dicionário final, é removido todos valores None.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :param objRecebido: 
+            Objeto passado por paramêtro, caso seja None o método copia os dicionários recebidos,
+            caso contrário o método completa o objeto com os seletores obrigatórios que faltam.
+
+        :param camposObrigatorios:
+            Dicionário com os seletores e valores defaults para os campos comuns.
+
+        :param camposObrigatoriosPopUp:
+            Dicionário com os seletores e valores defaults para os campos PopUpLov.
+
+        :return:
+            Dicionário final combinando o objeto recebido (caso ouver) com ambos dicionarios recebidos, não retorna seletores com valores Nones.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        if objRecebido is not None:
+            campos = FuncoesUteis.convertDictValoresToStr(init, FuncoesUteis.objToDictObrigatorio(init, objRecebido, camposObrigatorios))
+
+            for chave, valor in campos.items():
+                setattr(objRecebido, chave, valor)
+
+            camposPopUp = FuncoesUteis.convertDictValoresToStr(init, FuncoesUteis.objToDictObrigatorio(init, objRecebido, camposObrigatoriosPopUp))
+        else:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Objeto recebido não existente, dicionário final será uma copia dos dicionários recebidos!",
+                routine="preencheCamposComunsEPopUp",
+                error_details=""
+            )
+            campos = camposObrigatorios.copy()
+            camposPopUp = camposObrigatoriosPopUp.copy()
+
+        dicionarioFinal = campos | camposPopUp
+
+        return {chave: valor for chave, valor in dicionarioFinal.items() if valor is not None}
+
+#END preencheCamposComunsEPopUp(init, objRecebido, camposObrigatorios, camposObrigatoriosPopUp)
+
+    @staticmethod
+    def separaCamposComunsEPopUp(init:tuple, valoresCompletos:dict[str, Any], camposPopUp:dict[str, Any]) -> tuple[dict, dict]:
+        """
+        A partir de um possivel objeto gera um dicionário final, combinando ambos campos comuns e campos PopUpLov como seletores, e seus valores aleatórios como values.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :param valoresCompletos:
+            Dicionário com todos os campos e seus valores.
+
+        :param camposPopUp:
+            Dicionário contendo os seletores dos campos PopUpLov e seus respectivos valores.
+
+        :return:
+            Tupla de 2 dicionários, um com os campos e valores finais para os campos comuns, e outro para os campos PopUpLov, nessa respectiva ordem.
+        """
+        
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        valoresPopUpLov = {key: value for key, value in valoresCompletos.items() if key in camposPopUp}
+        valoresCampos = {key: value for key, value in valoresCompletos.items() if key not in camposPopUp}
+
+        return valoresCampos, valoresPopUpLov
+#END separaCamposComunsEPopUp(init, valoresCompletos, camposPopUp)
+
+    @staticmethod
+    def convertDictValoresToStr(init:tuple, dictRecebido:dict[str, Any]) -> dict[str, str]:
+        """
+        Recebe um dicionário e converte todos os seus valores para string.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :return:
+            Novo dicionário com todos os valores convertidos para string.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Convertido valores do dicionário recebido em String.",
+            routine="convertDictValoresToStr",
+            error_details=""
+        )
+        return {chave: str(valor) if valor is not None else None for chave, valor in dictRecebido.items()}
+#END convertDictValoresToStr(init, dictRecebido)
+
+    @staticmethod
+    def filtrarCamposPorDicionario(init:tuple, dictAFiltrar:dict, dictFiltro:dict) -> dict:
+        """
+        Retorna um novo dicionário com as chaves que estão presentes em ambos dicionarios com os valores do dicionario referente.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :param dictAFiltrar:
+            Dicionário que será filtrado, será comparado seus seletores com outro dicionário.
+
+        :param dictFiltro:
+            Dicionário com os campos desejados para comparação entre ambos dicionários.
+
+        :return:
+            Novo dicionário contendo apenas os campos presentes nos dois dicionários.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        dictFiltrado = {}
+
+        for chave, valor in dictAFiltrar.items():
+            if chave in dictFiltro:
+                dictFiltrado[chave] = valor
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Campo {chave} presente em ambos dicionários.",
+                    routine="filtrarCamposPorDicionario",
+                    error_details=""
+                )
+            else:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Campo {chave} não presente no dicionário de filtro.",
+                    routine="filtrarCamposPorDicionario",
+                    error_details=""
+                )
+        return dictFiltrado
+#END filtrarCamposPorDicionario(init, dictAFiltrar, dictFiltro)
