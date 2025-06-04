@@ -1198,7 +1198,7 @@ class FuncoesUteis:
 #END recuperaValores(init, dict)
 
     @staticmethod
-    def scrollIntoView(init:tuple, seletor:str, clica:bool = False):
+    def scrollIntoView(init:tuple, seletor:str, clica:bool = False, hashTag:bool = True):
         """
         Recebe um seletor, é arrastado a tela até o seletor estiver em vista.
 
@@ -1214,8 +1214,11 @@ class FuncoesUteis:
             - screenshots: Caminho para salvar capturas de tela em caso de erro.
             - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
 
-        :params seletor :
-            - String de seletor utilizado para dar scroll até acha-lo. Deve ser passado sem o '#'.
+        :param seletor :
+            - String de seletor utilizado para dar scroll até acha-lo. Pode ser passado com ou sem '#'.
+
+        :param hashTag:
+            - Booleano que dita se vai ser adicionado um '#' antes do seletor.
 
         :params clica :
             - Booleano que indica se o elemento deve ser clicado após o scroll.
@@ -1225,7 +1228,18 @@ class FuncoesUteis:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
 
-        campo = WebDriverWait(browser,30).until(EC.presence_of_element_located((By.CSS_SELECTOR, f"#{seletor}")))
+        if hashTag:
+            if not seletor.startswith("#"):
+                seletor = f"#{seletor}"
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"O seletor foi corrigido automaticamente para '{seletor}', adicionando '#' ao inicio.",
+                    routine="",
+                    error_details=""
+                )
+
+        campo = WebDriverWait(browser,30).until(EC.presence_of_element_located((By.CSS_SELECTOR, f"{seletor}")))
         browser.execute_script("arguments[0].scrollIntoView(true);", campo)
         Log_manager.add_log(
             application_type=env_application_type,
@@ -1235,7 +1249,7 @@ class FuncoesUteis:
             error_details=''
         )
 
-        Components.btnClick(init, f"#{seletor}") if clica else None
+        Components.btnClick(init, f"{seletor}") if clica else None
 #END scrollIntoView(init, seletor)
 
     @staticmethod
