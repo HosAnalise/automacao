@@ -15,8 +15,6 @@ from classes.utils.Components import Components
 from classes.rotinas.ExtratoContas import ExtratoContas
 from classes.rotinas.ContasReceber import ContaReceber
 from time import sleep
-from classes.rotinas.ContasReceber import ContaReceber
-from time import sleep
 from faker import Faker as fake
 from typing import Optional
 
