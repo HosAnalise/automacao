@@ -12,7 +12,7 @@ from classes.utils.Components import Components
 from classes.rotinas.CreditoCliente import CreditoCliente
 
 @pytest.mark.dockerCreditoCliente
-def test_creditoCliente_presquisa_credito(init):
+def test_creditoCliente_insere_credito(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
