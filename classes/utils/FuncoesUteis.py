@@ -837,26 +837,6 @@ class FuncoesUteis:
                     error_details=str(e)
                 )
 
-            finally:
-                if screenshots:
-                    screenshot_path = f"{screenshots}/{seletor}.png"
-                    if browser.save_screenshot(screenshot_path):
-                        Log_manager.add_log(
-                            application_type='WEB',
-                            level="INFO",
-                            message=f"Screenshot salvo em: {screenshot_path}",
-                            routine="ContaReceber",
-                            error_details=""
-                        )
-                    else:
-                        Log_manager.add_log(
-                            application_type='WEB',
-                            level="ERROR",
-                            message=f"Falha ao salvar screenshot em {screenshot_path}",
-                            routine="ContaReceber",
-                            error_details=""
-                        )
-
         campos = {seletor: (apexGetValue.get(seletor, None), value) for seletor, value in apexValues.items()}
         return campos
     
