@@ -260,13 +260,6 @@ class ExtratoContas:
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
 
 #END contaReceberResumido()   
 
@@ -1312,4 +1305,4 @@ class ExtratoContas:
                 error_details=""
             )
             return False
-#END compareTransferencia(init, transfCriada)
+#END verificaTransfCriada(init, transfCriada)
