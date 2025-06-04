@@ -1684,7 +1684,7 @@ class FuncoesUteis:
 #END preencheCamposComunsEPopUp(init, objRecebido, camposObrigatorios, camposObrigatoriosPopUp)
 
     @staticmethod
-    def separaCamposComunsEPopUp(init:tuple, valoresCompletos:dict[str, Any], camposPopUp:dict[str, Any]) -> tuple[dict, dict]:
+    def separaCamposComunsEPopUp(init:tuple, valoresCompletos:dict[str, Any], camposPopUp:dict[str, Any] | set[str]) -> tuple[dict, dict]:
         """
         A partir de um possivel objeto gera um dicionário final, combinando ambos campos comuns e campos PopUpLov como seletores, e seus valores aleatórios como values.
 
@@ -1695,7 +1695,7 @@ class FuncoesUteis:
             Dicionário com todos os campos e seus valores.
 
         :param camposPopUp:
-            Dicionário contendo os seletores dos campos PopUpLov e seus respectivos valores.
+            Dicionário contendo TODOS os seletores dos campos PopUpLov e seus respectivos valores.
 
         :return:
             Tupla de 2 dicionários, um com os campos e valores finais para os campos comuns, e outro para os campos PopUpLov, nessa respectiva ordem.
@@ -1705,8 +1705,10 @@ class FuncoesUteis:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
 
-        valoresPopUpLov = {key: value for key, value in valoresCompletos.items() if key in camposPopUp}
-        valoresCampos = {key: value for key, value in valoresCompletos.items() if key not in camposPopUp}
+        popupKeys = set(camposPopUp.keys()) if isinstance(camposPopUp, dict) else set(camposPopUp)
+
+        valoresPopUpLov = {key: value for key, value in valoresCompletos.items() if key in popupKeys}
+        valoresCampos = {key: value for key, value in valoresCompletos.items() if key not in popupKeys}
 
         return valoresCampos, valoresPopUpLov
 #END separaCamposComunsEPopUp(init, valoresCompletos, camposPopUp)
