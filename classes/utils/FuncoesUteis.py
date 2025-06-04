@@ -18,6 +18,7 @@ from conftest import env_vars
 from typing import Any, Tuple
 from pydantic import BaseModel
 import re
+import inspect
 
 
 Log_manager = LogManager()
@@ -1750,3 +1751,11 @@ class FuncoesUteis:
                 )
         return dictFiltrado
 #END filtrarCamposPorDicionario(init, dictAFiltrar, dictFiltro)
+
+    @staticmethod
+    def getNomeMetodo() -> str:
+        """
+        Retorna o nome do método onde essa função é chamada.
+        """
+        return inspect.currentframe().f_back.f_code.co_name
+#END getNomeMetodo
