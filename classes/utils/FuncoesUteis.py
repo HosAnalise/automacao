@@ -1265,7 +1265,7 @@ class FuncoesUteis:
             - int: Número inteiro aleatório entre 5 e 30.
             - float: Número decimal aleatório entre 5 e 30 com duas casas decimais.
             - bool: Valor booleano aleatório (True ou False).
-            - "date": Data aleatória no formato 'dd/mm/yyyy', não é possivel passar configuração por parametro.
+            - "date": Data aleatória no formato 'dd/mm/yyyy', não é possivel passar configuração da data por parametro.
 
         :params init :
             Tupla contendo os objetos necessários para a automação:
