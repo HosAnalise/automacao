@@ -1481,16 +1481,18 @@ class FuncoesUteis:
         Valida os campos não popuplov da tela com base no tipo definido no dicionário recebido.
 
         Tipos de validação aceitos:
-            - "num".
-            - "letras".
-            - "alfanum".
-            - "text".
-            - "valor".
-            - "date".
-            - "cnpj".
-            - "cpf".
-            - "telefone".
-            - "celular".
+            - "num". = '1234567890'
+            - "numComEspaco". = '1234 5678 9'
+            - "letras". = 'abcd ef'
+            - "alfanum". = 'abc 123'
+            - "text". = 'ab12!?' || Não aceita quebra de linhas
+            - "valor". = '45,33'
+            - "date". = '12/01/2020'
+            - "cnpj". = '12.345.678/0001-90'
+            - "cpf". = '123.456.789-01'
+            - "telefone". = '(12) 3456-7890'
+            - "celular". = '(12) 34567-8901'
+            - "cep". - '12345-678'
 
         :param init:
             Tupla com parâmetros do ambiente.
@@ -1498,8 +1500,8 @@ class FuncoesUteis:
         :param camposAVerificar: 
             - Dicionário com as chaves sendo os seletores dos campos e os valores os tipos para validação ("num", "letras", "", "date", etc.)
 
-            - String: tipo único (ex.: "num")
-            - Tupla de dois tipos (ex.: ("cpf", "cnpj"))
+            - String: tipo único (ex.: "P1_VALOR" : "num")
+            - Tupla de dois tipos (ex.: "P1_CPF_CNPJ" : ("cpf", "cnpj"))
 
         :return:
             Booleano. True se todos forem válidos, False se pelo menos um for inválido.
@@ -1512,6 +1514,7 @@ class FuncoesUteis:
         # Regex padrões
         regexTipos = {
             "num": r"^\d+$",
+            "numComEspaco": r"^[\d\s]+$",
             "letras": r"^[A-Za-zÀ-ÿ\s]+$",
             "alfanum": r"^[A-Za-zÀ-ÿ0-9\s]+$",
             "text" : r"^[^\n\r]+$",
@@ -1520,7 +1523,8 @@ class FuncoesUteis:
             "cnpj": r"^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$",
             "cpf": r"^\d{3}\.\d{3}\.\d{3}-\d{2}$",
             "telefone": r"^\(\d{2}\) \d{4}-\d{4}$",
-            "celular": r"^\(\d{2}\) \d{5}-\d{4}$"
+            "celular": r"^\(\d{2}\) \d{5}-\d{4}$",
+            "cep": r"^\d{5}-?\d{3}$"
         }
 
         totalTrue = 0
@@ -1608,13 +1612,22 @@ class FuncoesUteis:
                     )
 
         # Log final com resumo
-        Log_manager.add_log(
-            application_type=env_application_type,
-            level="INFO",
-            message=f"Validação concluída. Total válidos (True): {totalTrue}. Total inválidos (False): {totalFalse}.",
-            routine="validaCamposPorRegex",
-            error_details=""
-        )
+        if totalTrue or totalFalse:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"Validação concluída. Total válidos (True): {totalTrue}. Total inválidos (False): {totalFalse}.",
+                routine="validaCamposPorRegex",
+                error_details=""
+            )
+        else:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Nenhuma validação foi feita pois não foi recebido nenhum valor à ser validado.",
+                routine="validaCamposPorRegex",
+                error_details=""
+            )
 
         return False if totalFalse > 0 else True
 #END validaCamposPorRegex(init, camposAVerificar)
