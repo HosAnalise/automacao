@@ -1374,10 +1374,21 @@ class FuncoesUteis:
         env_application_type = getEnv.get("WEB")
 
         dictObjeto = objRecebido.model_dump(exclude_none=False)
+        dictObjetoFinal = {}
 
         for chave, valor in camposObrigatorios.items():
-            if chave not in dictObjeto or dictObjeto[chave] is None:
-                dictObjeto[chave] = valor
+            if dictObjeto.get(chave) not in [None, ""]: # se possui valor, utiliza ele pro dict final
+                dictObjetoFinal[chave] = dictObjeto[chave]
+
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Valor no seletor '{chave}' encontrado no objeto recebido. Valor utilizado: '{dictObjeto[chave]}'.",
+                    routine="objToDictObrigatorio",
+                    error_details=""
+                )
+            else:
+                dictObjetoFinal[chave] = valor
 
                 Log_manager.add_log(
                     application_type=env_application_type,
@@ -1386,16 +1397,28 @@ class FuncoesUteis:
                     routine="objToDictObrigatorio",
                     error_details=""
                 )
+
+        for chave, valor in dictObjeto.items():
+            if chave not in dictObjetoFinal and valor not in [None, ""]:
+                dictObjetoFinal[chave] = valor
+
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Campo não obrigatório '{chave}' encontrado no objeto. Valor recebido: '{valor}'.",
+                    routine="objToDictObrigatorio",
+                    error_details=""
+                )
                 
         Log_manager.add_log(
             application_type=env_application_type,
             level="INFO",
-            message=f"Dicionário final criado com {len(dictObjeto)} campos.",
+            message=f"Dicionário final criado com {len(dictObjetoFinal)} campos.",
             routine="objToDictObrigatorio",
             error_details=""
         )
         
-        return dictObjeto
+        return dictObjetoFinal
 #END objToDictObrigatorio(init, objRecebido, cmaposObrigatorios)
 
     @staticmethod
