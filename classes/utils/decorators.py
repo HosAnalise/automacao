@@ -1,4 +1,5 @@
 from functools import wraps
+from mimetypes import guess_file_type
 from classes.utils.VisualValidator import VisualValidator
 
 def com_visual(viewport_size=(1280, 720),batch_name="Testes Visuais"):
@@ -21,7 +22,7 @@ def com_visual(viewport_size=(1280, 720),batch_name="Testes Visuais"):
 
 
             # Abre sessão visual
-            validator.open(browser, test_name, viewport_size)
+            validator.open(driver=browser, test_name=test_name, viewport_size=viewport_size)
 
             try:
                 # Passa o validator via kwargs para o teste
@@ -34,3 +35,6 @@ def com_visual(viewport_size=(1280, 720),batch_name="Testes Visuais"):
 
         return wrapper
     return decorator
+
+
+

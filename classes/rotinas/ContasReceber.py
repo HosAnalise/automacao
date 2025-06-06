@@ -1,3 +1,4 @@
+from calendar import c
 from datetime import datetime,timedelta
 import random
 import time
@@ -9,6 +10,8 @@ from classes.utils.GerarDados import GeradorDados
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
+from classes.utils.decorators import com_visual
+
 
 
 
@@ -162,9 +165,9 @@ class ContaReceber:
       
 
 
-    
+    @com_visual(batch_name="Conta Receber")
     @staticmethod
-    def insereContaReceber(init,query,staticValues = False):
+    def insereContaReceber(init,query,staticValues = False,validator=None):
         """
         Função para inserir uma conta a receber no sistema.
 
@@ -189,12 +192,16 @@ class ContaReceber:
             
             urlContain = "conta-a-receber"
             has_contaReceber = Components.url_contains(init,urlContain)
+
            
 
             if not has_contaReceber:
                 Components.btnClick(init,"#B392477272658547904")
+
+            has_receipt = Apex.getValue(browser,"P85_RECEBIDO")     
+            WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#P85_RECEBIDO")))
                 
-            has_receipt = Apex.getValue(browser,"P85_RECEBIDO") 
+            
                         
             randomValue = round(random.uniform(1, 999999), 2)
             randomText = GeradorDados.gerar_texto(20)
@@ -237,7 +244,9 @@ class ContaReceber:
                 "P85_DESCRICAO":descricaoValue
             }
 
-           
+       
+
+
             for seletor, value in apexValues.items():
                 WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
                 Apex.setValue(browser,seletor,value)
@@ -249,7 +258,13 @@ class ContaReceber:
             campos = FuncoesUteis.prepareToCompareValues(init,apexValues)
             FuncoesUteis.compareValues(init,campos)
 
+            time.sleep(2)
 
+            if validator:
+                validator.check_window(
+                                        label="insereContaReceber",
+                                        ignore_regions=[(By.CSS_SELECTOR, "#P85_VALOR_MAIS_JUROS_MULTAS_DISPLAY")]
+                                      )
 
             
 
@@ -1439,7 +1454,6 @@ class ContaReceber:
             - seletor_ambiente: Seletor do ambiente (não utilizado diretamente).
             - screenshots (str): Caminho para salvar capturas de tela em caso de erro.
             - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada diretamente).
-
         
         """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
@@ -1455,12 +1469,12 @@ class ContaReceber:
             browser.execute_script("arguments[0].scrollIntoView(true);", btnSaveContaReceber)
             Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
 
+           
             btnSaveContaReceber.click()
             Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')
 
             Components.has_spin(init)
             Components.has_alert(init)
-            Components.has_alert_sucess(init)
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))

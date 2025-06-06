@@ -107,6 +107,7 @@ class LogManager:
         if execution_id is not None:
             filtro["execution_id"] = execution_id
 
+
         logs_cursor = self.collection.find(filtro)
 
         for doc in logs_cursor:
@@ -124,6 +125,99 @@ class LogManager:
                 print(f" - {erro['message']}")
 
         return logs_por_execucao
+    
+
+    def get_all_logs(self) -> list:
+        """
+        Recupera todos os documentos de log do banco.
+        """
+        return list(self.collection.find({}))
+    
+
+    def filtrar_logs_por_rotina(self, docs: list) -> dict:
+        """
+        Agrupa os logs por execution_id.
+        
+        :param docs: lista de documentos brutos do Mongo
+        :return: dict com execution_id como chave e lista de logs como valor
+        """
+        agrupado = defaultdict(list)
+
+        for doc in docs:
+            exec_id = doc.get("execution_id", "sem_execucao")
+            for log in doc.get("logs", []):
+                agrupado[exec_id].append(log)
+
+        return agrupado
+    
+
+    def remover_logs_ambiguos(self, agrupado: dict) -> dict:
+        """
+        Remove logs que não são ERROR ou que são erros conhecidos do Selenium.
+        
+        :param agrupado: dict de logs agrupados por rotina
+        :return: dict com apenas erros relevantes
+        """
+        erros_ignorados = [
+            "nosuchelementexception",
+            "timeoutexception",
+            "elementclickinterceptedexception",
+            "staleelementreferenceexception",
+            "elementnotinteractableexception",
+            "GetHandleVerifier",
+            "Message: \n",
+            "element click intercepted",
+            "has no attribute",
+            "",
+            "cannot access local variable",
+        ]
+
+        def is_relevante(log):
+            if str(log.get("level", "")).strip().upper() != "ERROR":
+                return False
+            msg = log.get("error_details", "").lower()
+            return not any(err in msg for err in erros_ignorados)
+
+        filtrado = {}
+
+        for exec_id, logs in agrupado.items():
+            relevantes = [log for log in logs if is_relevante(log)]
+            if relevantes:
+                filtrado[exec_id] = relevantes
+
+        return filtrado
+    
+    
+    def rankear_rotinas_por_erros(self, filtrado: dict) -> dict:
+        """
+        Ordena as rotinas com base na quantidade de erros relevantes.
+
+        :param filtrado: dict de logs relevantes por rotina
+        :return: dict ordenado por total de erros (desc)
+        """
+        resultado = {
+            exec_id: {
+                "total_errors": len(logs),
+                "errors": logs
+            }
+            for exec_id, logs in filtrado.items()
+        }
+
+        return dict(
+            sorted(resultado.items(), key=lambda item: item[1]["total_errors"], reverse=True)
+        )
+    
+
+
+    def analisar_erros(self):
+        todos = self.get_all_logs()
+        agrupado = self.filtrar_logs_por_rotina(todos)
+        filtrado = self.remover_logs_ambiguos(agrupado)
+        ranqueado = self.rankear_rotinas_por_erros(filtrado)
+        return ranqueado
+
+
+
 
 
 

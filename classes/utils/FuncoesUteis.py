@@ -14,6 +14,9 @@ from classes.utils.ApexUtil import Apex
 from classes.utils.LogManager import LogManager
 from conftest import env_vars
 
+from classes.utils.decorators import com_visual
+
+
 Log_manager = LogManager()
 class FuncoesUteis:
     """
@@ -199,8 +202,10 @@ class FuncoesUteis:
         
 
 # Redireciona para uma pagina especifica
+
+
     @staticmethod
-    def goToPage(init:tuple,url:str):
+    def goToPage(init:tuple,url:str,validator=None):
         """
         Redireciona pra pagina especifica
 
@@ -210,6 +215,8 @@ class FuncoesUteis:
         :param url: str Url pra onde deseja ir              
 
         """
+        browser = init[0]
+
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars

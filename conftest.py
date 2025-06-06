@@ -535,7 +535,6 @@ def oracle_db_connection(env_vars):
 
 
 
-
 @pytest.fixture()
 def init(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection):
     return browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection

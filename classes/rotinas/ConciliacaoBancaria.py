@@ -1,13 +1,7 @@
-import random
-
-from calendar import c
-import faker
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from sqlalchemy import false
-from sqlalchemy import true
 from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
@@ -16,7 +10,6 @@ from classes.rotinas.ExtratoContas import ExtratoContas
 from classes.rotinas.ContasReceber import ContaReceber
 from time import sleep
 from classes.rotinas.ContasReceber import ContaReceber
-from time import sleep
 import random
 from faker import Faker as fake
 
@@ -59,7 +52,7 @@ class ConciliacaoBancaria:
         e confirmar a conciliação bancária. O progresso é registrado em logs.
         
         
-        :param init: tuple
+        :param init: 
             Tupla contendo os objetos necessários para a automação:
             - browser: Instância do WebDriver do Selenium.
             - login: Objeto de login (não utilizado diretamente nesta função).
@@ -69,7 +62,8 @@ class ConciliacaoBancaria:
             - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
             - screenshots: Caminho para salvar capturas de tela em caso de erro.
             - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
-        
+        :param pathArquivo:  caminho para o arquivo ofx
+
         ##    
         Fluxo da Função:
         1. Aguarda e clica no botão "Nova Conciliação".

@@ -10,7 +10,6 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 from classes.utils.LogManager import LogManager
 
-Log_manager = LogManager()
 env_application_type = os.getenv("APPLICATION_TYPE")
 load_dotenv(r"C:\Users\GabrielSiqueiraHOSSi\Desktop\Automacao\.env.desktop")
 
@@ -85,7 +84,8 @@ def alchemy_connection():
         return None    
 
 @pytest.fixture(scope="function")
-def getQueryResults():
+def getQueryResults(log_manager):
+    Log_manager=log_manager
 
     def querys(queries:dict, limit:int=10, random_choice:bool=True)-> dict:
         """
@@ -137,3 +137,7 @@ def getQueryResults():
             )
 
     return querys
+
+@pytest.fixture
+def log_manager():
+    return LogManager()
