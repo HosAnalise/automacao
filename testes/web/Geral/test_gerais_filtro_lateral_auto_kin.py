@@ -14,8 +14,7 @@ from selenium.webdriver.common.alert import Alert
 from selenium.common.exceptions import NoAlertPresentException
 
 
-
-def test_FiltroLateralAbreEZeroRegistros(init):
+def test_geral_filtro_lateralAbre_e_zeroRegistros(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
@@ -45,16 +44,18 @@ def test_FiltroLateralAbreEZeroRegistros(init):
                 WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, seletor)))
 
                 Log_manager.add_log(
+                    application_type=env_application_type,
                     level="INFO",
                     message=f"O Filtro Lateral da Página {rotina} Esta Vindo Aberto.",
-                    routine=rotina,
+                    routine=f"Testes Gerais - test_geral_filtro_lateralAbre_e_zeroRegistros",
                     error_details=""
                 )
             except:
                 Log_manager.add_log(
+                    application_type=env_application_type,
                     level="INFO",
                     message=f"O Filtro Lateral da Página {rotina} Esta Vindo Fechado.",
-                    routine=rotina,
+                    routine=f"Testes Gerais - test_geral_filtro_lateralAbre_e_zeroRegistros",
                     error_details=""
                 )
 
@@ -62,31 +63,25 @@ def test_FiltroLateralAbreEZeroRegistros(init):
                 WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#.fa.fa-edit")))
 
                 Log_manager.add_log(
+                    application_type=env_application_type,
                     level="INFO",
                     message=f"A Página {rotina} Não Está Trazendo Nenhum Registro Automaticamente.",
-                    routine=rotina,
+                    routine=f"Testes Gerais - test_geral_filtro_lateralAbre_e_zeroRegistros",
                     error_details=""
                 )
             except:
                 Log_manager.add_log(
+                    application_type=env_application_type,
                     level="INFO",
                     message=f"A Página {rotina} Está Trazendo Registros Automaticamente.",
-                    routine=rotina,
+                    routine=f"Testes Gerais - test_geral_filtro_lateralAbre_e_zeroRegistros",
                     error_details=""
                 )
 
 
-
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="Testes Gerais - test_geral_filtro_lateralAbre_e_zeroRegistros", error_details=str(e))
+            
         finally:
             endTime = time.time()
             executionTime = endTime - starTime
@@ -99,7 +94,7 @@ def test_FiltroLateralAbreEZeroRegistros(init):
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-                routine="",
+                routine="Testes Gerais - test_geral_filtro_lateralAbre_e_zeroRegistros",
                 error_details=''
             )
 

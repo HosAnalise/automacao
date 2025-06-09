@@ -13,9 +13,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.alert import Alert
 from selenium.common.exceptions import NoAlertPresentException
+import pytest
 
-
-def test_DevolverTransferencia(init):
+@pytest.mark.dockerExtratoContas
+def test_extratoContas_devolverTransferencia(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
@@ -112,7 +113,7 @@ def test_DevolverTransferencia(init):
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Descrição Incorreta, Valor Obtido = {contaTransfDevolvida['P78_DESCRICAO']}, Valor Original = {contaTransf['P78_DESCRICAO']}",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - test_extratoContas_devolverTransferencia",
                     error_details=""
                 )
 
@@ -121,20 +122,13 @@ def test_DevolverTransferencia(init):
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Descrição Correta, Valor Obtido = {contaTransfDevolvida['P78_DESCRICAO']}, Valor Original = {contaTransf['P78_DESCRICAO']}",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - test_extratoContas_devolverTransferencia",
                     error_details=""
                 )
 
     except (TimeoutException, NoSuchElementException, Exception) as e:
-        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-        screenshot_path = screenshots
-        if screenshot_path:
-            success = browser.save_screenshot(screenshot_path)
-            if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ExtratoDeContas", application_type=env_application_type, error_details=str(e))
-            else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="ExtratoDeContas", application_type=env_application_type, error_details=str(e))
-
+        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - test_extratoContas_devolverTransferencia", error_details=str(e))
+        
     finally:
         endTime = time.time()
         executionTime = endTime - starTime
@@ -147,7 +141,7 @@ def test_DevolverTransferencia(init):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="ExtratoDeContas",
+            routine=f"{ExtratoContas.rotina} - test_extratoContas_devolverTransferencia",
             error_details=''
         )
 

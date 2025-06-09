@@ -11,6 +11,7 @@ from time import sleep
 
 class AbemaRelatorioPrestador:
     
+    rotina = "Abema"
 
     filterSelector = "#P56_PRESTADOR_1"
     filters =[

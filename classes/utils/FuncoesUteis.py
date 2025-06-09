@@ -18,7 +18,6 @@ from conftest import env_vars
 from typing import Any, Tuple
 from pydantic import BaseModel
 import re
-import inspect
 
 
 Log_manager = LogManager()
@@ -27,7 +26,7 @@ class FuncoesUteis:
     Classe contendo funções utilitárias para automação de testes.
     """
 
-   
+    rotina = "Funções Uteis"
 
     @staticmethod
     def stringToFloat(element:str) -> float|None:
@@ -40,12 +39,13 @@ class FuncoesUteis:
         :return:
             float: Número convertido ou None se a conversão falhar.
         """
-       
+
         
         try:
             return float(element.strip().replace('.', '').replace(',', '.'))
         except ValueError:
             return None  
+
 
     @staticmethod
     def formatBrCurrency(value: int | float) -> str:
@@ -69,6 +69,7 @@ class FuncoesUteis:
                 raise RuntimeError("Locale brasileiro não está instalado no sistema.")
 
         return locale.currency(value, grouping=True, symbol=False)
+#END formatBrCurrency(value)
 
     
 # Realiza as queries necessarias para preencher as lovs com valor aleatorio recebe um dicinario py. Exemplo: 'queries  = {"nomeDaQuery":"""Select * from dual"""}'    
@@ -78,14 +79,14 @@ class FuncoesUteis:
         Retorna o resultado de uma query, ou se o usurio quiser apenas um valor aleatorio dessa query.
 
         :param init: Tupla contendo os objetos necessários:
-                     (browser, login, Log_manager, get_ambiente, env_vars,
-                      seletor_ambiente, screenshots, oracle_db_connection).
+            (browser, login, Log_manager, get_ambiente, env_vars,
+            seletor_ambiente, screenshots, oracle_db_connection).
         :param queries: Dict contendo todas as queries a serem realizadas. 
         :param limit: int limita os resultados das queryes 
         :param random_choice: bool permite o usuario escolher se a query vem com o valor total ou apenas um valor aleatorio
         :return: Retorna um dicionario {"Query_nomeQuery": valor}
-
         """
+
         browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
@@ -108,11 +109,19 @@ class FuncoesUteis:
                     results[key] = executar_query(cursor, query)
 
                 queryResults = {f"Query_{key}": obter_valor(result) for key, result in results.items()}
+
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message="Queries realizadas com sucesso.",
+                    routine=f"{FuncoesUteis.rotina} - getQueryResults",
+                    error_details=""
+                )
                 
                 return queryResults
         
         except Exception as e:
-            Log_manager.add_log(application_type =env_application_type,level= "Error", message = f"Erro na excução das queries ", routine="", error_details =f"{e}" )
+            Log_manager.add_log(application_type =env_application_type,level= "Error", message = f"Erro na excução das queries ", routine=f"{FuncoesUteis.rotina} - getQueryResults", error_details =f"{e}" )
             return {"error": str(e)}
         finally:
             endTime = time.time()
@@ -126,35 +135,28 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Tempo de execução das queries: {minutos} min {segundos} s {milissegundos} ms",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - getQueryResults",
                 error_details=''
             )
+#End getQueryResults(init,queries,limit,random_choice)
 
-
-    
-
-      
-
-            
-#End RandomQueries(init,queries)
 
     @staticmethod
     def timestampFormat():
         """
         Retorna um timestamp formatado.
         
-        :return     str: Timestamp no formato 'dd-mm-yyyy HH-MM-SS-ffffff'.
+        :return str: Timestamp no formato 'dd-mm-yyyy HH-MM-SS-ffffff'.
         """
         return datetime.now().strftime("%d-%m-%Y %H-%M-%S-%f")
+
 
     @staticmethod
     def compareValues(init:tuple, obj:dict) -> bool:
         """
         Compara pares de valores em um dicionário e registra logs de sucesso ou erro.
-
-      
-            :param init: (tuple): Variáveis do ambiente extraídas no início.
-            :param obj: (dict): Dicionário onde cada chave mapeia para uma tupla (valor_esperado, valor_atual).
+        :param init: (tuple): Variáveis do ambiente extraídas no início.
+        :param obj: (dict): Dicionário onde cada chave mapeia para uma tupla (valor_esperado, valor_atual).
 
         :return:
             bool: True se todos os valores forem iguais, False se houver diferenças.Também cria logs que mostram os valores com diferenças
@@ -166,9 +168,9 @@ class FuncoesUteis:
         if not isinstance(obj, dict):
             Log_manager.add_log(
                 application_type=env_application_type,
-                level="ERROR",
-                message="compareValues - O objeto passado não é um dicionário válido.",
-                routine="",
+                level="WARNING",
+                message="O objeto passado não é um dicionário válido.",
+                routine=f"{FuncoesUteis.rotina} - compareValues",
                 error_details=""
             )
             return False
@@ -180,16 +182,16 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message="Todos valores foram inseridos corretamente.",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - compareValues",
                 error_details=""
             )
             return True
         else:
             Log_manager.add_log(
                 application_type=env_application_type,
-                level="ERROR",
+                level="WARNING",
                 message="Alguns valores foram inseridos incorretamente.",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - compareValues",
                 error_details=""
             )
             
@@ -201,12 +203,13 @@ class FuncoesUteis:
                         f"Valor incorreto - {chave}: {v1} (esperado, tipo {type(v1).__name__}) "
                         f"≠ {v2} (atual, tipo {type(v2).__name__})"
                     ),
-                    routine="",
+                    routine=f"{FuncoesUteis.rotina} - compareValues",
                     error_details=""
                 )
 
             return False
-        
+#END compareValues(init, obj)
+
 
 # Redireciona para uma pagina especifica
     @staticmethod
@@ -215,20 +218,30 @@ class FuncoesUteis:
         Redireciona pra pagina especifica
 
         :param init: Tupla contendo os objetos necessários:
-                     (browser, login, Log_manager, get_ambiente, env_vars,
-                      seletor_ambiente, screenshots, oracle_db_connection).
+            (browser, login, Log_manager, get_ambiente, env_vars,
+            seletor_ambiente, screenshots, oracle_db_connection).
         :param url: str Url pra onde deseja ir              
-
         """
+
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
+
+        env_application_type = getEnv.get("WEB")
+
         url_erp = getEnv.get('URL_ERP')
-       
+        
         if not url_erp:
             pytest.fail("Erro crítico: 'URL_ERP' não encontrada no ambiente de variáveis")   
 
-        browser.get(f"{url_erp}{url}")    
+        browser.get(f"{url_erp}{url}")
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Alterado a página para a URL : {url}.",
+            routine=f"{FuncoesUteis.rotina} - goToPage",
+            error_details=""
+        )
 #END goToPage(init,url)
 
 
@@ -239,11 +252,10 @@ class FuncoesUteis:
         Aplica valores a componentes apex baseados em um dicionario {seletor:valor} e aplica os filtro na pagina.
 
         :param init: Tupla contendo os objetos necessários:
-                     browser, login, Log_manager, get_ambiente, env_vars,
-                      seletor_ambiente, screenshots, oracle_db_connection.
+            (browser, login, Log_manager, get_ambiente, env_vars,
+            seletor_ambiente, screenshots, oracle_db_connection).
 
         :param apexValues: dict com itens de pagina apex {seletor:item}         
-
         """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -253,15 +265,11 @@ class FuncoesUteis:
         if isDictAndNotNull:
             try:
 
-            
                 for seletor,value in apexValues.items():
                     Apex.setValue(browser,seletor,value)
                     Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="", error_details="")
-
-                    
-                
+                                            routine=f"{FuncoesUteis.rotina} - aplyFilter", error_details="")
 
                 btnAplicaFiltros = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".t-Button.t-Button--hot.t-Button--simple.t-Button--stretch")))
                 btnText = btnAplicaFiltros.text
@@ -270,120 +278,51 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} encontrado",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - aplyFilter",
                         error_details=''
                     )
+                
                 btnAplicaFiltros.click()
                 Log_manager.add_log(
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} clicado",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - aplyFilter",
                         error_details=''
                     )
-
                 
-
-                    
-
-        
             except TimeoutException as e:
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="ERROR",
                     message="Erro: Tempo limite excedido ao acessar a página",
-                    routine="",
+                    routine=f"{FuncoesUteis.rotina} - aplyFilter",
                     error_details=str(e)
                 )
-                screenshot_path = screenshots
-                
-                # Verifica se o screenshot foi tirado corretamente
-                if screenshot_path:
-                    sucess  = browser.save_screenshot(screenshot_path)
-                    if sucess:            
-                        Log_manager.add_log(
-                            level="INFO", 
-                            message=f"Screenshot salvo em: {screenshot_path}", 
-                            routine="",
-                            application_type=env_application_type, 
-                            error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR", 
-                        message="Falha ao salvar screenshot", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                    )
 
             except NoSuchElementException as e:
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="ERROR",
                     message="Erro: Elemento não encontrado na página",
-                    routine="",
+                    routine=f"{FuncoesUteis.rotina} - aplyFilter",
                     error_details=str(e)
                 )
-                screenshot_path = screenshots
-                
-                # Verifica se o screenshot foi tirado corretamente
-                if screenshot_path:
-                    sucess  = browser.save_screenshot(screenshot_path)
-                    if sucess:  
-                        Log_manager.add_log(
-                            level="INFO", 
-                            message=f"Screenshot salvo em: {screenshot_path}", 
-                            routine="",
-                            application_type=env_application_type, 
-                            error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR", 
-                        message="Falha ao salvar screenshot", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                    )
 
             except Exception as e:  # Captura qualquer outro erro inesperado
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="ERROR",
                     message="Erro desconhecido ao acessar a página",
-                    routine="",
+                    routine=f"{FuncoesUteis.rotina} - aplyFilter",
                     error_details=str(e)
                 )
-                screenshot_path = screenshots
-                
-                # Verifica se o screenshot foi tirado corretamente
-                if screenshot_path:
-                    sucess  = browser.save_screenshot(screenshot_path)
-                    if sucess:  
-                        Log_manager.add_log(
-                            level="INFO", 
-                            message=f"Screenshot salvo em: {screenshot_path}", 
-                            routine="",
-                            application_type=env_application_type, 
-                            error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR", 
-                        message="Falha ao salvar screenshot", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                    )            
 #END aplyFilter(init,apexValues)
 
 
 #Oculta ou mostra barra de filtros
     @staticmethod
     def showHideFilter(init:tuple,seletor:str|bool=False):
-        
-
         """
         Mostra ou esconde o filtro lateral na página com base no seletor.
 
@@ -391,8 +330,8 @@ class FuncoesUteis:
         Se nenhum seletor for passado, o filtro será aberto.
 
         :param init: Tupla contendo os objetos necessários:
-                     (browser, login, Log_manager, get_ambiente, env_vars,
-                      seletor_ambiente, screenshots, oracle_db_connection).
+            (browser, login, Log_manager, get_ambiente, env_vars,
+            seletor_ambiente, screenshots, oracle_db_connection).
         :param seletor: Seletor CSS (str) usado para validar presença do filtro antes de ocultar.
                         Se não for passado, o filtro será exibido.
         """
@@ -410,7 +349,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Elemento {seletor} encontrado",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - showHideFilter",
                         error_details=''
                     )
                 
@@ -419,7 +358,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="ERROR",
                         message=f"Erro ao localizar seletor {seletor}. Err : {e}",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - showHideFilter",
                         error_details=str(e)
                     )
             
@@ -430,83 +369,31 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=messageFilter,
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - showHideFilter",
                 error_details=''
             ) 
             
-    
         except TimeoutException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Tempo limite excedido ao acessar a página",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - showHideFilter",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - showHideFilter",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{FuncoesUteis.rotina} - showHideFilter", error_details=str(e))
 #END showHideFilter(init,seletor)
-
-
 
 
 #Limpa Filtros 
@@ -516,11 +403,11 @@ class FuncoesUteis:
         Limpa os filtros da página e compara os valores antes e depois da limpeza.
 
         :param init: Tupla contendo os objetos necessários:
-                     browser, login, Log_manager, get_ambiente, env_vars,
-                      seletor_ambiente, screenshots, oracle_db_connection.
+            (browser, login, Log_manager, get_ambiente, env_vars,
+            seletor_ambiente, screenshots, oracle_db_connection).
 
         :param apexValues: Dicionário onde as chaves são os seletores Apex dos filtros
-                           e os valores são os valores esperados podem ser vazios.
+                            e os valores são os valores esperados podem ser vazios.
         """
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
@@ -538,7 +425,7 @@ class FuncoesUteis:
                     apexGetValueBefore[seletor] = Apex.getValue(browser,seletor)     
                     Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {apexGetValueBefore[seletor]} encontrado", 
-                                            routine="", error_details="") 
+                                            routine=f"{FuncoesUteis.rotina} - clearFilter", error_details="") 
 
                 btnLimpaFiltros = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#filtrosRegion > div.t-Region-bodyWrap > div.t-Region-buttons.t-Region-buttons--bottom > div.t-Region-buttons-right > button:nth-child(2) > span")))
                 btnText = btnLimpaFiltros.text
@@ -547,7 +434,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} encontrado",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - clearFilter",
                         error_details=''
                     )
                 btnLimpaFiltros.click()
@@ -555,10 +442,9 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} clicado",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - clearFilter",
                         error_details=''
                     )
-                
 
                 apexGetValueAfter = {}   
 
@@ -567,7 +453,7 @@ class FuncoesUteis:
                     apexGetValueAfter[seletor] = Apex.getValue(browser,seletor)     
                     Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {apexGetValueAfter[seletor]} encontrado", 
-                                            routine="", error_details="")
+                                            routine=f"{FuncoesUteis.rotina} - clearFilter", error_details="")
 
                 valuesBeforeAfter = {chave: (apexGetValueBefore[chave], apexGetValueAfter[chave]) for chave in apexGetValueBefore}
                 FuncoesUteis.compareValues(init, valuesBeforeAfter)
@@ -577,91 +463,29 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Tempo limite excedido ao acessar a página",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - clearFilter",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - clearFilter",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - clearFilter",
                 error_details=str(e)
-            )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )            
+            )     
 #END clearFilter(init,apexValues)
+
 
     @staticmethod
     def setFilters(init: tuple, apexValues: dict):
@@ -685,7 +509,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="WARNING",
                 message="Nenhum filtro foi passado para preenchimento.",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - setFilters",
                 error_details=""
             )
             return
@@ -697,7 +521,7 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Valor '{value}' setado com sucesso no seletor '{selector}'.",
-                    routine="",
+                    routine=f"{FuncoesUteis.rotina} - setFilters",
                     error_details=""
                 )
             except Exception as e:
@@ -705,7 +529,7 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="ERROR",
                     message=f"Erro ao setar valor no seletor '{selector}'.",
-                    routine="",
+                    routine=f"{FuncoesUteis.rotina} - setFilters",
                     error_details=str(e)
                 )
 
@@ -723,11 +547,11 @@ class FuncoesUteis:
         :return: Retorna um dicionario no formato {keys_list : values_list}
         """
 
-       
         return dict(zip(keys_list, values_list))
 
 #END combine_lists_to_dict(keys_set, values_set)
-   
+
+
     @staticmethod
     def has_connection() -> bool:
         """
@@ -768,7 +592,6 @@ class FuncoesUteis:
         :param value: Valor a ser inserido no campo.
         """
 
-
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         item = None
@@ -781,14 +604,12 @@ class FuncoesUteis:
                 application_type="WEB",
                 level="INFO",
                 message=f"Valor {value}, inserido no {textItem}",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - setValue",
                 error_details=""
             )
+#END setValue(init, seletor, value)
 
-    
-       
 
-        
     @staticmethod
     def prepareToCompareValues(init:tuple,apexValues:dict,sendKeys:bool = False):
         """
@@ -815,7 +636,7 @@ class FuncoesUteis:
                     application_type='WEB',
                     level="INFO",
                     message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado",
-                    routine="ContaReceber",
+                    routine=f"{FuncoesUteis.rotina} - prepareToCompareValues",
                     error_details=""
                 )
 
@@ -824,7 +645,7 @@ class FuncoesUteis:
                     application_type='WEB',
                     level="ERROR",
                     message=f"Erro ao manipular {seletor}: {str(e)}",
-                    routine="ContaReceber",
+                    routine=f"{FuncoesUteis.rotina} - prepareToCompareValues",
                     error_details=str(e)
                 )
 
@@ -833,17 +654,14 @@ class FuncoesUteis:
                     application_type='WEB',
                     level="ERROR",
                     message=f"Erro inesperado em {seletor}: {str(e)}",
-                    routine="ContaReceber",
+                    routine=f"{FuncoesUteis.rotina} - prepareToCompareValues",
                     error_details=str(e)
                 )
 
         campos = {seletor: (apexGetValue.get(seletor, None), value) for seletor, value in apexValues.items()}
         return campos
-    
+# END prepareToCompareValues(init,apexValues,sendKeys)
 
-
-    
-# END setValue(init,seletor,value)
 
     @staticmethod
     def guaranteeShowHideFilter(init:tuple,seletor:str,showHide:bool):
@@ -877,7 +695,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"O seletor foi corrigido automaticamente para '{seletor}', adicionando '#' ao inicio.",
-                routine="guaranteeShowHideFilter",
+                routine=f"{FuncoesUteis.rotina} - guaranteeShowHideFilter",
                 error_details=""
             )
 
@@ -905,7 +723,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Foi Escolhido {openClose[0]} o Filtro Lateral, e Ele Estava {status}. Logo, foi {openClose[1]}",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - guaranteeShowHideFilter",
                 error_details=''
                 )
             else:
@@ -913,7 +731,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Foi Escolhido {openClose[0]} o Filtro Lateral, Porém Já Estava {status}.",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - guaranteeShowHideFilter",
                 error_details=''
                 )
 
@@ -922,91 +740,29 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Tempo limite excedido ao acessar a página",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - guaranteeShowHideFilter",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - guaranteeShowHideFilter",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - guaranteeShowHideFilter",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 #END guaranteeShowHideFilter(init,seletor,showHide)
+
 
     @staticmethod
     def getURL(init:tuple)->str:
@@ -1028,7 +784,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message="Iniciando a captura da URL da nova janela.",
-                routine="Prestador/Empresa",
+                routine=f"{FuncoesUteis.rotina} - getURL",
                 error_details=''
             )
 
@@ -1038,7 +794,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"ID da janela original salvo: {originalWindow}",
-                routine="Prestador/Empresa",
+                routine=f"{FuncoesUteis.rotina} - getURL",
                 error_details=''
             )
 
@@ -1051,7 +807,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"IDs das janelas obtidos: {allWindows}",
-                routine="Prestador/Empresa",
+                routine=f"{FuncoesUteis.rotina} - getURL",
                 error_details=''
             )
 
@@ -1063,7 +819,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Foco alterado para a nova janela: {window}",
-                        routine="Prestador/Empresa",
+                        routine=f"{FuncoesUteis.rotina} - getURL",
                         error_details=''
                     )
                     break
@@ -1074,24 +830,15 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"URL capturada: {url}",
-                routine="Prestador/Empresa",
+                routine=f"{FuncoesUteis.rotina} - getURL",
                 error_details=''
             )
             
             return url
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{FuncoesUteis.rotina} - getURL", error_details=str(e))
 #END getURL(init)
-
-
 
 
     @staticmethod
@@ -1110,9 +857,9 @@ class FuncoesUteis:
         if not isinstance(obj, dict):
             Log_manager.add_log(
                 application_type=env_application_type,
-                level="ERROR",
+                level="WARNING",
                 message="compareValues - O objeto passado não é um dicionário válido.",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - compareValuesDesktop",
                 error_details=""
             )
             return False
@@ -1124,16 +871,16 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message="Todos valores foram inseridos corretamente.",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - compareValuesDesktop",
                 error_details=""
             )
             return True
         else:
             Log_manager.add_log(
                 application_type=env_application_type,
-                level="ERROR",
+                level="WARNING",
                 message="Alguns valores foram inseridos incorretamente.",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - compareValuesDesktop",
                 error_details=""
             )
             
@@ -1142,11 +889,13 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Valor incorreto - {chave}: {v1} (esperado) ≠ {v2} (atual)",
-                    routine="",
+                    routine=f"{FuncoesUteis.rotina} - compareValuesDesktop",
                     error_details=""
                 )
 
             return False
+#END compareValuesDesktop(obj)
+
 
     @staticmethod
     def recuperaValores(init:tuple, seletores:set)->dict:
@@ -1190,12 +939,13 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Capturado valor do seletor {seletor}: {valoresDict[seletor]}",
-                routine="",
+                routine=f"{FuncoesUteis.rotina} - recuperaValores",
                 error_details=''
             )
 
         return valoresDict
-#END recuperaValores(init, dict)
+#END recuperaValores(init, seletores)
+
 
     @staticmethod
     def scrollIntoView(init:tuple, seletor:str, clica:bool = False, hashTag:bool = True):
@@ -1235,7 +985,7 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"O seletor foi corrigido automaticamente para '{seletor}', adicionando '#' ao inicio.",
-                    routine="",
+                    routine=f"{FuncoesUteis.rotina} - scrollIntoView",
                     error_details=""
                 )
 
@@ -1245,12 +995,13 @@ class FuncoesUteis:
             application_type=env_application_type,
             level="INFO",
             message=f"Scroll até o seletor {seletor} realizado com sucesso.",
-            routine="",
+            routine=f"{FuncoesUteis.rotina} - scrollIntoView",
             error_details=''
         )
 
         Components.btnClick(init, f"{seletor}") if clica else None
-#END scrollIntoView(init, seletor)
+#END scrollIntoView(init, seletor, clica, hashTag)
+
 
     @staticmethod
     def geraValoresRandom(init:tuple, dictRecebido:dict[str, type | tuple[type, int, int]]) -> dict[str, Any]:
@@ -1312,7 +1063,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Gerado o int aleatório : {valor} | Variável {seletor}",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - geraValoresRandom",
                         error_details=""
                     )
 
@@ -1323,7 +1074,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Gerado o float aleatório : {valor} | Variável {seletor}",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - geraValoresRandom",
                         error_details=""
                     )
 
@@ -1333,7 +1084,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Gerado boolean {valor} para o seletor {seletor}",
-                        routine="",
+                        routine=f"{FuncoesUteis.rotina} - geraValoresRandom",
                         error_details=""
                     )
 
@@ -1348,6 +1099,7 @@ class FuncoesUteis:
 
         return resultados
 #END geraValoresRandom(init, dictRecebido)
+
 
     @staticmethod
     def objToDictObrigatorio(init:tuple, objRecebido:BaseModel, camposObrigatorios:dict) -> dict:
@@ -1384,7 +1136,7 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Valor no seletor '{chave}' encontrado no objeto recebido. Valor utilizado: '{dictObjeto[chave]}'.",
-                    routine="objToDictObrigatorio",
+                    routine=f"{FuncoesUteis.rotina} - objToDictObrigatorio",
                     error_details=""
                 )
             else:
@@ -1394,7 +1146,7 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Valor no seletor '{chave}' não encontrado ou estava None no objeto recebido. Valor default utilizado: '{valor}'.",
-                    routine="objToDictObrigatorio",
+                    routine=f"{FuncoesUteis.rotina} - objToDictObrigatorio",
                     error_details=""
                 )
 
@@ -1406,7 +1158,7 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Campo não obrigatório '{chave}' encontrado no objeto. Valor recebido: '{valor}'.",
-                    routine="objToDictObrigatorio",
+                    routine=f"{FuncoesUteis.rotina} - objToDictObrigatorio",
                     error_details=""
                 )
                 
@@ -1414,12 +1166,13 @@ class FuncoesUteis:
             application_type=env_application_type,
             level="INFO",
             message=f"Dicionário final criado com {len(dictObjetoFinal)} campos.",
-            routine="objToDictObrigatorio",
+            routine=f"{FuncoesUteis.rotina} - objToDictObrigatorio",
             error_details=""
         )
         
         return dictObjetoFinal
 #END objToDictObrigatorio(init, objRecebido, cmaposObrigatorios)
+
 
     @staticmethod
     def mapearObjeto(init:tuple, objRecebido:BaseModel, mapa:dict[str, str | list[str]]) -> dict[str, str]:
@@ -1461,19 +1214,20 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Campo '{chaveObjeto}' não encontrado no objeto recebido. Ignorado no mapeamento.",
-                    routine="mapearObjeto",
+                    routine=f"{FuncoesUteis.rotina} - mapearObjeto",
                     error_details=""
                 )
         Log_manager.add_log(
             application_type=env_application_type,
             level="INFO",
             message=f"Mapeamento concluído com sucesso. Total de {len(dictFinal)} campos mapeados.",
-            routine="mapearObjeto",
+            routine=f"{FuncoesUteis.rotina} - mapearObjeto",
             error_details=""
         )
 
         return dictFinal
 #END mapearObjeto(init, objRecebido, mapa)
+
 
     @staticmethod
     def validaCamposPorRegex(init:tuple, camposAVerificar:dict[str, str | Tuple[str, str]]) -> bool:
@@ -1538,7 +1292,7 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="WARNING",
                     message=f"O campo {seletor} não foi encontrado ou está vazio.",
-                    routine="validaCamposPorRegex",
+                    routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                     error_details=""
                 )
                 continue
@@ -1552,7 +1306,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="WARNING",
                         message=f"Tipo {tipo} do campo {seletor} não implementado para validação.",
-                        routine="validaCamposPorRegex",
+                        routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                         error_details=""
                     )
                     totalFalse += 1
@@ -1563,7 +1317,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"O campo {seletor} possui valor '{valor}' válido para os tipos '{tipo[0]}' ou '{tipo[1]}'.",
-                        routine="validaCamposPorRegex",
+                        routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                         error_details=""
                     )
                     totalTrue += 1
@@ -1573,7 +1327,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="WARNING",
                         message=f"O campo {seletor} possui valor inválido: '{valor}' para os tipos '{tipo[0]}' ou '{tipo[1]}'.",
-                        routine="validaCamposPorRegex",
+                        routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                         error_details=""
                     )
 
@@ -1586,7 +1340,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="WARNING",
                         message=f"Tipo {tipo} do campo {seletor} não implementado para validação.",
-                        routine="validaCamposPorRegex",
+                        routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                         error_details=""
                     )
                     totalFalse += 1
@@ -1597,7 +1351,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"O campo {seletor} possui valor '{valor}' válido para o tipo '{tipo}'.",
-                        routine="validaCamposPorRegex",
+                        routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                         error_details=""
                     )
                     totalTrue += 1
@@ -1607,7 +1361,7 @@ class FuncoesUteis:
                         application_type=env_application_type,
                         level="WARNING",
                         message=f"O campo {seletor} possui valor inválido: '{valor}' para o tipo '{tipo}'.",
-                        routine="validaCamposPorRegex",
+                        routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                         error_details=""
                     )
 
@@ -1617,7 +1371,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Validação concluída. Total válidos (True): {totalTrue}. Total inválidos (False): {totalFalse}.",
-                routine="validaCamposPorRegex",
+                routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                 error_details=""
             )
         else:
@@ -1625,12 +1379,13 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message="Nenhuma validação foi feita pois não foi recebido nenhum valor à ser validado.",
-                routine="validaCamposPorRegex",
+                routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                 error_details=""
             )
 
         return False if totalFalse > 0 else True
 #END validaCamposPorRegex(init, camposAVerificar)
+
 
     @staticmethod
     def preencheCamposComunsEPopUp(init:tuple, objRecebido:BaseModel | None, camposObrigatorios:dict[str, Any], camposObrigatoriosPopUp:dict[str, Any]) -> dict[str, str]:
@@ -1671,7 +1426,7 @@ class FuncoesUteis:
                 application_type=env_application_type,
                 level="INFO",
                 message="Objeto recebido não existente, dicionário final será uma copia dos dicionários recebidos!",
-                routine="preencheCamposComunsEPopUp",
+                routine=f"{FuncoesUteis.rotina} - preencheCamposComunsEPopUp",
                 error_details=""
             )
             campos = camposObrigatorios.copy()
@@ -1710,8 +1465,25 @@ class FuncoesUteis:
         valoresPopUpLov = {key: value for key, value in valoresCompletos.items() if key in popupKeys}
         valoresCampos = {key: value for key, value in valoresCompletos.items() if key not in popupKeys}
 
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Dicionário de campos comuns: {valoresCampos}",
+            routine=f"{FuncoesUteis.rotina} - preencheCamposComunsEPopUp",
+            error_details=""
+        )
+
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Dicionário de campos PopUpLov: {valoresPopUpLov}",
+            routine=f"{FuncoesUteis.rotina} - preencheCamposComunsEPopUp",
+            error_details=""
+        )
+
         return valoresCampos, valoresPopUpLov
 #END separaCamposComunsEPopUp(init, valoresCompletos, camposPopUp)
+
 
     @staticmethod
     def convertDictValoresToStr(init:tuple, dictRecebido:dict[str, Any]) -> dict[str, str]:
@@ -1733,11 +1505,12 @@ class FuncoesUteis:
             application_type=env_application_type,
             level="INFO",
             message=f"Convertido valores do dicionário recebido em String.",
-            routine="convertDictValoresToStr",
+            routine=f"{FuncoesUteis.rotina} - convertDictValoresToStr",
             error_details=""
         )
         return {chave: str(valor) if valor is not None else None for chave, valor in dictRecebido.items()}
 #END convertDictValoresToStr(init, dictRecebido)
+
 
     @staticmethod
     def filtrarCamposPorDicionario(init:tuple, dictAFiltrar:dict, dictFiltro:dict) -> dict:
@@ -1770,7 +1543,7 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Campo {chave} presente em ambos dicionários.",
-                    routine="filtrarCamposPorDicionario",
+                    routine=f"{FuncoesUteis.rotina} - filtrarCamposPorDicionario",
                     error_details=""
                 )
             else:
@@ -1778,16 +1551,8 @@ class FuncoesUteis:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Campo {chave} não presente no dicionário de filtro.",
-                    routine="filtrarCamposPorDicionario",
+                    routine=f"{FuncoesUteis.rotina} - filtrarCamposPorDicionario",
                     error_details=""
                 )
         return dictFiltrado
 #END filtrarCamposPorDicionario(init, dictAFiltrar, dictFiltro)
-
-    @staticmethod
-    def getNomeMetodo() -> str:
-        """
-        Retorna o nome do método onde essa função é chamada.
-        """
-        return inspect.currentframe().f_back.f_code.co_name
-#END getNomeMetodo

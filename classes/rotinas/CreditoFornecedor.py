@@ -16,7 +16,8 @@ import random
 class CreditoFornecedor:
     url = "listagem-de-crédito-de-devolução-de-fornecedor"
     filterSelector = "#P166_SELETOR_LOJA"
-    rotina = "CreditoFornecedor"
+
+    rotina = "Credito de Fornecedor"
 
     class Filtros(BaseModel):
         P166_SELETOR_LOJA : Optional [str] = None
@@ -54,6 +55,7 @@ class CreditoFornecedor:
         "P169_LOJA_ID" : "P166_SELETOR_LOJA"
         # "P169_VALOR" : "P166_MAIOR_QUE" - não utilizado pois para filtrar, por exemplo, R$30, é necessario colocar pelo menos R$29,99. Filtro desnecessário.
     }
+
 
     @staticmethod
     def insereCreditoFornecedor(init:tuple, valores:Credito = None) -> Credito | bool:
@@ -142,7 +144,7 @@ class CreditoFornecedor:
                 application_type=env_application_type,
                 level="INFO",
                 message="Criado um Set via chaves do dicionario.",
-                routine="",
+                routine=f"{CreditoFornecedor.rotina} - insereCreditoFornecedor",
                 error_details=""
             )
 
@@ -153,7 +155,7 @@ class CreditoFornecedor:
                     application_type=env_application_type,
                     level="WARNING",
                     message="Teste encerrado por causa dos campos aceitando valores incorretos.",
-                    routine="",
+                    routine=f"{CreditoFornecedor.rotina} - insereCreditoFornecedor",
                     error_details=""
                 )
                 return False
@@ -166,7 +168,7 @@ class CreditoFornecedor:
                     application_type=env_application_type,
                     level="INFO",
                     message="Crédito inserido com sucesso!",
-                    routine="",
+                    routine=f"{CreditoFornecedor.rotina} - insereCreditoFornecedor",
                     error_details=""
                 )
                 return CreditoFornecedor.Credito(**valoresRecuperados)
@@ -175,12 +177,13 @@ class CreditoFornecedor:
                 application_type=env_application_type,
                 level="INFO",
                 message="Apareceu um alerta, crédito não inserido.",
-                routine="",
+                routine=f"{CreditoFornecedor.rotina} - insereCreditoFornecedor",
                 error_details=""
             )
             
             return False
 #END insereCreditoFornecedor(init, valores)
+
 
     @staticmethod
     def procuraCreditoFornecedor(init:tuple, credito:Optional[Credito] = None) -> bool:
@@ -207,7 +210,7 @@ class CreditoFornecedor:
                 application_type=env_application_type,
                 level="INFO",
                 message="Crédito não passado, criando um novo para utilizar.",
-                routine="",
+                routine=f"{CreditoFornecedor.rotina} - procuraCreditoFornecedor",
                 error_details=""
             )
             FuncoesUteis.showHideFilter(init, CreditoFornecedor.filterSelector)
@@ -218,7 +221,7 @@ class CreditoFornecedor:
                 application_type=env_application_type,
                 level="INFO",
                 message="Crédito para filtragem recebido.",
-                routine="",
+                routine=f"{CreditoFornecedor.rotina} - procuraCreditoFornecedor",
                 error_details=""
             )
 
@@ -233,7 +236,7 @@ class CreditoFornecedor:
                 application_type=env_application_type,
                 level="INFO",
                 message="Crédito informado achado!",
-                routine="",
+                routine=f"{CreditoFornecedor.rotina} - procuraCreditoFornecedor",
                 error_details=""
             )
 
@@ -243,7 +246,7 @@ class CreditoFornecedor:
             application_type=env_application_type,
             level="INFO",
             message="Crédito informado não achado!",
-            routine="",
+            routine=f"{CreditoFornecedor.rotina} - procuraCreditoFornecedor",
             error_details=""
         )
 

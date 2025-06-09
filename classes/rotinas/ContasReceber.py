@@ -1,6 +1,7 @@
 from datetime import datetime,timedelta
 import random
 import time
+from duckdb import query
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -9,12 +10,15 @@ from classes.utils.GerarDados import GeradorDados
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
-
-
+from pydantic import BaseModel, field_validator
+from typing import Optional
+from classes.rotinas.Pessoas import Pessoas
 
 class ContaReceber:
     url="contas-a-receber"
     filterSelector="#P84_SELETOR_LOJA"
+    rotina = "Conta a Receber"
+
     filters =[
         "P84_SELETOR_LOJA",
         "P84_TIPO_PERIODO",
@@ -159,10 +163,21 @@ class ContaReceber:
         """
     }
 
-      
+    class ContaResumida(BaseModel):
+        P199_CONTA_ID : Optional[str] = None
+        P199_VALOR : Optional[str] = None
+        P199_PESSOA_ID : Optional[str] = None
+        P199_DATA_EMISSAO : Optional[str] = None
+        P199_DATA_RECEBIMENTO : Optional[str] = None
+        P199_CATEGORIA_FINANCEIRA_ID : Optional[str] = None
+        P199_DESCRICAO : Optional[str] = None
 
-
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
     
+
     @staticmethod
     def insereContaReceber(init,query,staticValues = False):
         """
@@ -189,7 +204,6 @@ class ContaReceber:
             
             urlContain = "conta-a-receber"
             has_contaReceber = Components.url_contains(init,urlContain)
-           
 
             if not has_contaReceber:
                 Components.btnClick(init,"#B392477272658547904")
@@ -239,111 +253,47 @@ class ContaReceber:
                 "P85_DESCRICAO":descricaoValue
             }
 
-           
+
             for seletor, value in apexValues.items():
                 WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
                 Apex.setValue(browser,seletor,value)
                 Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="ContaReceber", error_details="")
+                                                routine=f"{ContaReceber.rotina} - insereContaReceber", error_details="")
                 
                 
             campos = FuncoesUteis.prepareToCompareValues(init,apexValues)
             FuncoesUteis.compareValues(init,campos)
-
-
-
-            
 
         except TimeoutException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Tempo limite excedido ao acessar a página",
-                routine="ContaReceber",
+                routine=f"{ContaReceber.rotina} - insereContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="ContaReceber",
+                routine=f"{ContaReceber.rotina} - insereContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="ContaReceber",
+                routine=f"{ContaReceber.rotina} - insereContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
-
         finally:
             if not staticValues: return recebidovalue
-#END insereContaReceber(init,query)
-
-
+#END insereContaReceber(init,query,staticValues)
 
 
     @staticmethod
@@ -358,8 +308,6 @@ class ContaReceber:
             seletor de ambiente, caminho para salvar screenshots e conexão com o banco de dados Oracle.
         
         query: Dicionário contendo consultas aleatórias que são usadas para preencher os campos da conta a receber.
-
-       
         """
         randomQueries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
@@ -382,11 +330,6 @@ class ContaReceber:
 
         bigText700 = GeradorDados.gerar_texto(700)
         bigText500 = GeradorDados.gerar_texto(700)
-
-    
-
-
-
 
         try:
 
@@ -418,100 +361,36 @@ class ContaReceber:
                 "P85_OBSERVACAO":observacao,
             }
             
-
             campos = FuncoesUteis.prepareToCompareValues(init,apexValues)
             FuncoesUteis.compareValues(init,campos)
                 
-                
-
-
-
-
-
         except TimeoutException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Tempo limite excedido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - detalhesContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - detalhesContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - detalhesContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
-#END detalhesContaReceber(init,query)
+#END detalhesContaReceber(init,query,staticValues)
 
 
     @staticmethod
@@ -557,38 +436,38 @@ class ContaReceber:
         try:
 
             abaRepeticao = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#R221082137306428338_tab"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: aba Repeticao encontrado", routine="ContaReceber", error_details ="" )        
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: aba Repeticao encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )        
 
             browser.execute_script("arguments[0].scrollIntoView(true);", abaRepeticao)        
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Scrol até aba Repeticao", routine="ContaReceber", error_details ="" )        
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Scrol até aba Repeticao", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )        
 
             if abaRepeticao:
                 abaRepeticao.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: aba Repeticao clicado", routine="ContaReceber", error_details ="" )        
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: aba Repeticao clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )        
 
 
             try:
                 has_repeat = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#listaRepeticao")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Listas de repetição encontrada, já há repetição incluida", routine="ContaReceber", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Listas de repetição encontrada, já há repetição incluida", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
             except  (TimeoutException, NoSuchElementException, Exception) as e:
                 has_repeat = 0
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="ERROR",
                     message="Lista de repetições não encontrada",
-                    routine="ContaReceber",
+                    routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
                     error_details=str(e)
                 )
                 
             if has_repeat == 0: 
 
                 btnRepeticao = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[name='repeticao']"))) 
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao encontrado", routine="ContaReceber", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                 if btnRepeticao:
 
                     btnRepeticao.click()
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao clicado", routine="ContaReceber", error_details ="" )
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                     
                     Components.has_alert(init)
                     Components.has_alert_sucess(init)
@@ -604,25 +483,25 @@ class ContaReceber:
                             Apex.setValue(browser,"P91_OPCAO_FERIADO","A")
                             opcaoFeriadoValue = Apex.getValue(browser,"P91_OPCAO_FERIADO_0")
                             if opcaoFeriadoValue == "A":
-                                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P91_OPCAO_FERIADO: Opção feriados teve o valor : Antecipar inserido corretamente", routine="ContaReceber", error_details ="" )
+                                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P91_OPCAO_FERIADO: Opção feriados teve o valor : Antecipar inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                         elif randomZeroOrOne == 1 :
                             Apex.setValue(browser,"P91_OPCAO_FERIADO","P")  
                             opcaoFeriadoValue = Apex.getValue(browser,"P91_OPCAO_FERIADO_1")
                             if opcaoFeriadoValue == "P":
-                                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P91_OPCAO_FERIADO: Opção feriados teve o valor : Postergar Sábados e Doomingos inserido corretamente", routine="ContaReceber", error_details ="" )
+                                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P91_OPCAO_FERIADO: Opção feriados teve o valor : Postergar Sábados e Doomingos inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                     
 
                         if randomZeroOrOne == 0:
                             Apex.setValue(browser,"P91_OPCAO_COMPETENCIA","O")
                             opcaoCompetencia = Apex.getValue(browser,"P91_OPCAO_COMPETENCIA")
                             if opcaoCompetencia == "O":
-                                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P91_OPCAO_COMPETENCIA: Opção Competencia teve o valor: Ajustar Data Emissão/Competência conforme periodicidade da repetição  inserido corretamente", routine="ContaReceber", error_details ="" )
+                                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P91_OPCAO_COMPETENCIA: Opção Competencia teve o valor: Ajustar Data Emissão/Competência conforme periodicidade da repetição  inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                         elif randomZeroOrOne == 1:
                             Apex.setValue(browser,"P91_OPCAO_COMPETENCIA","R")     
                             opcaoCompetencia = Apex.getValue(browser,"P91_OPCAO_COMPETENCIA")
                             if opcaoCompetencia == "R":
-                                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P91_OPCAO_COMPETENCIA: Opção Competencia teve o valor: Manter mesmo dia Data Emissão/Competência da conta original nas repetições inserido corretamente", routine="ContaReceber", error_details ="" )
+                                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo P91_OPCAO_COMPETENCIA: Opção Competencia teve o valor: Manter mesmo dia Data Emissão/Competência da conta original nas repetições inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
 
                         randomPeriodo = GeradorDados.randomNumberDinamic(0, 2)
@@ -651,96 +530,96 @@ class ContaReceber:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Campo P91_OPCAO_COMPETENCIA: Seleção período teve o valor inserido corretamente valor selecionado {valor_selecionado}",
-                                routine="ContaReceber",
+                                routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
                                 error_details="")
                         else:
                             Log_manager.add_log(
                                 application_type=env_application_type,
-                                level="ERROR",
+                                level="WARNING",
                                 message="Falha ao definir o valor do campo : Seleção período",
-                                routine="ContaReceber",
+                                routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
                                 error_details=f"Esperado: {valor_selecionado}, Obtido: {selecaoPeriodoValue}" )
 
 
                         if selecaoPeriodoValue == "M":
                             WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P91_DIA")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_DIA encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_DIA encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                             Apex.setValue(browser, "P91_DIA", randomDay)
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_DIA:Todo dia teve o valor inserido corretamente", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_DIA:Todo dia teve o valor inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                             time.sleep(1)
 
                             WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P91_QUANTIDADE_MES")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_QUANTIDADE_MES encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_QUANTIDADE_MES encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                             Apex.setValue(browser, "P91_QUANTIDADE_MES", randomMonth)
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_QUANTIDADE_MES: Repetir por teve o valor inserido corretamente", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_QUANTIDADE_MES: Repetir por teve o valor inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                             
                             btnNovaSimulacao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B119202079299682336")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                             btnNovaSimulacao.click()
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                         elif selecaoPeriodoValue == "S":
                             WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P91_DIA_SEMANA")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_DIA_SEMANA encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_DIA_SEMANA encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                             Apex.setValue(browser, "P91_DIA_SEMANA", randonDayOfTheWeek)
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_DIA_SEMANA:Repetir:todo(a) teve o valor inserido corretamente", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_DIA_SEMANA:Repetir:todo(a) teve o valor inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                             time.sleep(1)
 
                             WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P91_QUANTIDADE_SEMANA")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_QUANTIDADE_SEMANA encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_QUANTIDADE_SEMANA encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                             
                             Apex.setValue(browser, "P91_QUANTIDADE_SEMANA", randomWeeks)
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_QUANTIDADE_SEMANA:por teve o valor inserido corretamente", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_QUANTIDADE_SEMANA:por teve o valor inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                             
                             btnNovaSimulacao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B119200508165682334")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                             btnNovaSimulacao.click()
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                         
                         elif selecaoPeriodoValue == "E":
                             WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P91_A_CADA_DIA")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_A_CADA_DIA encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_A_CADA_DIA encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                             Apex.setValue(browser, "P91_A_CADA_DIA", randomWeeks)
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_A_CADA_DIA :Repetir a cada teve o valor inserido corretamente", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_A_CADA_DIA :Repetir a cada teve o valor inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                             time.sleep(1)
 
                             WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P91_QUANTIDADE_VEZ")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_QUANTIDADE_VEZ encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_QUANTIDADE_VEZ encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                             Apex.setValue(browser, "P91_QUANTIDADE_VEZ", randomWeeks)
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_QUANTIDADE_VEZ :por teve o valor inserido corretamente", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo P91_QUANTIDADE_VEZ :por teve o valor inserido corretamente", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                             
                             btnNovaSimulacao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B119203509952682337")))
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                             btnNovaSimulacao.click()
-                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine="ContaReceber", error_details ="" )
+                            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                         Components.has_spin(init)
                         Components.has_form(init)           
 
 
                         WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#simulacao")))
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Tabela Criada Simulação realizada", routine="ContaReceber", error_details ="" )
+                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Tabela Criada Simulação realizada", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
 
                         btnSaveIframeRepeticaoPagamento = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B119206935067682339"))) 
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão salvar da aba geração de repetições encontrado", routine="ContaReceber", error_details ="" )
+                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão salvar da aba geração de repetições encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                         # browser.execute_script("arguments[0].scrollIntoView(true);", btnSaveIframeRepeticaoPagamento)        
-                        # Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Scrol até aba Repeticao", routine="ContaReceber", error_details ="" ) 
+                        # Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Scrol até aba Repeticao", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" ) 
                 
                         btnSaveIframeRepeticaoPagamento.click()
-                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão salvar da aba geração de repetições clicado", routine="ContaReceber", error_details ="" )
+                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão salvar da aba geração de repetições clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
 
                 else:
-                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: btnRepeticao não encontrado", routine="ContaReceber", error_details ="" )
+                    Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Campo: btnRepeticao não encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                     
 
                 Components.has_alert(init)
@@ -750,87 +629,31 @@ class ContaReceber:
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Tempo limite excedido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
         finally:    
             browser.switch_to.default_content()
 #END repeticaoContaReceber(init)            
+
 
     def recebimentoContaReceber(init,query,staticValues = False):
         """
@@ -843,8 +666,6 @@ class ContaReceber:
                     login, Log_manager, ambiente de execução, e outros componentes de configuração.
         query (dict): Dicionário que contém informações relacionadas à consulta da conta a receber, 
                     incluindo identificadores e parâmetros específicos da conta.
-        
-       
         """
 
         randomQuery = query
@@ -879,28 +700,28 @@ class ContaReceber:
                 abaRecebimento = WebDriverWait(browser, 30).until(
                     EC.visibility_of_element_located((By.ID, "recebimento_tab"))
                 )
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento encontrada", routine="ContaReceber", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento encontrada", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
 
 
                 # Garante que o elemento está na tela
                 browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", abaRecebimento)
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de Recebimento ", routine="ContaReceber", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de Recebimento ", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
 
 
                 # Aguarda até que o elemento esteja clicável
                 WebDriverWait(browser, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#recebimento_tab")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicavel", routine="ContaReceber", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicavel", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
 
 
                 abaRecebimento.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicada", routine="ContaReceber", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicada", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
             
                 try:
                     novoRecebimento = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B118674634687784523")))    
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo Recebimento encontrado", routine="ContaReceber", error_details ="" )
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo Recebimento encontrado", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
 
                     novoRecebimento.click()
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo Recebimento clicado", routine="ContaReceber", error_details ="" )
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão novo Recebimento clicado", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
                     has_repeat = True
                 except  (TimeoutException, NoSuchElementException, Exception) as e:
                     has_repeat = False
@@ -908,7 +729,7 @@ class ContaReceber:
                         application_type=env_application_type,
                         level="ERROR",
                         message="Botão novo recebimento não encontrado",
-                        routine="ContaReceber",
+                        routine=f"{ContaReceber.rotina} - recebimentoContaReceber",
                         error_details=str(e)
                     )  
             else:
@@ -951,12 +772,12 @@ class ContaReceber:
                         Apex.setValue(browser,seletor,value)
                         Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="ContaReceber", error_details="")
+                                                routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details="")
 
                         apexGetValue[seletor] =  FuncoesUteis.stringToFloat(Apex.getValue(browser,seletor))     
                         Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                routine="ContaReceber", error_details="")
+                                                routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details="")
                         clienteId = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P87_PESSOA_ID") )
 
                     apexValuesDisplay = {
@@ -980,12 +801,12 @@ class ContaReceber:
                             displayValuesText[key] = element.text  
                             Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{selector} Display encontrado com valor: {displayValuesText[key]}", 
-                                                routine="ContaReceber", error_details="")
+                                                routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details="")
                             valorFloat[key] = FuncoesUteis.stringToFloat(displayValuesText[key])
                         except Exception as e:
                             Log_manager.add_log(application_type=env_application_type, level="ERROR", 
                                                 message=f"Erro ao encontrar {selector}", 
-                                                routine="ContaReceber", error_details=str(e))
+                                                routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details=str(e))
 
                     valorSomado =  round(abs(valorFloat[6] - valorFloat[0] + valorFloat[1] + valorFloat[2] + valorFloat[3]),2)         
 
@@ -1006,10 +827,10 @@ class ContaReceber:
                     FuncoesUteis.compareValues(init,valores)
 
                     btnSaveIframeRecebimentos =  WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#btn_salvar"))) 
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão save do iframe Recebimentos encontrado", routine="ContaReceber", error_details ="" )
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão save do iframe Recebimentos encontrado", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
 
                     btnSaveIframeRecebimentos.click()
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão save do iframe Recebimentos clicado", routine="ContaReceber", error_details ="" )
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão save do iframe Recebimentos clicado", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
 
                     Components.has_alert(init)            
                 
@@ -1020,89 +841,33 @@ class ContaReceber:
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Tempo limite excedido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - recebimentoContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - recebimentoContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - recebimentoContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
         finally:
             browser.switch_to.default_content()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaReceber", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
                             
-#END recebimentoContaReceber(init,query) 
+#END recebimentoContaReceber(init,query,staticValues) 
+
 
     @staticmethod
     def jurosMultasContaReceber(init,staticValues = False):
@@ -1136,7 +901,7 @@ class ContaReceber:
             Log_manager.add_log(application_type =env_application_type,
                                 level= "INFO",
                                 message = "Aba de Juros e multas encontrada",
-                                routine="ContaReceber", 
+                                routine=f"{ContaReceber.rotina} - jurosMultasContaReceber", 
                                 error_details ="" 
                                 )
             
@@ -1144,7 +909,7 @@ class ContaReceber:
             Log_manager.add_log(application_type =env_application_type,
                                 level= "INFO",
                                 message = "Aba de Juros e multas clicada",
-                                routine="ContaReceber", 
+                                routine=f"{ContaReceber.rotina} - jurosMultasContaReceber", 
                                 error_details ="" 
                                 )
             randomValue = GeradorDados.randomNumberDinamic(0,4)
@@ -1161,7 +926,7 @@ class ContaReceber:
             }
 
             print(f"valores apex {apexValues}")
-           
+
             campos = FuncoesUteis.prepareToCompareValues(init,apexValues,True)
             FuncoesUteis.compareValues(init,campos)
 
@@ -1171,85 +936,28 @@ class ContaReceber:
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Tempo limite excedido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - jurosMultasContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - jurosMultasContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - jurosMultasContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
-#END jurosMultasContaReceber(init)
+#END jurosMultasContaReceber(init,staticValues)
 
 
     @staticmethod
@@ -1274,16 +982,17 @@ class ContaReceber:
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")    
+        env_application_type = getEnv.get("WEB")   
+
         dataId = "data id não encontrado"  
         try:
-           
+
             edit = WebDriverWait(browser,120).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit")))
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
                 message="Conta a pagar editavel encontrada",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - editaContaReceber",
                 error_details=''
             )
 
@@ -1292,7 +1001,7 @@ class ContaReceber:
                 application_type=env_application_type,
                 level="INFO",
                 message="Conta a pagar data-id capturado",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - editaContaReceber",
                 error_details=''
             )
 
@@ -1301,42 +1010,31 @@ class ContaReceber:
                 application_type=env_application_type,
                 level="INFO",
                 message="Conta a pagar editavel clicada. Inicio da edição da conta!",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - editaContaReceber",
                 error_details=''
             )
             if callback:
                 callback()
-         
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContaReceber.rotina} - editaContaReceber", error_details=str(e))
 
         finally:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Conta a pagar {dataId} editada",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - editaContaReceber",
                 error_details=''
             )    
-#END editaContaReceber(init)                       
+#END editaContaReceber(init,callback)                       
 
 
-    
     @staticmethod
     def totalizadoresContaReceber(init,query):
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB") 
-
 
         try:     
             queries = query
@@ -1358,71 +1056,30 @@ class ContaReceber:
                 
                 if totalizador:
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Totalizador {key} encontrado", 
-                                        routine="ContaReceber", error_details ="" 
+                                        routine=f"{ContaReceber.rotina} - totalizadoresContaReceber", error_details ="" 
                     )
                 else:
                     Log_manager.add_log(application_type =env_application_type,level= "ERROR", message = f"Totalizador {key} não encontrado", 
-                                        routine="ContaReceber", error_details ="" 
+                                        routine=f"{ContaReceber.rotina} - totalizadoresContaReceber", error_details ="" 
                     )
-            
-
-
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - totalizadoresContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="ContaPagar",
+                routine=f"{ContaReceber.rotina} - totalizadoresContaReceber",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="Login",application_type='WEB', 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="Login",application_type='WEB', 
-                    error_details=str(e)
-                )
 #END totalizadoresContaReceber(init,query)        
 
 
@@ -1452,31 +1109,22 @@ class ContaReceber:
 
             btnSaveContaReceber = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B118650201045784509"))) 
             btnText = btnSaveContaReceber.text
-            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine=f"{ContaReceber.rotina} - salvaContaReceber", error_details='')
 
             browser.execute_script("arguments[0].scrollIntoView(true);", btnSaveContaReceber)
-            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine=f"{ContaReceber.rotina} - salvaContaReceber", error_details='')
 
             btnSaveContaReceber.click()
-            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine=f"{ContaReceber.rotina} - salvaContaReceber", error_details='')
 
             Components.has_spin(init)
             Components.has_alert(init)
             Components.has_alert_success(init)
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))    
-
-
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContaReceber.rotina} - salvaContaReceber", error_details=str(e))
 #END salvaContaReceber(init)
+
 
     @staticmethod
     def excluiContaReceber(init):
@@ -1504,36 +1152,36 @@ class ContaReceber:
             abaRecebimento = WebDriverWait(browser, 30).until(
                 EC.visibility_of_element_located((By.ID, "recebimento_tab"))
             )
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento encontrada", routine="ContaReceber", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento encontrada", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details ="" )
 
 
             # Garante que o elemento está na tela
             browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", abaRecebimento)
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de Recebimento ", routine="ContaReceber", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de Recebimento ", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details ="" )
 
 
             # Aguarda até que o elemento esteja clicável
             WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#recebimento_tab")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicavel", routine="ContaReceber", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicavel", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details ="" )
 
 
             abaRecebimento.click()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicada", routine="ContaReceber", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de Recebimento clicada", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details ="" )
             
             try:
                 has_receipt = WebDriverWait(browser,30).until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR,".fa.fa-trash-o")))
             except (TimeoutException, NoSuchElementException, Exception) as e:
-                Log_manager.add_log(application_type=env_application_type, level="ERROR", message="Não há recebimento atrelado a conta", routine="", error_details=str(e))
-               
+                Log_manager.add_log(application_type=env_application_type, level="ERROR", message="Não há recebimento atrelado a conta", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details=str(e))
+
                 has_receipt = False
 
             if has_receipt:
                 while len(has_receipt) > 0:  # Continuar enquanto houver botões de exclusão na lista
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Botão de exclusão de recebimentos encontrado", routine="ContaReceber", error_details="")
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Botão de exclusão de recebimentos encontrado", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details="")
                     
                     # Clicar no primeiro botão de exclusão encontrado
                     has_receipt[0].click()
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Botão de exclusão de recebimentos clicado", routine="ContaReceber", error_details="")
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message="Botão de exclusão de recebimentos clicado", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details="")
                     
                     # Esperar um pouco para garantir que o item seja removido ou que a página seja atualizada
                     WebDriverWait(browser, 10).until(EC.staleness_of(has_receipt[0]))  # Espera até o botão se tornar obsoleto
@@ -1545,23 +1193,23 @@ class ContaReceber:
 
                 btnDeleteRecebimentoConfirm = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot"))) 
                 btnText = btnDeleteRecebimentoConfirm.text
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')
 
                 browser.execute_script("arguments[0].scrollIntoView(true);", btnDeleteRecebimentoConfirm)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')
 
                 btnDeleteRecebimentoConfirm.click()
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')    
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')    
             else:
                 btnDeleteContaReceber = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B118650674994784509"))) 
                 btnText = btnDeleteContaReceber.text
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')
 
                 browser.execute_script("arguments[0].scrollIntoView(true);", btnDeleteContaReceber)
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')
 
                 btnDeleteContaReceber.click()
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')
 
                 has_alert = Components.has_alert(init)
                 
@@ -1569,23 +1217,173 @@ class ContaReceber:
 
                     btnDeleteContaReceberConfirm = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot"))) 
                     btnText = btnDeleteContaReceberConfirm.text
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')
 
                     browser.execute_script("arguments[0].scrollIntoView(true);", btnDeleteContaReceberConfirm)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine="", error_details='')
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Scroll até {btnText}", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')
 
                     btnDeleteContaReceberConfirm.click()
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details='')
                     
                     Components.url_contains(init,ContaReceber.url)
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))    
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContaReceber.rotina} - excluiContaReceber", error_details=str(e))
+#END excluiContaReceber(init)
+
+
+    @staticmethod
+    def insereContaReceberResumida(init:tuple, valores:ContaResumida = None, salvar:bool = True) -> ContaResumida | bool:
+        """
+        Método inicia dentro do frame. Insere valores nos campos necessarios para cadastrar uma conta a receber resumida,
+        também possivelmente salvando automaticamente, caso seja passado por parametro.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :param valores:
+            Objeto com os seletores e seus respectivos valores, se não passado os valores serão criados aleatóriamente.
         
+        :param salvar:
+            Booleano que dita se o método irá salvar automáticamente o cadastro da conta, True para salvar, False para não salvar.
+
+        :return:
+            False caso aconteça algum erro durante a inserção, objeto da classe contaResumida com os campos preenchidos e seus valores caso inserção sucedida.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        queries = {
+            "queryCliente": """
+                                SELECT
+                                    PESSOA.PESSOA_ID       
+                                FROM 
+                                    ERP.PESSOA
+                                WHERE 
+                                    GRUPO_LOJA_ID = 1501
+                                    AND STATUS = 1
+                            """
+                            ,
+            "queryContaId": """
+                                SELECT CONTA.CONTA_ID  
+                                FROM ERP.CONTA
+                                JOIN ERP.CONTA_ESPECIFICACAO ON CONTA.CONTA_ID = CONTA_ESPECIFICACAO.CONTA_ID
+                                LEFT JOIN ERP.LOJA ON LOJA.LOJA_ID = CONTA_ESPECIFICACAO.LOJA_ID
+                                WHERE CONTA_ESPECIFICACAO.GRUPO_LOJA_ID = 1501
+                                    AND CONTA.TIPO_CONTA_ID IN (1, 2)
+                                    AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
+                                    AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
+                            """
+                            ,
+            "queryCategoriaFinanceira": """
+                                            SELECT CF.CATEGORIA_FINANCEIRA_ID  
+                                            FROM ERP.CATEGORIA_FINANCEIRA CF
+                                            LEFT JOIN ERP.CATEGORIA_FINANCEIRA_ESPECIFICACAO CFE ON CF.CATEGORIA_FINANCEIRA_ID = CFE.CATEGORIA_FINANCEIRA_ID
+                                            LEFT JOIN ERP.CATEGORIA_FINANCEIRA CF_PAI ON CFE.CATEGORIA_FINANCEIRA_PAI_ID = CF_PAI.CATEGORIA_FINANCEIRA_ID
+                                            WHERE CF.CLASSIFICACAO_CATEGORIA_FINANCEIRA_ID = 1
+                                                AND CFE.CATEGORIA_FINANCEIRA_PAI_ID IS NOT NULL
+                                                AND CFE.GRUPO_LOJA_ID = 1501
+                                                AND (CFE.CATEGORIA_FINANCEIRA_ID IN (0) OR CFE.STATUS = 1)
+                                        """
+        }
+
+        queryContaResumida = FuncoesUteis.getQueryResults(init, queries)
+
+        camposObrigatorios = {
+            "P199_VALOR" : (float, 10, 30),
+            "P199_DATA_EMISSAO" : "date",
+            "P199_DATA_RECEBIMENTO" : "date"
+        }
+
+        camposObrigatorios = FuncoesUteis.geraValoresRandom(init, camposObrigatorios)
+
+        camposObrigatoriosPopUp = {
+            "P199_CONTA_ID" : queryContaResumida["Query_queryContaId"],
+            "P199_PESSOA_ID" : queryContaResumida["Query_queryCliente"],
+            "P199_CATEGORIA_FINANCEIRA_ID" : queryContaResumida["Query_queryCategoriaFinanceira"]
+        }
+
+        valoresConta = FuncoesUteis.preencheCamposComunsEPopUp(init, valores, camposObrigatorios, camposObrigatoriosPopUp)
+
+        valoresCampo, valoresCampoPopUo = FuncoesUteis.separaCamposComunsEPopUp(init, valoresConta, camposObrigatoriosPopUp)
+
+        camposAVerificarRegex = {
+            "P199_VALOR" : "valor",
+            "P199_DATA_EMISSAO" : "date",
+            "P199_DATA_RECEBIMENTO" : "date",
+            "P199_DESCRICAO" : "text"
+        }
+
+        camposAVerificarRegex = FuncoesUteis.filtrarCamposPorDicionario(init, camposAVerificarRegex, valoresCampo)
+
+        FuncoesUteis.prepareToCompareValues(init, valoresCampo, True)
+
+        FuncoesUteis.prepareToCompareValues(init, valoresCampoPopUo, False)
+
+        valoresRecuperar = set(valoresConta.keys())
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Set de campos criado para recuperação: {valoresRecuperar}",
+            routine=f"{ContaReceber.rotina} - insereContaReceberResumida",
+            error_details=""
+        )
+
+        valoresRecuperados = FuncoesUteis.recuperaValores(init, valoresRecuperar)
+
+        if not FuncoesUteis.validaCamposPorRegex(init, camposAVerificarRegex):
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="WARNING",
+                message="Teste encerrado por causa dos campos aceitando valores incorretos.",
+                routine=f"{ContaReceber.rotina} - insereContaReceberResumida",
+                error_details=""
+            )
+            return False
+        
+        if salvar: 
+            Components.btnClick(init, "#save")
+            if not Components.has_alert(init):
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message="Alerta encontrado ao finalizar. Conta não criada",
+                    routine=f"{ContaReceber.rotina} - insereContaReceberResumida",
+                    error_details=""
+                )
+                return False
+        
+        return ContaReceber.ContaResumida(**valoresRecuperados)
+#END insereContaReceberResumida(init, valores, salvar)
+
+
+    @staticmethod
+    def criaNovoCliente(init:tuple, cliente:Pessoas.Pessoa) -> Pessoas.Pessoa | bool:
+        """
+        Cria um novo cliente durante a criação de uma conta a receber via o botão "Novo Cliente" localizado abaixo do campo de cliente.
+
+        :param init:
+            Tupla comparâmetros do ambiente.
+
+        :param cliente:
+            Objeto instanciado da classe BaseModel pessoa, caso passado, seus valores serão priorizados durante criação do cliente.
+
+        :return:
+            Retorna um objeto pessoa com os valores inseridos na criação. Pode retornar False caso o método falhe em algum momento.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        Components.btnClick(init, "#btn_novoCliente")
+
+        if Components.has_frame(init, "[title='Cadastro de Pessoa']"):
+
+            WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#P6_STATUS")))
+
+            # if Pessoas.inserePessoaCompleta(init, cliente):

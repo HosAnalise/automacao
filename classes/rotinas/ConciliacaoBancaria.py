@@ -22,6 +22,9 @@ from typing import Optional
 class ConciliacaoBancaria:
     url="conciliacao-bancaria"
     filterSelector = "#P154_FILTRO_CONTA"
+
+    rotina = "Conciliação Bancaria"
+    
     filters = [
         "P154_FILTRO_CONTA",
         "P154_FILTRO_PERIODO_POR",
@@ -47,6 +50,7 @@ class ConciliacaoBancaria:
         "P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO",
         "P268_CONTA_PAGAR_DESCRICAO"
     }
+
 
     @staticmethod
     def insereConciliacao(init:tuple,pathArquivo:str):
@@ -88,7 +92,7 @@ class ConciliacaoBancaria:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-           
+
         try:
 
             btnNovaConciliacao = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B43105716282300150")))
@@ -97,7 +101,7 @@ class ConciliacaoBancaria:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Botão {btnText} encontrado ",
-                routine="ConciliacaoBancaria",
+                routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                 error_details=''
             )
             btnNovaConciliacao.click()
@@ -105,7 +109,7 @@ class ConciliacaoBancaria:
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Botão {btnText} clicado ",
-                routine="ConciliacaoBancaria",
+                routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                 error_details=''
             )
 
@@ -120,7 +124,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message="input do arquivo Ofx encontrado",
-                    routine="ExtratoDeContas",
+                    routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                     error_details=''
                 )
                 dropZone.send_keys(filePath)
@@ -128,7 +132,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message="Aquivo Ofx dropado no input do arquivo Ofx",
-                    routine="ExtratoDeContas",
+                    routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                     error_details=''
                 )
 
@@ -137,7 +141,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message="Botão btnImportaExtrato encontrado ",
-                    routine="ConciliacaoBancaria",
+                    routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                     error_details=''
                 )
                 btnImportaExtrato.click()
@@ -145,7 +149,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message="Botão btnImportaExtrato clicado ",
-                    routine="ConciliacaoBancaria",
+                    routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                     error_details=''
                 )
 
@@ -156,7 +160,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message="Botão btnConfirm encontrado ",
-                        routine="ConciliacaoBancaria",
+                        routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                         error_details=''
                     )
 
@@ -165,7 +169,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message="Botão btnConfirm clicado ",
-                        routine="ConciliacaoBancaria",
+                        routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                         error_details=''
                     )
 
@@ -174,39 +178,29 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="ERROR",
                         message="Erro: Tempo limite excedido ao acessar a página",
-                        routine="ConciliacaoBancaria",
+                        routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao",
                         error_details=str(e)
                     )
-                   
-
-               
-                    
-
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - insereConciliacao", error_details=str(e))
+            
         finally:
-                browser.switch_to.default_content()
+            browser.switch_to.default_content()
 
-#END insereConciliacao(init)
+#END insereConciliacao(init,pathArquivo)
+
 
     @staticmethod
     def inluiRecebimentoContaExistente(init:tuple,filter:dict):
         """
         Automatiza a inclusão de um recebimento em uma conta existente no sistema web.
 
-       
+
         :param init:
-         (tuple): Contém os objetos e configurações necessárias para a automação.
+        (tuple): Contém os objetos e configurações necessárias para a automação.
         :param filter:
-         (dict): Filtros a serem aplicados para localizar os lançamentos desejados.
+        (dict): Filtros a serem aplicados para localizar os lançamentos desejados.
 
         Fluxo da Função:
         1. Aguarda e clica no botão "Incluir Recebimento".
@@ -242,7 +236,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} encontrado",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - inluiRecebimentoContaExistente",
                     error_details=''
                 )
             
@@ -251,7 +245,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} clicado",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - inluiRecebimentoContaExistente",
                     error_details=''
                 )
             
@@ -271,7 +265,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="Info",
                     message=f"{checkBoxesLen} checkBoxes encontrados",
-                    routine="ConciliacaoBancaria",
+                    routine=f"{ConciliacaoBancaria.rotina} - inluiRecebimentoContaExistente",
                     error_details=str(e)
                 )
 
@@ -282,7 +276,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="Info",
                     message=f"{randomCheckbox} checkBox clicado",
-                    routine="ConciliacaoBancaria",
+                    routine=f"{ConciliacaoBancaria.rotina} - inluiRecebimentoContaExistente",
                     error_details=str(e)
                 )
 
@@ -293,7 +287,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} encontrado",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - inluiRecebimentoContaExistente",
                         error_details=''
                     )
                 
@@ -302,7 +296,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} clicado",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - inluiRecebimentoContaExistente",
                         error_details=''
                     )
                 FuncoesUteis.has_alert(init)
@@ -312,22 +306,15 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão desconciliarLancamento encontrado",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - inluiRecebimentoContaExistente",
                         error_details=''
                     )          
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - inluiRecebimentoContaExistente", error_details=str(e))
 #END incluiRecebimentoContaExistente(init,filter)
+
 
     @staticmethod
     def criarNovaContaReceber(init:tuple,values:dict):
@@ -354,7 +341,7 @@ class ConciliacaoBancaria:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-           
+
         try:
 
             btnNovaContaReceber = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"[acao='novoLancamento']")))
@@ -363,7 +350,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} encontrado",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarNovaContaReceber",
                     error_details=''
                 )
             
@@ -372,7 +359,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} clicado",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarNovaContaReceber",
                     error_details=''
                 )
             
@@ -380,15 +367,9 @@ class ConciliacaoBancaria:
 
             
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - criarNovaContaReceber", error_details=str(e))
 #END criarNovaContaReceber(init,values)
+
 
     @staticmethod
     def criarNovaTransferencia(init:tuple,query:dict):
@@ -421,7 +402,7 @@ class ConciliacaoBancaria:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-           
+
         try:       
             btnNovaContaReceber = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"[acao='novoLancamentoTransferencia']")))
             btnText = btnNovaContaReceber.text
@@ -429,7 +410,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} encontrado",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarNovaTransferencia",
                     error_details=''
                 )
             
@@ -438,24 +419,15 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} clicado",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarNovaTransferencia",
                     error_details=''
                 )
             ExtratoContas.novaTransferencia(init,query,False)
             
-
             
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-#END criarNovaTransferencia(init)
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - criarNovaTransferencia", error_details=str(e))
+#END criarNovaTransferencia(init,query)
 
 
     @staticmethod
@@ -516,8 +488,6 @@ class ConciliacaoBancaria:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
 
-       
-           
         try:       
             seletor ="[acao='associarLancamento']"
             Components.btnClick(init,seletor)
@@ -532,7 +502,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} encontrado",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - associarRecebimentoExistente",
                         error_details=''
                     )
                 
@@ -541,7 +511,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} clicado",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - associarRecebimentoExistente",
                         error_details=''
                     )
                 FuncoesUteis.aplyFilter(init,filters)
@@ -553,7 +523,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message="Report encontrado com com filtros aplicados",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - associarRecebimentoExistente",
                         error_details=''
                     )
 
@@ -564,7 +534,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message="Report encontrado sem filtros aplicados",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - associarRecebimentoExistente",
                         error_details=''
                     )
 
@@ -576,12 +546,11 @@ class ConciliacaoBancaria:
             else:
                 Log_manager.add_log(
                         application_type=env_application_type,
-                        level="ERROR",
+                        level="WARNING",
                         message="Report não encontrado",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - associarRecebimentoExistente",
                         error_details=''
                     )
-             
 
             btnConciliar = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#conciliarButton")))
             btnText = btnConciliar.text
@@ -589,7 +558,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} encontrado",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - associarRecebimentoExistente",
                     error_details=''
                 )
             
@@ -598,19 +567,13 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} clicado",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - associarRecebimentoExistente",
                     error_details=''
                 )
                             
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - associarRecebimentoExistente", error_details=str(e))
+            
         finally:
             browser.switch_to.default_content()
 #END associarRecebimentoExistente(init,filters,contaReceber)
@@ -675,7 +638,7 @@ class ConciliacaoBancaria:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-           
+
         try: 
             seletor = "[acao='associarLancamentoTransferencia']"
             Components.btnClick(init,seletor)
@@ -694,7 +657,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message="Resultados encontrado com filtros aplicados",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - associarTransferenciaExistente",
                         error_details=''
                 )
 
@@ -704,7 +667,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message="Resultados encontrado sem filtros aplicados",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - associarTransferenciaExistente",
                         error_details=''
                 )
 
@@ -716,29 +679,23 @@ class ConciliacaoBancaria:
             else:
                 Log_manager.add_log(
                         application_type=env_application_type,
-                        level="ERROR",
+                        level="WARNING",
                         message="Report não encontrado",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - associarTransferenciaExistente",
                         error_details=''
                     )
-             
+
             seletor = "#conciliarButton"
             Components.btnClick(init,seletor)
 
 
-
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - associarTransferenciaExistente", error_details=str(e))
+            
         finally:
             browser.switch_to.default_content()          
 #END associarTransferemciaExistente(init,filters,contaReceber)
+
 
     @staticmethod
     def ingnorarLancamento(init:tuple):
@@ -747,7 +704,7 @@ class ConciliacaoBancaria:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-           
+
         try: 
             lancamentoBancarioId = Apex.getValue(browser,"P159_LANCAMENTO_BANCARIO_ID")
 
@@ -762,32 +719,21 @@ class ConciliacaoBancaria:
             
             if lancamentoIgnorado :
                 Log_manager.add_log(application_type=env_application_type,
-                                    level="ERROR",
+                                    level="WARNING",
                                     message="Lançamento bancario ignorado com sucesso",
-                                    routine="",
+                                    routine=f"{ConciliacaoBancaria.rotina} - ingnorarLancamento",
                                     error_details="")
             else:
                 Log_manager.add_log(application_type=env_application_type,
-                                    level="ERROR",
+                                    level="WARNING",
                                     message="Lançamento bancario não ignorado",
-                                    routine="",
+                                    routine=f"{ConciliacaoBancaria.rotina} - ingnorarLancamento",
                                     error_details="")
-                    
-
-
-
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-        
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - ingnorarLancamento", error_details=str(e))
 #END ignorarLancamento(init)
+
 
     @staticmethod
     def conciliarLancamento(init:tuple):
@@ -795,7 +741,7 @@ class ConciliacaoBancaria:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-           
+
         try: 
             lancamentoBancarioId = Apex.getValue(browser,"P159_LANCAMENTO_BANCARIO_ID")
 
@@ -807,39 +753,26 @@ class ConciliacaoBancaria:
 
             seletor = "#SR_conciliadosReport_tab"
             Components.btnClick(init,seletor)
-            
-
 
             lancamentoConciliado = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,f"[lancamentobancarioid={lancamentoBancarioId}]")))
             
             if lancamentoConciliado :
                 Log_manager.add_log(application_type=env_application_type,
-                                    level="ERROR",
+                                    level="WARNING",
                                     message="Lançamento bancario ignorado com sucesso",
-                                    routine="",
+                                    routine=f"{ConciliacaoBancaria.rotina} - conciliarLancamento",
                                     error_details="")
             else:
                 Log_manager.add_log(application_type=env_application_type,
-                                    level="ERROR",
+                                    level="WARNING",
                                     message="Lançamento bancario não ignorado",
-                                    routine="",
+                                    routine=f"{ConciliacaoBancaria.rotina} - conciliarLancamento",
                                     error_details="")
-                    
-
-
-
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-        
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - conciliarLancamento", error_details=str(e))
 #END conciliarLancamento(init)
+
 
     @staticmethod
     def processaConciliacaoAutomatica(init:tuple,yesNot:bool):
@@ -893,18 +826,17 @@ class ConciliacaoBancaria:
         Se a captura de tela falhar, um erro adicional é registrado nos logs.
         """
 
-
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-           
+
         try:       
             if yesNot:
 
                 seletor = ".js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot"
                 Components.btnClick(init,seletor)
-              
+
                 Components.has_spin(init)
                 
 
@@ -922,7 +854,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message="Não há conciliações automaticas disponiveis na aba de conciliações automaticas",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - processaConciliacaoAutomatica",
                         error_details=''
                     )
                 else:
@@ -930,7 +862,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message="Há conciliações automaticas disponiveis na aba de conciliações automaticas",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - processaConciliacaoAutomatica",
                         error_details=''
                     )
             else:
@@ -939,16 +871,9 @@ class ConciliacaoBancaria:
 
                             
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - processaConciliacaoAutomatica", error_details=str(e))
 #END processaConciliacaoAutomatica(init,yesNot) 
+
 
     @staticmethod
     def desconciliaLancamento(init:tuple,especifico:str|bool=False):
@@ -956,7 +881,7 @@ class ConciliacaoBancaria:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-           
+
         try: 
             seletor = especifico if especifico else ".buttonsConciliacao"
 
@@ -974,29 +899,22 @@ class ConciliacaoBancaria:
             
             if lancamentoDesconciliado :
                 Log_manager.add_log(application_type=env_application_type,
-                                    level="ERROR",
+                                    level="WARNING",
                                     message="Lançamento bancario desconciliado com sucesso",
-                                    routine="",
+                                    routine=f"{ConciliacaoBancaria.rotina} - desconciliaLancamento",
                                     error_details="")
             else:
                 Log_manager.add_log(application_type=env_application_type,
-                                    level="ERROR",
+                                    level="WARNING",
                                     message="Lançamento bancario não desconciliado",
-                                    routine="",
+                                    routine=f"{ConciliacaoBancaria.rotina} - desconciliaLancamento",
                                     error_details="")
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-        
-#END processaConciliacaoAutomatica(init,yesNot) 
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - desconciliaLancamento", error_details=str(e))
+#END processaConciliacaoAutomatica(init,especifico) 
+
 
     @staticmethod
     def desconciliaLancamento(init,especifico):
@@ -1022,29 +940,22 @@ class ConciliacaoBancaria:
             
             if lancamentoDesconciliado :
                 Log_manager.add_log(application_type=env_application_type,
-                                    level="ERROR",
+                                    level="WARNING",
                                     message="Lançamento bancario desconciliado com sucesso",
-                                    routine="",
+                                    routine=f"{ConciliacaoBancaria.rotina} - desconciliaLancamento",
                                     error_details="")
             else:
                 Log_manager.add_log(application_type=env_application_type,
-                                    level="ERROR",
+                                    level="WARNING",
                                     message="Lançamento bancario não desconciliado",
-                                    routine="",
+                                    routine=f"{ConciliacaoBancaria.rotina} - desconciliaLancamento",
                                     error_details="")
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-        
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - desconciliaLancamento", error_details=str(e))
 #END desconciliaLancamento(init,especifico)
+
 
     @staticmethod
     def criarRegraConciliacao(init:tuple, dictConfigRecebido:dict):
@@ -1103,7 +1014,6 @@ class ConciliacaoBancaria:
             queryContaReceber = FuncoesUteis.getQueryResults(init, ContaReceber.queries)
 
 
-
             #gera configurações aleatorias para o dicionario de configurações default, os campos gerados fora de dicionarios influenciam na criação de outros campos
             if dictConfigRecebido["tipoLancamento"] is None:
                 tipoLancamento = random.randint(1, 2)
@@ -1111,7 +1021,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"tipoLancamento gerado aleatóriamente: {tipoLancamento}",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                     error_details=""
                 )
             else:
@@ -1120,7 +1030,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"tipoLancamento recebido: {tipoLancamento}",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                     error_details=""
                 )
 
@@ -1130,7 +1040,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"tipoTratamento gerado aleatóriamente: {tipoTratamento}",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                     error_details=""
                 )
             else:
@@ -1139,7 +1049,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"tipoTratamento recebido: {tipoTratamento}",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                     error_details=""
                 )
             
@@ -1153,7 +1063,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"cliente gerado aleatóriamente: {dictConfigEspecificDefault['cliente']} | categFinanceira gerada aleatóriamente: {dictConfigEspecificDefault['categFinanceira']} | utilizarDescricao gerada aleatóriamente: {dictConfigEspecificDefault['utilizarDescricao']}",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                     error_details=""
                 )
 
@@ -1167,7 +1077,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"conta2 gerada aleatóriamente: {dictConfigEspecificDefault['conta2']} | formaTransferencia gerada aleatóriamente: {dictConfigEspecificDefault['formaTransferencia']} | utilizarDescricao gerada aleatóriamente: {dictConfigEspecificDefault['utilizarDescricao']}",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                     error_details=""
                 )
 
@@ -1180,7 +1090,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"utilizarDescricao não será utilizado, logo não terá descricaoTratamento",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                         error_details=""
                     )
             except:
@@ -1188,7 +1098,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"dictConfigEspecificDefault não foi criado, logo não terá descricaoTratamento",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                     error_details=""
                 )
 
@@ -1311,7 +1221,7 @@ class ConciliacaoBancaria:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Desmarcado a checkbox {seletor}",
-                                routine="",
+                                routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                                 error_details=""
                             )
                             del dicionarioPopup[seletor]
@@ -1322,13 +1232,12 @@ class ConciliacaoBancaria:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Não encontrado nenhum seletor no dicionario",
-                                routine="",
+                                routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                                 error_details=""
                             )
 
                 campos = FuncoesUteis.prepareToCompareValues(init, dicionarioPopup)
                 FuncoesUteis.compareValues(init, campos)
-
 
                 campos = FuncoesUteis.prepareToCompareValues(init, dicionarioEscrito, True)
                 FuncoesUteis.compareValues(init, campos)
@@ -1345,7 +1254,7 @@ class ConciliacaoBancaria:
                             application_type=env_application_type,
                             level="INFO",
                             message=f"Campo {seletor} encontrado com valor {size_value}",
-                            routine="",
+                            routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                             error_details=""
                         )
 
@@ -1354,7 +1263,7 @@ class ConciliacaoBancaria:
                             application_type=env_application_type,
                             level="ERROR",
                             message=f"Erro ao buscar o campo {seletor}: {str(e)}",
-                            routine="",
+                            routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                             error_details=str(e)
                         )
                         continue
@@ -1368,7 +1277,7 @@ class ConciliacaoBancaria:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Valor do campo {key} recebeu {valorCampo} de tamanho({tamanho}), é maior que o permitido ({value})",
-                                routine="",
+                                routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                                 error_details=""
                             )
                         else:
@@ -1376,7 +1285,7 @@ class ConciliacaoBancaria:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Valor do campo {key} recebeu {valorCampo} de tamanho({tamanho}), dentro do permitido ({value})",
-                                routine="",
+                                routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                                 error_details=""
                             )
                     except Exception as e:
@@ -1384,27 +1293,19 @@ class ConciliacaoBancaria:
                             application_type=env_application_type,
                             level="ERROR",
                             message=f"Erro ao verificar o valor do campo {key}: {str(e)}",
-                            routine="",
+                            routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao",
                             error_details=str(e)
                         )
 
                 botaoFinal = "#B170903369717813403" if dictConfigFinal["salvar"] else "#B170903131900813401"
                 Components.btnClick(init, botaoFinal)
 
-
                 browser.switch_to.default_content()
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - criarRegraConciliacao", error_details=str(e))
 #END criarRegraConciliacao(init, dictConfigRecebido)
+
 
     @staticmethod
     def criarContaReceberResumido(init:tuple, dictRecebido:dict = None, procuraConta:bool = True) -> dict:
@@ -1497,7 +1398,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Campo {seletor} escrito com tamanho = {tamanhoEscrito}, encontrado com tamanho = {tamanhoEncontrado}",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarContaReceberResumido",
                     error_details=""
                 )
 
@@ -1531,7 +1432,7 @@ class ConciliacaoBancaria:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Inserido o valor do campo {seletor} para o seletor {seletorFinal}",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarContaReceberResumido",
                     error_details=""
                 )
             
@@ -1544,9 +1445,9 @@ class ConciliacaoBancaria:
             if not Components.has_alert(init) and int(tamanhoEncontrado) > int(tamMax):
                 Log_manager.add_log(
                     application_type=env_application_type,
-                    level="ERROR",
+                    level="WARNING",
                     message=f"Campo {seletor} não respeitou o tamanho máximo permitido ({tamMax})",
-                    routine="",
+                    routine=f"{ConciliacaoBancaria.rotina} - criarContaReceberResumido",
                     error_details=""
                 )
 
@@ -1603,7 +1504,8 @@ class ConciliacaoBancaria:
 
             return camposFiltros
 
-#END criarContaReceberResumido(init, procuraConta)
+#END criarContaReceberResumido(init, dictRecebido, procuraConta)
+
 
     @staticmethod
     def clickOpcoesLancamento(init:tuple, filtros:dict = None):
@@ -1643,12 +1545,12 @@ class ConciliacaoBancaria:
         browser.execute_script("$('.ui-button.ui-corner-all.ui-widget').click()") 
 
         spin = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".fa.fa-spinner.fa-anim-spin")))
-        Log_manager.add_log(application_type=env_application_type, level="INFO", message="Loading...", routine="", error_details='')
+        Log_manager.add_log(application_type=env_application_type, level="INFO", message="Loading...", routine=f"{ConciliacaoBancaria.rotina} - clickOpcoesLancamento", error_details='')
 
         if spin:
 
             var = WebDriverWait(browser,90).until(EC.staleness_of(spin))
-            Log_manager.add_log(application_type=env_application_type, level="INFO", message="fim do Loading...", routine="", error_details='')
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message="fim do Loading...", routine=f"{ConciliacaoBancaria.rotina} - clickOpcoesLancamento", error_details='')
 
         if var:
 
@@ -1673,7 +1575,8 @@ class ConciliacaoBancaria:
         else:
             Log_manager.insert_logs_for_execution()
             browser.quit()
-#END clickOpcoesLancamento(init, data)
+#END clickOpcoesLancamento(init, filtros)
+
 
     @staticmethod
     def incluiRecebimentoContaExistente(init:tuple, dictRecebido:dict, verificaConta:bool = True) -> Optional[bool]:
@@ -1718,10 +1621,8 @@ class ConciliacaoBancaria:
         if hasFrame:
             sleep(1)
             Components.btnClick(init, "#SR_filtros_tab")
-            # sleep(1)
 
             FuncoesUteis.setFilters(init, dictRecebido)
-            # sleep(10)
             
             Components.btnClick(init, "#B111432143494655101")
 
@@ -1746,11 +1647,8 @@ class ConciliacaoBancaria:
                 FuncoesUteis.goToPage(init,ContaReceber.url)
                 FuncoesUteis.guaranteeShowHideFilter(init, "#P84_TIPO_PERIODO", True)
 
-                # FuncoesUteis.setFilters(init, camposFiltros)
                 FuncoesUteis.aplyFilter(init, camposFiltros)
                 Components.has_spin(init)
-
-                # Components.btnClick(init, "#filtrar")
 
                 ContaReceber.editaContaReceber(init)
 
@@ -1762,7 +1660,7 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Conta a Receber foi recebida com sucesso!",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - incluiRecebimentoContaExistente",
                         error_details=""
                     )
                     return True
@@ -1771,13 +1669,14 @@ class ConciliacaoBancaria:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Conta a Receber não foi recebida!",
-                        routine="",
+                        routine=f"{ConciliacaoBancaria.rotina} - incluiRecebimentoContaExistente",
                         error_details=""
                     )
                     return False
 
             return None
 #END incluiRecebimentoContaExistente(init, dictRecebido, verificaConta)
+
 
     @staticmethod
     def cadastraTransferencia(init:tuple, dictRecebido:dict = None, verificaTransf:bool = True):

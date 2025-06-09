@@ -17,6 +17,7 @@ class CreditoCliente:
     url = "listagem-credito-cliente"
     filterSelector = "#P163_TIPO_VALOR"
 
+    rotina = "Credito de Cliente"
 
     class Filtros(BaseModel):
         P163_SITUACAO_SELECIONADA : Optional [str] = None #exemplo de get = '1, 2, 3, 5'
@@ -133,7 +134,7 @@ class CreditoCliente:
                 application_type=env_application_type,
                 level="INFO",
                 message="Criado um Set via chaves do dicionario.",
-                routine="",
+                routine=f"{CreditoCliente.rotina} - insereCreditoCliente",
                 error_details=""
             )
 
@@ -147,7 +148,7 @@ class CreditoCliente:
                     application_type=env_application_type,
                     level="INFO",
                     message="Apareceu um alerta, crédito não inserido.",
-                    routine="",
+                    routine=f"{CreditoCliente.rotina} - insereCreditoCliente",
                     error_details=""
                 )
 
@@ -164,13 +165,14 @@ class CreditoCliente:
                     application_type=env_application_type,
                     level="INFO",
                     message="Crédito inserido com sucesso!",
-                    routine="",
+                    routine=f"{CreditoCliente.rotina} - insereCreditoCliente",
                     error_details=""
                 )
                 return CreditoCliente.Credito(**valoresRecuperados)
 
         return False
 #END insereCreditoCliente(init, valores)
+
 
     @staticmethod
     def procuraCreditoCliente(init:tuple, credito:Optional[Credito] = None) -> bool:
@@ -197,7 +199,7 @@ class CreditoCliente:
                 application_type=env_application_type,
                 level="INFO",
                 message="Crédito não passado, criando um novo para utilizar.",
-                routine="",
+                routine=f"{CreditoCliente.rotina} - procuraCreditoCliente",
                 error_details=""
             )
             FuncoesUteis.showHideFilter(init, CreditoCliente.filterSelector)
@@ -207,7 +209,7 @@ class CreditoCliente:
                 application_type=env_application_type,
                 level="INFO",
                 message="Crédito para filtragem recebido.",
-                routine="",
+                routine=f"{CreditoCliente.rotina} - procuraCreditoCliente",
                 error_details=""
             )
 
@@ -224,7 +226,7 @@ class CreditoCliente:
                 application_type=env_application_type,
                 level="INFO",
                 message="Crédito informado achado!",
-                routine="",
+                routine=f"{CreditoCliente.rotina} - procuraCreditoCliente",
                 error_details=""
             )
 
@@ -234,7 +236,7 @@ class CreditoCliente:
             application_type=env_application_type,
             level="INFO",
             message="Crédito informado não achado!",
-            routine="",
+            routine=f"{CreditoCliente.rotina} - procuraCreditoCliente",
             error_details=""
         )
 

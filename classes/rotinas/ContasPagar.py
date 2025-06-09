@@ -16,6 +16,9 @@ class ContasPagar:
 
     url="contas-a-pagar"
     filterSelector ="#P46_SELETOR_LOJA"
+
+    rotina = "Conta a Pagar"
+
     filters =[
         "P46_SELETOR_LOJA",
         "P46_TIPO_PERIODO",
@@ -180,12 +183,11 @@ class ContasPagar:
         """
         queries = query
 
-
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-        
+
         random_value = round(random.uniform(1, 999999), 2) 
         randomText = GeradorDados.gerar_texto(50)
         randomNumber = GeradorDados.randomNumberDinamic(0,5)
@@ -209,13 +211,12 @@ class ContasPagar:
             has_contaPagar = Components.url_contains(init,urlContain)
 
             if not has_contaPagar:
-           
+
                 btnNovaContaPagar = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B129961237978758786")))
                 btnNovaContaPagar.click()
-               
 
             WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P47_VALOR")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: valorOriginal encontrado", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: valorOriginal encontrado", routine=f"{ContasPagar.rotina} - insereContaPagar", error_details ="" )
 
             apexValues = staticValues if isinstance(staticValues,dict) else {
                     "P47_VALOR":randomValue,
@@ -233,14 +234,14 @@ class ContasPagar:
                 Apex.setValue(browser,seletor,value)
                 Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="ContaReceber", error_details="")
-               
+                                                routine=f"{ContasPagar.rotina} - insereContaPagar", error_details="")
+
                 
                 # WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
                 apexGetValue[seletor] = Apex.getValue(browser,seletor)
                 Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                routine="ContaReceber", error_details="")
+                                                routine=f"{ContasPagar.rotina} - insereContaPagar", error_details="")
                 
                 
                 if seletor == "P47_CATEGORIA_FINANCEIRA":
@@ -248,14 +249,14 @@ class ContasPagar:
                     Apex.setValue(browser,seletor,value)
                     Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                     message=f"{seletor} teve o valor {value} inserido", 
-                                                    routine="ContaReceber", error_details="")
+                                                    routine=f"{ContasPagar.rotina} - insereContaPagar", error_details="")
                 
                     
                     # WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
                     apexGetValue[seletor] = Apex.getValue(browser,seletor)
                     Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                     message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                    routine="ContaReceber", error_details="")
+                                                    routine=f"{ContasPagar.rotina} - insereContaPagar", error_details="")
                 
                 
             campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
@@ -267,88 +268,9 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="ERROR",
                 message="TimeoutException: " + str(e),
-                routine="",
+                routine=f"{ContasPagar.rotina} - insereContaPagar",
                 error_details=str(e)
             )
-
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(
-                        level="INFO",
-                        message=f"Screenshot salvo em: {screenshot_path}",
-                        routine="",
-                        application_type=env_application_type,
-                        error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR",
-                        message="Falha ao salvar screenshot",
-                        routine="",
-                        application_type=env_application_type,
-                        error_details=str(e)
-                    )
-
-        except NoSuchElementException as e:
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="NoSuchElementException: " + str(e),
-                routine="",
-                error_details=str(e)
-            )
-
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(
-                        level="INFO",
-                        message=f"Screenshot salvo em: {screenshot_path}",
-                        routine="",
-                        application_type=env_application_type,
-                        error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR",
-                        message="Falha ao salvar screenshot",
-                        routine="",
-                        application_type=env_application_type,
-                        error_details=str(e)
-                    )
-
-        except Exception as e:
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="ERROR",
-                message="Exception: " + str(e),
-                routine="",
-                error_details=str(e)
-            )
-
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(
-                        level="INFO",
-                        message=f"Screenshot salvo em: {screenshot_path}",
-                        routine="",
-                        application_type=env_application_type,
-                        error_details=str(e)
-                    )
-                else:
-                    Log_manager.add_log(
-                        level="ERROR",
-                        message="Falha ao salvar screenshot",
-                        routine="",
-                        application_type=env_application_type,
-                        error_details=str(e)
-                    )
-
 #END insereContaPagar(init,query)
 
     @staticmethod
@@ -395,7 +317,7 @@ class ContasPagar:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-        
+
         randomText = GeradorDados.gerar_texto(50)
         randomNumber = GeradorDados.randomNumberDinamic(0,4)
         randomDay = GeradorDados.randomNumberDinamic(1,30)
@@ -444,7 +366,7 @@ class ContasPagar:
                                         application_type=env_application_type,
                                         level="INFO", 
                                         message=f"{seletor} teve o valor {value} inserido", 
-                                        routine="ContaReceber", 
+                                        routine=f"{ContasPagar.rotina} - detalhesContaPagar", 
                                         error_details=""
                                         )
                                     
@@ -454,35 +376,18 @@ class ContasPagar:
                     Log_manager.add_log(
                                         application_type=env_application_type, level="INFO", 
                                         message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                        routine="ContaReceber", 
+                                        routine=f"{ContasPagar.rotina} - detalhesContaPagar", 
                                         error_details=""
                                         )                       
                 except (TimeoutException, NoSuchElementException, Exception) as e:
-                    Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-                    screenshot_path = screenshots
-                    if screenshot_path:
-                        success = browser.save_screenshot(screenshot_path)
-                        if success:
-                            Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                        else:
-                            Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-        
+                    Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - detalhesContaPagar", error_details=str(e))
                 
                 campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
                 FuncoesUteis.compareValues(init,campos)
 
-
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - detalhesContaPagar", error_details=str(e))
 #END detalhesContaPagar(init,query)
 
 
@@ -527,31 +432,31 @@ class ContasPagar:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-        
+
     #_________________________________________________________________
     # inicio da aba repetição de nova conta a pagar
         try:
 
             abaRepeticao = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#R102440341243643834_tab"))) 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: abaRepeticao encontrada", routine="ContaPagar", error_details ="" )        
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: abaRepeticao encontrada", routine=f"{ContasPagar.rotina} - repeticaoContaPagar", error_details ="" )        
 
             browser.execute_script("arguments[0].scrollIntoView(true);", abaRepeticao)        
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até abaRepeticao", routine="ContaPagar", error_details ="" )        
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até abaRepeticao", routine=f"{ContasPagar.rotina} - repeticaoContaPagar", error_details ="" )        
 
 
             abaRepeticao.click()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: abaRepeticao clicado", routine="ContaPagar", error_details ="" )        
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Campo: abaRepeticao clicado", routine=f"{ContasPagar.rotina} - repeticaoContaPagar", error_details ="" )        
 
             try:
                 has_repeat = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#listaRepeticao")))
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Listas de repetição encontrada, já há repetição incluida", routine="ContaPagar", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Listas de repetição encontrada, já há repetição incluida", routine=f"{ContasPagar.rotina} - repeticaoContaPagar", error_details ="" )
             except  (TimeoutException, NoSuchElementException, Exception) as e:
                 has_repeat = 0
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="ERROR",
                     message="Lista de repetições não encontrada",
-                    routine="ContaPagar",
+                    routine=f"{ContasPagar.rotina} - repeticaoContaPagar",
                     error_details=str(e)
                 )
 
@@ -559,7 +464,7 @@ class ContasPagar:
 
                 btnRepeticao = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#btn_repeticao"))) 
                 btnRepeticao.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao clicado", routine="ContaPagar", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao clicado", routine=f"{ContasPagar.rotina} - repeticaoContaPagar", error_details ="" )
 
                 Components.has_alert(init)
                 
@@ -614,7 +519,7 @@ class ContasPagar:
                                                 application_type=env_application_type,
                                                 level="INFO", 
                                                 message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="ContaReceber", 
+                                                routine=f"{ContasPagar.rotina} - repeticaoContaPagar", 
                                                 error_details=""
                                                 )
                             elif periodo == "S" and (seletor == "P71_DIA_SEMANA" or seletor  ==  "P71_QUANTIDADE_SEMANA"):  
@@ -623,7 +528,7 @@ class ContasPagar:
                                                     application_type=env_application_type,
                                                     level="INFO", 
                                                     message=f"{seletor} teve o valor {value} inserido", 
-                                                    routine="ContaReceber", 
+                                                    routine=f"{ContasPagar.rotina} - repeticaoContaPagar", 
                                                     error_details=""
                                                     )
                             elif periodo == "E" and (seletor == "P71_A_CADA_DIA" or seletor == "P71_QUANTIDADE_VEZ"):
@@ -632,7 +537,7 @@ class ContasPagar:
                                                     application_type=env_application_type,
                                                     level="INFO", 
                                                     message=f"{seletor} teve o valor {value} inserido", 
-                                                    routine="ContaReceber", 
+                                                    routine=f"{ContasPagar.rotina} - repeticaoContaPagar", 
                                                     error_details=""
                                                     )
                             else:
@@ -641,7 +546,7 @@ class ContasPagar:
                                                     application_type=env_application_type,
                                                     level="INFO", 
                                                     message=f"{seletor} teve o valor {value} inserido", 
-                                                    routine="ContaReceber", 
+                                                    routine=f"{ContasPagar.rotina} - repeticaoContaPagar", 
                                                     error_details=""
                                                     )
 
@@ -650,20 +555,12 @@ class ContasPagar:
                             Log_manager.add_log(
                                                 application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                routine="ContaReceber", 
+                                                routine=f"{ContasPagar.rotina} - repeticaoContaPagar", 
                                                 error_details=""
                                                 )                       
                             
                         except (TimeoutException, NoSuchElementException, Exception) as e:
-                            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-                            screenshot_path = screenshots
-                            if screenshot_path:
-                                success = browser.save_screenshot(screenshot_path)
-                                if success:
-                                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                                else:
-                                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-                
+                            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - repeticaoContaPagar", error_details=str(e))
                     
                     campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
@@ -672,7 +569,7 @@ class ContasPagar:
                     Components.has_form(init)
                     
                     WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".a-IRR-table")))
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Tabela Criada Simulação realizada", routine="ContaPagar", error_details ="" )
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Tabela Criada Simulação realizada", routine=f"{ContasPagar.rotina} - repeticaoContaPagar", error_details ="" )
 
                     seletor = "#B112188062181997438"
                     Components.btnClick(init,seletor)
@@ -681,22 +578,15 @@ class ContasPagar:
 
             
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - repeticaoContaPagar", error_details=str(e))
+            
         finally:    
             browser.switch_to.default_content()
 
 #END repeticaoContaPagar(init)
     @staticmethod
     def pagamentosContaPagar(init):
-      
+
         """
         Função para realizar o pagamento de uma conta a pagar, aplicando possíveis descontos condicionais, juros, multas e verificando se os valores inseridos estão corretos.
 
@@ -738,7 +628,7 @@ class ContasPagar:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-        
+
         # random_value = round(random.uniform(1, 9999), 2)
         # randomStr = FuncoesUteis.formatBrCurrency(random_value)
         # randomValue = FuncoesUteis.stringToFloat(randomStr)
@@ -765,37 +655,23 @@ class ContasPagar:
             abaPagamento = WebDriverWait(browser, 30).until(
                 EC.visibility_of_element_located((By.ID, "pagamento_tab"))
             )
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento encontrada", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento encontrada", routine=f"{ContasPagar.rotina} - pagamentosContaPagar", error_details ="" )
 
             # Garante que o elemento está na tela
             browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", abaPagamento)
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de pagamento ", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de pagamento ", routine=f"{ContasPagar.rotina} - pagamentosContaPagar", error_details ="" )
 
-           
+
             try:
                 abaPagamento.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicada via py", routine="ContaPagar", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicada via py", routine=f"{ContasPagar.rotina} - pagamentosContaPagar", error_details ="" )
 
             except:
                 browser.execute_script("arguments[0].click();", abaPagamento)
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicada via js", routine="ContaPagar", error_details ="" )
-
-                
-
-            
-           
-            
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicada via js", routine=f"{ContasPagar.rotina} - pagamentosContaPagar", error_details ="" )
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - pagamentosContaPagar", error_details=str(e))
 #END pagamentosContaPagar(init,query)       
 
     @staticmethod
@@ -870,7 +746,7 @@ class ContasPagar:
                                             application_type=env_application_type,
                                             level="INFO", 
                                             message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - lancarDescontoCondicional", 
                                             error_details=""
                                             )                                        
                         time.sleep(1)
@@ -879,19 +755,11 @@ class ContasPagar:
                         Log_manager.add_log(
                                             application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - lancarDescontoCondicional", 
                                             error_details=""
                                             )                       
                     except (TimeoutException, NoSuchElementException, Exception) as e:
-                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-                        screenshot_path = screenshots
-                        if screenshot_path:
-                            success = browser.save_screenshot(screenshot_path)
-                            if success:
-                                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                            else:
-                                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-            
+                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - lancarDescontoCondicional", error_details=str(e))
                     
                 campos = {seletor: (apexGetValue[seletor], str(value)) for seletor, value in apexValues.items()}                
 
@@ -906,21 +774,14 @@ class ContasPagar:
                     valorOriginalFormatado = FuncoesUteis.stringToFloat(valorOriginalValue)
                     novoValor = abs(valorOriginalFormatado - descontoCondicional)
                     Apex.setValue(browser,"P220_DESCONTO",novoValor)
-                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f" Desconto Condicional inserido {novoValor} ", routine="ContaPagar", error_details ="" )
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f" Desconto Condicional inserido {novoValor} ", routine=f"{ContasPagar.rotina} - lancarDescontoCondicional", error_details ="" )
                     Components.btnClick(init,seletor)                     
         
                 browser.switch_to.default_content()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaPagar", error_details ="" )            
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine=f"{ContasPagar.rotina} - lancarDescontoCondicional", error_details ="" )            
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - lancarDescontoCondicional", error_details=str(e))
 #END lancaDescontoCondicional(init,staticValues = False)           
 
     @staticmethod
@@ -962,7 +823,7 @@ class ContasPagar:
         queries = query
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")   
+        env_application_type = getEnv.get("WEB")  
 
         try:
             valorOriginalValue = Apex.getValue(browser,"P47_VALOR")
@@ -1020,7 +881,7 @@ class ContasPagar:
                                             application_type=env_application_type,
                                             level="INFO", 
                                             message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - novoPagamento", 
                                             error_details=""
                                             )                                        
                         
@@ -1029,20 +890,13 @@ class ContasPagar:
                         Log_manager.add_log(
                                             application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - novoPagamento", 
                                             error_details=""
                                             )                       
                     except (TimeoutException, NoSuchElementException, Exception) as e:
-                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-                        screenshot_path = screenshots
-                        if screenshot_path:
-                            success = browser.save_screenshot(screenshot_path)
-                            if success:
-                                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                            else:
-                                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-            
-                
+                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - novoPagamento", error_details=str(e))
+
+
                 campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
                 FuncoesUteis.compareValues(init,campos)    
@@ -1066,7 +920,6 @@ class ContasPagar:
                     textDisplay = item.text
                     textValues[key] = FuncoesUteis.stringToFloat(textDisplay)
 
-                              
                 valorSomado =  round(abs(textValues["#P70_VALOR_DISPLAY"] - textValues["#P70_DESCONTO_CONTA_DISPLAY > span"] + textValues["#P70_JUROS_CONTA_DISPLAY > span"] + textValues["#P70_MULTA_CONTA_DISPLAY > span"] + textValues["#P70_VALOR_ACRESCIMOS_DISPLAY > span"]),2)
                 regex = r"[\s#>]|span"
                 campos = {
@@ -1075,8 +928,6 @@ class ContasPagar:
                 }
 
                 FuncoesUteis.compareValues(init,campos)              
-
-
         
             # Dicionário para armazenar comparações
             valores = {               
@@ -1090,22 +941,13 @@ class ContasPagar:
 
 
             browser.switch_to.default_content()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Voltando para o conteudo principal", routine=f"{ContasPagar.rotina} - novoPagamento", error_details ="" )
             
             Components.has_alert(init)       
 
-
-
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - novoPagamento", error_details=str(e))
+#END novoPagamento(init, query, staticValues)
 
     @staticmethod
     def instrucaoPagamentoContaPagar(init,query,staticValues = False):
@@ -1162,22 +1004,18 @@ class ContasPagar:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
         
-       
-
-
-
         try:
 
             abaInstrucaoPagamento = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#R108405262283655634_tab")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba instrução de pagamento encontrada", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba instrução de pagamento encontrada", routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", error_details ="" )
 
             browser.execute_script("arguments[0].scrollIntoView(true);", abaInstrucaoPagamento)
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Sroll até Aba instrução de pagamento", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Sroll até Aba instrução de pagamento", routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", error_details ="" )
 
 
             # Clica na aba de instrução de pagamento
             abaInstrucaoPagamento.click()
-            Log_manager.add_log(application_type=env_application_type, level="INFO", message="Aba instrução de pagamento clicada", routine="ContaPagar", error_details="")
+            Log_manager.add_log(application_type=env_application_type, level="INFO", message="Aba instrução de pagamento clicada", routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", error_details="")
 
             randomValues = GeradorDados.randomNumberDinamic(0,5)
             random_value = round(random.uniform(1, 999999), 2)
@@ -1240,7 +1078,7 @@ class ContasPagar:
                                             application_type=env_application_type,
                                             level="INFO", 
                                             message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", 
                                             error_details=""
                                             )                                        
                         WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
@@ -1248,7 +1086,7 @@ class ContasPagar:
                         Log_manager.add_log(
                                             application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", 
                                             error_details=""
                                             )        
                     elif (seletor == "P47_BOL_CODIGO_BARRA" and formaPagamento == 2) or (seletor == "P47_PIX_CHAVE" and formaPagamento == 3) or ( seletor in("P47_TED_AGENCIA","P47_TED_CONTA","P47_TED_CONTA_DIGITO","P47_TED_NOME_FAVORECIDO","P47_TED_DOCUMENTO_FAVORECIDO") and formaPagamento == 4):
@@ -1257,7 +1095,7 @@ class ContasPagar:
                                             application_type=env_application_type,
                                             level="INFO", 
                                             message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", 
                                             error_details=""
                                             )   
                         WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"#{seletor}")))
@@ -1265,7 +1103,7 @@ class ContasPagar:
                         Log_manager.add_log(
                                             application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", 
                                             error_details=""
                                         )     
                     
@@ -1275,7 +1113,7 @@ class ContasPagar:
                                             application_type=env_application_type,
                                             level="INFO", 
                                             message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", 
                                             error_details=""
                                             )                    
 
@@ -1285,36 +1123,20 @@ class ContasPagar:
                         Log_manager.add_log(
                                             application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                            routine="ContaReceber", 
+                                            routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", 
                                             error_details=""
                                             )                      
                 except (TimeoutException, NoSuchElementException, Exception) as e:
-                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-                        screenshot_path = screenshots
-                        if screenshot_path:
-                            success = browser.save_screenshot(screenshot_path)
-                            if success:
-                                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                            else:
-                                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-                
+                        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", error_details=str(e))
+
                 
             campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}                
 
             FuncoesUteis.compareValues(init,campos)    
 
-
-           
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - instrucaoPagamentoContaPagar", error_details=str(e))
+            
 #END instrucaoPagamentoContaPagar(init,query)
 
     @staticmethod
@@ -1375,9 +1197,7 @@ class ContasPagar:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-        
-        
-    
+            
         try:
             valorOrginal = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P47_VALOR"))
     
@@ -1386,7 +1206,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Aba despesas encontrada",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - despesasContaPagar",
                 error_details=''
             )
             browser.execute_script("arguments[0].scrollIntoView(true);", abaDespesas)
@@ -1394,7 +1214,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Scroll até a aba de despesas",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - despesasContaPagar",
                 error_details=''
             )
 
@@ -1403,7 +1223,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Aba de despesas clicada",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - despesasContaPagar",
                 error_details=''
             )
 
@@ -1412,7 +1232,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Botão nova despesa encontrado",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - despesasContaPagar",
                 error_details=''
             )
             btnNovaDespesa.click()
@@ -1420,7 +1240,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Botão nova despesa encontrado",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - despesasContaPagar",
                 error_details=''
             )
 
@@ -1457,20 +1277,13 @@ class ContasPagar:
                         application_type=env_application_type,
                         level="INFO",
                         message="Voltando pro contexto principal",
-                        routine="ContaPagar",
+                        routine=f"{ContasPagar.rotina} - despesasContaPagar",
                         error_details=''
                     )
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - despesasContaPagar", error_details=str(e))
 
 #END despesasContaPagar(init)
 
@@ -1520,16 +1333,17 @@ class ContasPagar:
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")    
+        env_application_type = getEnv.get("WEB")  
+
         dataId = "data id não encontrado"  
         try:
-           
+
             edit = WebDriverWait(browser,120).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit")))
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
                 message="Conta a pagar editavel encontrada",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - editaContaPagar",
                 error_details=''
             )
 
@@ -1538,7 +1352,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Conta a pagar data-id capturado",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - editaContaPagar",
                 error_details=''
             )
 
@@ -1547,30 +1361,23 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Conta a pagar editavel clicada. Inicio da edição da conta!",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - editaContaPagar",
                 error_details=''
             )
             if callback:
                 callback()
-         
+
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - editaContaPagar", error_details=str(e))
+            
 
         finally:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Conta a pagar {dataId} editada",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - editaContaPagar",
                 error_details=''
             )    
 #END editaContaPagar(init)
@@ -1607,11 +1414,10 @@ class ContasPagar:
             - NoSuchElementException: Caso um elemento não seja encontrado.
             - Exception: Para qualquer outro erro inesperado.
         """
-       
+
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")    
-          
 
         try:                  
 
@@ -1619,20 +1425,20 @@ class ContasPagar:
             abaPagamento = WebDriverWait(browser, 30).until(
                 EC.visibility_of_element_located((By.ID, "pagamento_tab"))
             )
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento encontrada", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento encontrada", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
 
 
             # Garante que o elemento está na tela
             browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", abaPagamento)
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de pagamento ", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Scroll até Aba de pagamento ", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
 
 
             # Aguarda até que o elemento esteja clicável
             WebDriverWait(browser, 5).until(EC.element_to_be_clickable((By.ID, "pagamento_tab")))
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicavel", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicavel", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
 
             abaPagamento.click()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicada via py", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Aba de pagamento clicada via py", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
 
             while True:
                 try:
@@ -1654,32 +1460,24 @@ class ContasPagar:
                 except TimeoutException:
                     break  
             btnDelete = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"[name='excluirConta']")))   
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão excluir Conta Pagar encontrado", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão excluir Conta Pagar encontrado", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
     
             btnDelete.click()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão excluir Conta Pagar clicado", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão excluir Conta Pagar clicado", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
 
             btnConfirmDelete = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".js-confirmBtn")))   
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão confirmar exclusão Conta Pagar encontrado", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão confirmar exclusão Conta Pagar encontrado", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
     
             btnConfirmDelete.click()
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão confirmar exclusão Conta Pagar clicado", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão confirmar exclusão Conta Pagar clicado", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
 
             Components.has_alert(init)
 
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Conta a pagar foi excluida", routine="ContaPagar", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Conta a pagar foi excluida", routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details ="" )
 
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - excluiContaPagar", error_details=str(e))
 #END excluiContaPagar(init)
 
     @staticmethod
@@ -1728,7 +1526,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Botão salvar do nova conta a pagar encontrado",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - finalizaInsertContaPagar",
                 error_details=''
             ) 
 
@@ -1737,7 +1535,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Scroll até Botão salvar do nova conta a pagar",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - finalizaInsertContaPagar",
                 error_details=''
             )
 
@@ -1746,31 +1544,23 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Botão salvar do nova conta a pagar clicado",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - finalizaInsertContaPagar",
                 error_details=''
             ) 
 
             Components.has_alert(init)
-            has_alert_sucess = Components.has_alert_sucess(init)       
+            has_alert_sucess = Components.has_alert_success(init)       
 
             if has_alert_sucess:
                 # Captura o botão de Voltar a Contas a Pagar e clica
                 voltarContaPagar =  WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#B103339792839912425"))) 
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão voltar a contas a pagar encontrado", routine="ContaPagar", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão voltar a contas a pagar encontrado", routine=f"{ContasPagar.rotina} - finalizaInsertContaPagar", error_details ="" )
 
                 voltarContaPagar.click()
-                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão voltar a contas a pagar clicado", routine="ContaPagar", error_details ="" )
+                Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão voltar a contas a pagar clicado", routine=f"{ContasPagar.rotina} - finalizaInsertContaPagar", error_details ="" )
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - finalizaInsertContaPagar", error_details=str(e))
 #END finalizaInsertContaPagar(init)
 
     @staticmethod
@@ -1814,15 +1604,14 @@ class ContasPagar:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")    
         dataId = "data id não encontrado"  
-       
-
+        
         try:                  
             abaDespesas = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#despesas_tab")))
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
                 message="Aba despesas encontrada",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - excluiDespesa",
                 error_details=''
             )
             browser.execute_script("arguments[0].scrollIntoView(true);", abaDespesas)
@@ -1830,7 +1619,7 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Scroll até a aba de despesas",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - excluiDespesa",
                 error_details=''
             )
 
@@ -1839,10 +1628,10 @@ class ContasPagar:
                 application_type=env_application_type,
                 level="INFO",
                 message="Aba de despesas clicada",
-                routine="ContaPagar",
+                routine=f"{ContasPagar.rotina} - excluiDespesa",
                 error_details=''
             )
-          
+
             trashicon = WebDriverWait(browser, 10).until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".fa.fa-trash-o.icon-red.remove"))
             )
@@ -1886,17 +1675,6 @@ class ContasPagar:
                     Log_manager.add_log(env_application_type, "ERROR", "Parâmetro inválido para deleteAllOrOnlyOne", "ContaPagar", '')
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
-#END excluiDespesa(init)            
-
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContasPagar.rotina} - excluiDespesa", error_details=str(e))
             
-
+#END excluiDespesa(init)

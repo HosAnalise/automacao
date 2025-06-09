@@ -5,20 +5,13 @@ from classes.utils.GerarDados import GeradorDados
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
-
-
-
-
-
-
 import pytest
 
 @pytest.mark.dockercontaReceber
-def test_contaReceber_insereConta_detalhes(init):
+def test_contaReceber_insereConta_jurosMultas(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
-
 
     try:
 
@@ -35,15 +28,8 @@ def test_contaReceber_insereConta_detalhes(init):
 
             
     except (TimeoutException, NoSuchElementException, Exception) as e:
-        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-        screenshot_path = screenshots
-        if screenshot_path:
-            success = browser.save_screenshot(screenshot_path)
-            if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ContaReceber", application_type=env_application_type, error_details=str(e))
-            else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContaReceber.rotina} - test_contaReceber_insereConta_jurosMultas", error_details=str(e))
+        
     finally:
         endTime = time.time()
         executionTime = endTime - starTime
@@ -56,14 +42,10 @@ def test_contaReceber_insereConta_detalhes(init):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="ContaPagar",
+            routine=f"{ContaReceber.rotina} - test_contaReceber_insereConta_jurosMultas",
             error_details=''
         )
 
         Log_manager.insert_logs_for_execution("ContaReceber")
 
         browser.quit()
-
-
-
-       

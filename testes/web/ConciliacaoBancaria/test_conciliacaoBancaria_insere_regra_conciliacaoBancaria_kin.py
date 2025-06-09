@@ -30,8 +30,6 @@ def test_insere_regra_conciliacao(init):
 
         Components.btnClick(init, "#regrasConciliacao_tab")
 
-
-
         dictConfig = { #deixar None significa que será utilizado um valor aleatorio para cada campo na geração dos dicionarios
         #{ Campos que sempre serão preenchidos
         "descricaoRegra" : None, #string
@@ -40,7 +38,7 @@ def test_insere_regra_conciliacao(init):
         "conta1" : None, #Se for usar, necessario o numero da conta especifica
         "tipoSelecao" : None, #Varia entre 1 = "Conter" ; 2 = "For igual a"
         "descricaoLancamento" : None, #string 
-        "salvar" : 1, #0 = "Não Salvar" ; 1 = "Salvar"
+        "salvar" : 0, #0 = "Não Salvar" ; 1 = "Salvar"
         #}
         "tipoTratamento" : None, #1 = "Lançamento de Conta a Receber"(Se quiser utilizar, colocar tipoLancamento = 1); 2 = "Lançamento de Transferência"; 4 = "Lançamento de Conta a Pagar"(Se quiser utilizar, colocar tipoLancamento = 2); 5 = "Ignorar Lançamento"
         "conta2" : None, #(Apenas caso tipoTratamento for 2). Se for usar, necessario o numero da conta especifica
@@ -55,14 +53,7 @@ def test_insere_regra_conciliacao(init):
 
 
     except (TimeoutException, NoSuchElementException, Exception) as e:
-        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-        screenshot_path = screenshots
-        if screenshot_path:
-            success = browser.save_screenshot(screenshot_path)
-            if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="Conciliação Bancaria", application_type=env_application_type, error_details=str(e))
-            else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - test_insere_regra_conciliacao", error_details=str(e))
 
     finally:
         endTime = time.time()
@@ -76,7 +67,7 @@ def test_insere_regra_conciliacao(init):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="Conciliação Bancaria",
+            routine=f"{ConciliacaoBancaria.rotina} - test_insere_regra_conciliacao",
             error_details=''
         )
 

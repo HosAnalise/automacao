@@ -99,14 +99,7 @@ def test_conciliacaoBancaria_insere_lancamento_contaExistente(init):
         ConciliacaoBancaria.incluiRecebimentoContaExistente(init, filtros)
 
     except (TimeoutException, NoSuchElementException, Exception) as e:
-        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-        screenshot_path = screenshots
-        if screenshot_path:
-            success = browser.save_screenshot(screenshot_path)
-            if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ConciliacaoBancaria", application_type=env_application_type, error_details=str(e))
-            else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - test_conciliacaoBancaria_insere_lancamento_contaExistente", error_details=str(e))
 
     finally:
         endTime = time.time()
@@ -120,7 +113,7 @@ def test_conciliacaoBancaria_insere_lancamento_contaExistente(init):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="ContaPagar",
+            routine=f"{ConciliacaoBancaria.rotina} - test_conciliacaoBancaria_insere_lancamento_contaExistente",
             error_details=''
         )
 

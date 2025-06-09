@@ -22,15 +22,8 @@ def test_creditoFornecedor_procura_credito(init):
         CreditoFornecedor.procuraCreditoFornecedor(init)
 
     except (TimeoutException, NoSuchElementException, Exception) as e:
-        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-        screenshot_path = screenshots
-        if screenshot_path:
-            success = browser.save_screenshot(screenshot_path)
-            if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="Credito Fornecedor", application_type=env_application_type, error_details=str(e))
-            else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{CreditoFornecedor.rotina} - test_creditoFornecedor_procura_credito", error_details=str(e))
+        
     finally:
         endTime = time.time()
         executionTime = endTime - starTime
@@ -43,7 +36,7 @@ def test_creditoFornecedor_procura_credito(init):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="Credito Fornecedor",
+            routine=f"{CreditoFornecedor.rotina} - test_creditoFornecedor_procura_credito",
             error_details=''
         )
 

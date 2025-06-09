@@ -11,6 +11,7 @@ from classes.rotinas.ExtratoContas import ExtratoContas
 class PortalCotacoes:
 
     filterSelector = "#P1_REGIAO"
+    rotina = "Portal de Cotações"
     filters =[
         "P1_REGIAO",
         "P1_TIPO_PERIODO",

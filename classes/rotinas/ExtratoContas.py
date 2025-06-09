@@ -16,12 +16,13 @@ from classes.utils.Components import Components
 from pypdf import PdfReader
 
 
-
-
 class ExtratoContas:
 
     url = "exibir-extrato-das-contas"
     filterSelector = "#P76_CONTAS"
+
+    rotina = "Extrato de Contas"
+
     filters = [
         "P76_CONTAS",
         "P76_DATA_INICIAL",
@@ -52,6 +53,7 @@ class ExtratoContas:
                                         AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
                                         AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
                                 """,
+
                 "queryContaDestinoId": """
                                     SELECT CONTA.CONTA_ID  
                                     FROM ERP.CONTA
@@ -87,7 +89,6 @@ class ExtratoContas:
                         AND (CFE.CATEGORIA_FINANCEIRA_ID IN (0) OR CFE.STATUS = 1)
                 """,
 
-
                 "queryFormaPagamento": """
                     SELECT FORMA_PAGAMENTO_ID FROM ERP.FORMA_PAGAMENTO
                     WHERE
@@ -95,7 +96,6 @@ class ExtratoContas:
                         and (grupo_loja_id = 1501 or grupo_loja_id is null)
                         AND VISIVEL = 1        
                 """,
-
 
                 "queryTipoChave": """
                     SELECT TIPO_CHAVE_PIX_ID 
@@ -105,6 +105,7 @@ class ExtratoContas:
                 "queryBanco": """
                     SELECT BANCO_ID FROM ERP.BANCO
                 """,
+
                 "queryCentroCusto": """
                     SELECT 
                         CC.CENTRO_CUSTO_ID  
@@ -121,7 +122,6 @@ class ExtratoContas:
                             CCE.CENTRO_CUSTO_ID IN (0)
                             OR CCE.STATUS IN (1)
                         )
-
                 """,
 
                 "queryCobradorId": """
@@ -145,10 +145,7 @@ class ExtratoContas:
                                 AND NVL(PESSOA_FORNECEDOR.COBRADOR, 0) = 1
                             ))
                         )
-
                 """,
-
-
 
                 "queryEmpresa": """
                         SELECT LOJA_ID FROM ERP.LOJA WHERE GRUPO_LOJA_ID = 1501
@@ -165,7 +162,7 @@ class ExtratoContas:
                 """
             }
 
-    
+
 #insere uma conta a receber resumida
     @staticmethod
     def contaReceberResumido(init, query, values):
@@ -191,17 +188,17 @@ class ExtratoContas:
             if not values:
                 btnNovaContaReceber = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#B89274598958096047")))
                 btnText = btnNovaContaReceber.text
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} encontrado", routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details='')
                 btnNovaContaReceber.click()
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Botão {btnText} clicado", routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details='')
 
             seletor = "[title='Cadastro de Contas a Receber Resumido']"
             has_frame = Components.has_frame(init, seletor)
 
             if has_frame:
                 WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#P199_CONTA_ID")))
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message="Elemento no iframe encontrado", routine="", error_details='')
-               
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message="Elemento no iframe encontrado", routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details='')
+
                 descricaoText500 = GeradorDados.gerar_texto(500)
                 descricaoText700 = GeradorDados.gerar_texto(700)
 
@@ -233,10 +230,10 @@ class ExtratoContas:
                 for seletor, value in apexValues.items():
                     Apex.setValue(browser, seletor, value)
                     time.sleep(0.5)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"{seletor} teve o valor {value} inserido", routine="", error_details='')
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"{seletor} teve o valor {value} inserido", routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details='')
 
                     apexGetValue[seletor] = Apex.getValue(browser, seletor)
-                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", routine="", error_details='')
+                    Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details='')
 
                 # Comparando valores
                 campos = {seletor: (apexGetValue[seletor], value) for seletor, value in apexValues.items()}
@@ -244,9 +241,9 @@ class ExtratoContas:
 
                 # Clicando no botão para salvar
                 btnSaveExtratoContasResumido = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#save")))
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message="o botão btnSaveExtratoContasResumido foi encontrado", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message="o botão btnSaveExtratoContasResumido foi encontrado", routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details='')
                 btnSaveExtratoContasResumido.click()
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message="o botão btnSaveExtratoContasResumido foi clicado", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message="o botão btnSaveExtratoContasResumido foi clicado", routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details='')
 
                 Components.has_alert(init)
                 Components.has_alert_sucess(init)
@@ -256,14 +253,11 @@ class ExtratoContas:
                 if not values:
                     icon = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".a-Icon.icon-irr-no-results")))
                     if icon:
-                        Log_manager.add_log(application_type=env_application_type, level="INFO", message="o ícone inicial foi encontrado, transação ocorreu corretamente", routine="", error_details='')
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", message="o ícone inicial foi encontrado, transação ocorreu corretamente", routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details='')
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-
-#END contaReceberResumido()   
-
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - contaReceberResumido", error_details=str(e))
+#END contaReceberResumido(init, query, values)   
 
 
     #insere uma nova transferencia 
@@ -288,7 +282,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} encontrado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - novaTransferencia",
                     error_details=''
                 )
             btnNovaTransferencia.click()
@@ -296,7 +290,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} clicado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - novaTransferencia",
                     error_details=''
                 )
             seletor = "[title='Cadastro de Transferência']"
@@ -308,7 +302,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message="Elemento no iframe encontrado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - novaTransferencia",
                     error_details=''
                 )
                 descricaoText500 = GeradorDados.gerar_texto(500)
@@ -339,12 +333,12 @@ class ExtratoContas:
 
                 for seletor,value in apexValues.items():
                     if not contaDestino and seletor == "P78_VALOR_TRANSFERENCIA":
-                       
+
                         Log_manager.add_log(
                             application_type=env_application_type, 
                             level="INFO", 
                             message=f"Seletor {seletor} foi ignorado, pois contaDestino é False", 
-                            routine="", 
+                            routine=f"{ExtratoContas.rotina} - novaTransferencia", 
                             error_details=""
                         )
                     else:    
@@ -352,12 +346,12 @@ class ExtratoContas:
                         Apex.setValue(browser,seletor,value)
                         Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {value} inserido", 
-                                                routine="", error_details="")
+                                                routine=f"{ExtratoContas.rotina} - novaTransferencia", error_details="")
 
                         apexGetValue[seletor] = Apex.getValue(browser,seletor)     
                         Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                                routine="", error_details="")
+                                                routine=f"{ExtratoContas.rotina} - novaTransferencia", error_details="")
                     
                     if contaDestino:
                         values = value if seletor == "P78_CONTA_DESTINO_ID" and isinstance(staticValues,dict) else 0 if not randomQueries else contaDestinoIdValue
@@ -386,7 +380,6 @@ class ExtratoContas:
                 Components.has_alert_sucess(init)
 
                 browser.switch_to.default_content()
-              
 
                 icon = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".a-Icon.icon-irr-no-results")))
                 if icon:
@@ -394,22 +387,13 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message="o icone inicial foi encontrado transação ocorreu corretamente",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - novaTransferencia",
                         error_details=''
                     )           
 
-
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
-#END novaTransferencia()
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - novaTransferencia", error_details=str(e))
+#END novaTransferencia(init, query, contaDestino, staticValues)
 
 
 #Nova conta a pagar resumida 
@@ -439,7 +423,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} encontrado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - contaPagarResumida",
                     error_details=''
                 )
             btnNovaContaPagar.click()
@@ -447,7 +431,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} clicado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - contaPagarResumida",
                     error_details=''
                 )
             seletor = "[title='Cadastro de Contas a Pagar Resumido']"
@@ -465,7 +449,6 @@ class ExtratoContas:
                 conferido = GeradorDados.randomNumberDinamic(0,1) if randomNumber != 0 else 3 
                 descricao = randomText if randomNumber != 0 else GeradorDados.gerar_texto(500)
                 numeroDocumento = GeradorDados.gerar_cpf() if randomNumber != 0 else GeradorDados.gerar_texto(500)               
-
                 
                 apexValues = {
                     "P194_CONTA_ID":contaId,
@@ -487,14 +470,12 @@ class ExtratoContas:
                     Apex.setValue(browser,seletor,value)
                     Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {value} inserido", 
-                                            routine="", error_details="")
+                                            routine=f"{ExtratoContas.rotina} - contaPagarResumida", error_details="")
 
                     apexGetValue[seletor] = Apex.getValue(browser,seletor)     
                     Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                             message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
-                                            routine="", error_details="")
-
-
+                                            routine=f"{ExtratoContas.rotina} - contaPagarResumida", error_details="")
 
                 campos = {
                         "contaO"
@@ -513,9 +494,7 @@ class ExtratoContas:
                 
                 FuncoesUteis.compareValues(init,campos)
 
-                
                 browser.switch_to.default_content()
-              
 
                 icon = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".a-Icon.icon-irr-no-results")))
                 if icon:
@@ -523,22 +502,13 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message="o icone inicial foi encontrado transação ocorreu corretamente",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - contaPagarResumida",
                         error_details=''
                     )           
 
-
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
-# END contaPagarResumida(init)
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - contaPagarResumida", error_details=str(e))
+# END contaPagarResumida(init, query)
 
 
 # Nova conciliação bancaria
@@ -549,7 +519,6 @@ class ExtratoContas:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-        
 
         try:
             btnConciliacaoBancaria = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#B120530734977149415")))
@@ -559,7 +528,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} encontrado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - conciliacaoBancaria",
                     error_details=''
                 )
             btnConciliacaoBancaria.click()
@@ -567,21 +536,12 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} clicado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - conciliacaoBancaria",
                     error_details=''
                 )
 
-    
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - conciliacaoBancaria", error_details=str(e))
 # END conciliacaoBancaria(init)               
 
 
@@ -593,7 +553,6 @@ class ExtratoContas:
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")      
 
-
         try:    
             original_window = browser.current_window_handle
             Components.btnClick(init,"#B131918532644441921")
@@ -602,15 +561,15 @@ class ExtratoContas:
             has_frame = Components.has_frame(init,seletor)
 
             if has_frame:
-               
+
                 btnSelector =  ".t-Cards-item.gerarPDF" if pdfOrExcel == "PDF" else ".t-Cards-item.gerarXLSX"   if pdfOrExcel == "Excel" else None
                 Components.btnClick(init,btnSelector)
 
                 browser.switch_to.default_content()
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message="Voltando pro contexto principal", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message="Voltando pro contexto principal", routine=f"{ExtratoContas.rotina} - gerarRelatorio", error_details='')
 
                 WebDriverWait(browser,30).until(EC.number_of_windows_to_be(2))
-                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"janelas encontradas", routine="", error_details='')
+                Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"janelas encontradas", routine=f"{ExtratoContas.rotina} - gerarRelatorio", error_details='')
                 
                 nextStep = False
                 for window_handle in browser.window_handles:
@@ -623,22 +582,22 @@ class ExtratoContas:
                 if nextStep:
                     if pdfOrExcel == "PDF":
                         WebDriverWait(browser,120).until(EC.url_contains("JasperReportsIntegration"))                   
-                        Log_manager.add_log(application_type=env_application_type, level="INFO", message="URL contém 'JasperReportsIntegration'", routine="", error_details='')
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", message="URL contém 'JasperReportsIntegration'", routine=f"{ExtratoContas.rotina} - gerarRelatorio", error_details='')
 
                         url = browser.current_url
-                        Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"URL do arquivo: {url}", routine="", error_details='')
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"URL do arquivo: {url}", routine=f"{ExtratoContas.rotina} - gerarRelatorio", error_details='')
 
                         archive = "mypdf.pdf"  
                         response = requests.get(url, stream=True)
-                        Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Fazendo download do arquivo: {archive}", routine="", error_details='')
+                        Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Fazendo download do arquivo: {archive}", routine=f"{ExtratoContas.rotina} - gerarRelatorio", error_details='')
 
                         if response.status_code == 200:
                             with open(archive, 'wb') as f:
                                 f.write(response.content)
-                            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Arquivo {archive} salvo com sucesso", routine="", error_details='')      
+                            Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"Arquivo {archive} salvo com sucesso", routine=f"{ExtratoContas.rotina} - gerarRelatorio", error_details='')      
 
                         else:
-                            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=f"Falha ao baixar o arquivo {archive}", routine="", error_details='')
+                            Log_manager.add_log(application_type=env_application_type, level="WARNING", message=f"Falha ao baixar o arquivo {archive}", routine=f"{ExtratoContas.rotina} - gerarRelatorio", error_details='')
 
                     
                     # elif pdfOrExcel == "Excel":
@@ -667,7 +626,7 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message="O PDF está vazio",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - gerarRelatorio",
                                 error_details=""
                             )
                         else:
@@ -675,7 +634,7 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"PDF contém texto: {text}",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - gerarRelatorio",
                                 error_details=""
                             )
 
@@ -687,9 +646,9 @@ class ExtratoContas:
                         if df.empty:
                             Log_manager.add_log(
                                 application_type=env_application_type,
-                                level="ERROR",
+                                level="WARNING",
                                 message="O DataFrame está vazio",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - gerarRelatorio",
                                 error_details=""
                             )
                         else:
@@ -697,7 +656,7 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"DataFrame lido do Excel:\n{df.iloc[:5, :5]}",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - gerarRelatorio",
                                 error_details=""
                             )
                     
@@ -707,7 +666,7 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"{archive} excluido",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - gerarRelatorio",
                                 error_details=""
                             )
                     except Exception as e:    
@@ -715,41 +674,23 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="ERROR",
                                 message=f"{archive} não foi excluido",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - gerarRelatorio",
                                 error_details=""
-                            )  
-                        
-
-
-                
-
-
-
+                            ) 
     
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - gerarRelatorio", error_details=str(e))
 #END geraRelatorio(init,pdfOrExcel)
 
 
 #Realiza multiplas ações em varios extratos diferentes
-
     @staticmethod
     def multipleActions(init,conciliaDesconcilia,checkAll):
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-        
-      
-
+    
         try:
 
             if checkAll:
@@ -760,7 +701,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} encontrado",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - multipleActions",
                         error_details=''
                     )
                 btnMultiplosCheckBoxes.click()
@@ -768,7 +709,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} clicado",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - multipleActions",
                         error_details=''
                     )
             else:
@@ -783,7 +724,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message="CheckBoxes Clicados",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - multipleActions",
                         error_details=''
                     )
                 else:
@@ -791,7 +732,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message="Não há checkboxes suficientes para clicar",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - multipleActions",
                         error_details=''
                     )
             
@@ -803,7 +744,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} encontrado",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - multipleActions",
                         error_details=''
                     )
                 btnMultiplasAcoes.click()
@@ -811,7 +752,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} clicado",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - multipleActions",
                         error_details=''
                     )
             
@@ -829,7 +770,7 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Botão {btnText} encontrado",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - multipleActions",
                                 error_details=''
                             )
                         btnConciliarItens.click()
@@ -837,7 +778,7 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Botão {btnText} clicado",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - multipleActions",
                                 error_details=''
                             )
                         WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".conciliacao.conciliado")))
@@ -845,11 +786,10 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message="Campo Conciliado encontrado",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - multipleActions",
                                 error_details=''
                             )
                         
-
                     else:
                         btnText = btnDesconciliarItens.text
                         
@@ -857,7 +797,7 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Botão {btnText} encontrado",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - multipleActions",
                                 error_details=''
                             )
                         btnDesconciliarItens.click()
@@ -865,7 +805,7 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message=f"Botão {btnText} clicado",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - multipleActions",
                                 error_details=''
                             )
                         WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,".conciliacao.nao-conciliado")))
@@ -873,24 +813,14 @@ class ExtratoContas:
                                 application_type=env_application_type,
                                 level="INFO",
                                 message="Campo Não Conciliado encontrado",
-                                routine="",
+                                routine=f"{ExtratoContas.rotina} - multipleActions",
                                 error_details=''
                             )
 
-                
-
-    
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - multipleActions", error_details=str(e))
 #END multipleActions(init,conciliaDesconcilia)
+
 
 # Icone de mais informações
     @staticmethod
@@ -899,9 +829,7 @@ class ExtratoContas:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
-        
-      
-
+    
         try:
             btnMaisInformacoes = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-info-circle-o.icon-color")))
             btnText = btnMaisInformacoes.text
@@ -909,34 +837,25 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} encontrado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - moreInfo",
                     error_details=''
                 )
             
             # Garante que o elemento está na tela
             browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", btnMaisInformacoes)
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Scroll até {btnText} ", routine="", error_details ="" )
+            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Scroll até {btnText} ", routine=f"{ExtratoContas.rotina} - moreInfo", error_details ="" )
             
             btnMaisInformacoes.click()
             Log_manager.add_log(
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Botão {btnText} clicado",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - moreInfo",
                     error_details=''
                 )           
-            
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-    
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - moreInfo", error_details=str(e))
 # END moreInfo(init)
 
 
@@ -947,7 +866,7 @@ class ExtratoContas:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")      
-      
+
         try:
 
             seletor = "#P76_CONTAS" if showHide  else ""
@@ -966,7 +885,7 @@ class ExtratoContas:
                             application_type=env_application_type,
                             level="INFO",
                             message=f"Botão {btnText} encontrado",
-                            routine="",
+                            routine=f"{ExtratoContas.rotina} - zerarFiltros",
                             error_details=''
                         )
                     
@@ -975,7 +894,7 @@ class ExtratoContas:
                             application_type=env_application_type,
                             level="INFO",
                             message=f"Botão {btnText} clicado",
-                            routine="",
+                            routine=f"{ExtratoContas.rotina} - zerarFiltros",
                             error_details=''
                         )
                     
@@ -986,7 +905,6 @@ class ExtratoContas:
                     3:"P76_CATEGORIAS",
                     4:"P76_CENTRO_CUSTO",
                     5:"P76_ORIGEM"
-
                     }
 
                     for key,seletor in apexGetValues.items():
@@ -994,24 +912,15 @@ class ExtratoContas:
                         value = Apex.getValue(browser,seletor)
                         Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {value} encontrado", 
-                                                routine="", error_details="")
+                                                routine=f"{ExtratoContas.rotina} - zerarFiltros", error_details="")
                         if not value or value == ['0']:
                             Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} foi zerado", 
-                                                routine="", error_details="")              
+                                                routine=f"{ExtratoContas.rotina} - zerarFiltros", error_details="")              
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - zerarFiltros", error_details=str(e))
 #END zerarFiltros(init,showHide,apexValues)                
-
 
 
     @staticmethod
@@ -1020,7 +929,7 @@ class ExtratoContas:
 
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")      
-      
+
         try:
             has_edit = WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,".fa.fa-edit.icon-color.edit")))
             if has_edit:
@@ -1035,7 +944,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} encontrado",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - conciliarDesconciliar",
                         error_details=''
                     )
                 
@@ -1045,7 +954,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} clicado",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - conciliarDesconciliar",
                         error_details=''
                     )
                 
@@ -1057,7 +966,7 @@ class ExtratoContas:
                         application_type=env_application_type,
                         level="INFO",
                         message=f"Botão {btnText} encontrado, conciliação/Desconciliacao realizada com sucesso",
-                        routine="",
+                        routine=f"{ExtratoContas.rotina} - conciliarDesconciliar",
                         error_details=''
                     )
 
@@ -1067,98 +976,37 @@ class ExtratoContas:
                 application_type=env_application_type,
             level="ERROR",
             message="Erro: Tempo limite excedido ao acessar a página",
-            routine="",
+            routine=f"{ExtratoContas.rotina} - conciliarDesconciliar",
             error_details=str(e)
             )
-            screenshot_path = screenshots
-        
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:            
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 
         except NoSuchElementException as e:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro: Elemento não encontrado na página",
-                routine="",
+                routine=f"{ExtratoContas.rotina} - conciliarDesconciliar",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 
         except Exception as e:  # Captura qualquer outro erro inesperado
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="ERROR",
                 message="Erro desconhecido ao acessar a página",
-                routine="",
+                routine=f"{ExtratoContas.rotina} - conciliarDesconciliar",
                 error_details=str(e)
             )
-            screenshot_path = screenshots
-            
-            # Verifica se o screenshot foi tirado corretamente
-            if screenshot_path:
-                sucess  = browser.save_screenshot(screenshot_path)
-                if sucess:  
-                    Log_manager.add_log(
-                        level="INFO", 
-                        message=f"Screenshot salvo em: {screenshot_path}", 
-                        routine="",
-                        application_type=env_application_type, 
-                        error_details=str(e)
-                )
-            else:
-                Log_manager.add_log(
-                    level="ERROR", 
-                    message="Falha ao salvar screenshot", 
-                    routine="",
-                    application_type=env_application_type, 
-                    error_details=str(e)
-                )
 #END conciliarDesconciliar(init,conciliaDesconcilia)
+
 
     @staticmethod
     def editaExtratoConta(init):
         
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")    
+        env_application_type = getEnv.get("WEB") 
+
         dataId = "data id não encontrado"  
         try:
 
@@ -1169,7 +1017,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message="Extrato de Conta editavel encontrada",
-                    routine="ContaPagar",
+                    routine=f"{ExtratoContas.rotina} - editaExtratoConta",
                     error_details=''
                 )
 
@@ -1178,7 +1026,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message="Extrato de Conta data-id capturado",
-                    routine="ContaPagar",
+                    routine=f"{ExtratoContas.rotina} - editaExtratoConta",
                     error_details=''
                 )
 
@@ -1187,31 +1035,23 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message="Extrato de Conta editavel clicada. Inicio da edição da conta!",
-                    routine="ContaPagar",
+                    routine=f"{ExtratoContas.rotina} - editaExtratoConta",
                     error_details=''
                 )
-            
 
         except (TimeoutException, NoSuchElementException, Exception) as e:
-            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-            screenshot_path = screenshots
-            if screenshot_path:
-                success = browser.save_screenshot(screenshot_path)
-                if success:
-                    Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="", application_type=env_application_type, error_details=str(e))
-                else:
-                    Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+            Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ExtratoContas.rotina} - editaExtratoConta", error_details=str(e))
 
         finally:
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
                 message=f"Extrato de Conta {dataId} editada",
-                routine="ContaPagar",
+                routine=f"{ExtratoContas.rotina} - editaExtratoConta",
                 error_details=''
             )    
 #END editaExtratoConta(init)
+
 
     @staticmethod
     def verificaTransfCriada(init:tuple, transfCriada:dict) -> bool:
@@ -1282,7 +1122,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Transferência Foi Encontrada Igual Como Foi Criada!",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - verificaTransfCriada",
                     error_details=""
                 )
             else:
@@ -1290,7 +1130,7 @@ class ExtratoContas:
                     application_type=env_application_type,
                     level="INFO",
                     message=f"Transferência Não Está Como Foi Criada!",
-                    routine="",
+                    routine=f"{ExtratoContas.rotina} - verificaTransfCriada",
                     error_details=""
                 )
             
@@ -1299,9 +1139,9 @@ class ExtratoContas:
         else:
             Log_manager.add_log(
                 application_type=env_application_type,
-                level="ERROR",
+                level="WARNING",
                 message="Não foi possível confirmar se a transferência foi criada — frame de edição não carregado.",
-                routine="CadastroTransferencia",
+                routine=f"{ExtratoContas.rotina} - verificaTransfCriada",
                 error_details=""
             )
             return False

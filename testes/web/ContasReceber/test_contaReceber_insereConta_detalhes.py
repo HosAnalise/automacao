@@ -8,19 +8,12 @@ from classes.utils.Components import Components
 import pytest
 from classes.utils.decorators import com_visual
 
-
-
-
-
-
-
 @com_visual()
 @pytest.mark.dockercontaReceber
 def test_contaReceber_insereConta_detalhes(init,validator=None):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['APPLICATION_TYPE']
-
 
     try:
 
@@ -34,15 +27,8 @@ def test_contaReceber_insereConta_detalhes(init,validator=None):
             ContaReceber.recebimentoContaReceber(init,query)
             
     except (TimeoutException, NoSuchElementException, Exception) as e:
-        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-        screenshot_path = screenshots
-        if screenshot_path:
-            success = browser.save_screenshot(screenshot_path)
-            if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em: {screenshot_path}", routine="ContaReceber", application_type=env_application_type, error_details=str(e))
-            else:
-                Log_manager.add_log(level="ERROR", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
-
+        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContaReceber.rotina} - test_contaReceber_insereConta_detalhes", error_details=str(e))
+        
     finally:
         endTime = time.time()
         executionTime = endTime - starTime
@@ -55,7 +41,7 @@ def test_contaReceber_insereConta_detalhes(init,validator=None):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="ContaPagar",
+            routine=f"{ContaReceber.rotina} - test_contaReceber_insereConta_detalhes",
             error_details=''
         )
 
@@ -66,7 +52,3 @@ def test_contaReceber_insereConta_detalhes(init,validator=None):
 
 
         browser.quit()
-
-
-
-       

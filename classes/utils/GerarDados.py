@@ -1,10 +1,15 @@
 import random
 import string
 
+from automacao.classes.utils import GerarDados
+
 
 #Class legada, agora usamos faker um biblioteca py que gera varios conteudos aleatorios
 
 class GeradorDados:
+
+    rotina = "GeradorDados"
+
     @staticmethod
     def gerar_chave_aleatoria(tamanho=32):
         return ''.join(random.choices(string.ascii_lowercase + string.digits, k=tamanho))
@@ -107,7 +112,7 @@ class GeradorDados:
         Log_manager.add_log(
             level="INFO",
             message=log_msg,
-            routine="",
+            routine=f"{GeradorDados.rotina} - simpleRandString",
             application_type=env_application_type,
             error_details=""
         )
@@ -134,7 +139,7 @@ class GeradorDados:
         Log_manager.add_log(
             level="INFO",
             message=log_msg,
-            routine="",
+            routine=f"{GeradorDados.rotina} - simpleRandDate",
             application_type=env_application_type,
             error_details=""
         )

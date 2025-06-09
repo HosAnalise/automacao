@@ -11,7 +11,6 @@ def test_contaPagar_insereArquivoOfx(init):
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
     env_application_type = env_vars['WEB']
 
-
     try:
         
         FuncoesUteis.goToPage(init,ConciliacaoBancaria.url)
@@ -21,14 +20,7 @@ def test_contaPagar_insereArquivoOfx(init):
         # Components.has_alert(init)
                     
     except (TimeoutException, NoSuchElementException, Exception) as e:
-        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine="", error_details=str(e))
-        screenshot_path = screenshots
-        if screenshot_path:
-            success = browser.save_screenshot(screenshot_path)
-            if success:
-                Log_manager.add_log(level="INFO", message=f"Screenshot salvo em : {screenshot_path}", routine="ConciliacaoBancaria", application_type=env_application_type, error_details=str(e))
-            else:
-                Log_manager.add_log(level="INFO", message="Falha ao salvar screenshot", routine="", application_type=env_application_type, error_details=str(e))
+        Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ConciliacaoBancaria.rotina} - test_contaPagar_insereArquivoOfx", error_details=str(e))
 
     finally:
         endTime = time.time()
@@ -42,14 +34,10 @@ def test_contaPagar_insereArquivoOfx(init):
             application_type=env_application_type,
             level="INFO",
             message=f"Tempo de execução do teste: {minutos} min {segundos} s {milissegundos} ms",
-            routine="ContaPagar",
+            routine=f"{ConciliacaoBancaria.rotina} - test_contaPagar_insereArquivoOfx",
             error_details=''
         )
 
         Log_manager.insert_logs_for_execution("ConciliacaoBancaria")
 
         browser.quit()
-
-
-
-       
