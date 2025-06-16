@@ -11,7 +11,7 @@ from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, Union
 from classes.rotinas.Pessoas import Pessoas
 
 class ContaReceber:
@@ -79,7 +79,7 @@ class ContaReceber:
             FROM ERP.CATEGORIA_FINANCEIRA CF
             LEFT JOIN ERP.CATEGORIA_FINANCEIRA_ESPECIFICACAO CFE ON CF.CATEGORIA_FINANCEIRA_ID = CFE.CATEGORIA_FINANCEIRA_ID
             LEFT JOIN ERP.CATEGORIA_FINANCEIRA CF_PAI ON CFE.CATEGORIA_FINANCEIRA_PAI_ID = CF_PAI.CATEGORIA_FINANCEIRA_ID
-            WHERE CF.CLASSIFICACAO_CATEGORIA_FINANCEIRA_ID = 1
+            WHERE CF.CLASSIFICACAO_CATEGORIA_FINANCEIRA_ID = 2
                 AND CFE.CATEGORIA_FINANCEIRA_PAI_ID IS NOT NULL
                 AND CFE.GRUPO_LOJA_ID = 1501
                 AND (CFE.CATEGORIA_FINANCEIRA_ID IN (0) OR CFE.STATUS = 1)
@@ -176,7 +176,47 @@ class ContaReceber:
         @classmethod
         def forceString(cls, v):
             return str(v) if v is not None else None
+
+
+    class DetalhesConta(BaseModel):
+        P85_DATA_EMISSAO : Optional[str] = None
+        P85_DATA_REGISTRO : Optional[str] = None
+        P85_CENTRO_DE_CUSTO : Optional[str] = None
+        P85_NUMERO_PEDIDO : Optional[str] = None
+        P85_DOCUMENTO_FISCAL_MODELO_ID : Optional[str] = None
+        P85_NUMERO_DOCUMENTO : Optional[str] = None
+        P85_CHAVE_NFE : Optional[str] = None
+        tipoCobranca : Optional[str] = None
+        P85_COBRADOR : Optional[str] = None
+        P85_OBSERVACAO : Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+
     
+    class Conta(BaseModel):
+        P85_VALOR : Optional[str] = None
+        P85_CONTA_ID : Optional[str] = None
+        P85_PESSOA_CLIENTE_ID : Optional[str] = None
+        P85_DATA_VENCIMENTO : Optional[str] = None
+        P85_DATA_PREVISAO_RECEBIMENTO : Optional[str] = None
+        P85_CATEGORIA_FINANCEIRA : Optional[str] = None
+        P85_LOJA : Optional[str] = None
+        P85_DESCRICAO : Optional[str] = None
+        detalhes : Optional["ContaReceber.DetalhesConta"] = None
+
+        @field_validator(
+        "P85_VALOR", "P85_CONTA_ID", "P85_PESSOA_CLIENTE_ID", "P85_DATA_VENCIMENTO",
+        "P85_DATA_PREVISAO_RECEBIMENTO", "P85_CATEGORIA_FINANCEIRA", "P85_LOJA",
+        "P85_DESCRICAO",
+        mode="before"
+        )
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+
 
     @staticmethod
     def insereContaReceber(init,query,staticValues = False):
@@ -1369,10 +1409,10 @@ class ContaReceber:
             Tupla comparâmetros do ambiente.
 
         :param cliente:
-            Objeto instanciado da classe BaseModel pessoa, caso passado, seus valores serão priorizados durante criação do cliente.
+            Objeto instanciado da classe BaseModel Pessoa, caso passado, seus valores serão priorizados durante criação do cliente.
 
         :return:
-            Retorna um objeto pessoa com os valores inseridos na criação. Pode retornar False caso o método falhe em algum momento.
+            Retorna um objeto Pessoa com os valores inseridos na criação. Retorna False caso o método falhe em algum momento.
         """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
@@ -1383,7 +1423,564 @@ class ContaReceber:
         Components.btnClick(init, "#btn_novoCliente")
 
         if Components.has_frame(init, "[title='Cadastro de Pessoa']"):
+            
+            try:
+                WebDriverWait(browser, 90).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#P6_STATUS")))
+            except:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message="Página demorou muito para carregar, teste interrompido!",
+                    routine=f"{ContaReceber.rotina} - criaNovoCliente",
+                    error_details=""
+                )
+                return False
 
-            WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#P6_STATUS")))
+            pessoaCriada = Pessoas.inserePessoaCompleta(init, cliente)
 
-            # if Pessoas.inserePessoaCompleta(init, cliente):
+            if pessoaCriada:
+                time.sleep(30)
+                FuncoesUteis.scrollIntoView(init, "#criarPessoa", True, False)
+
+                if Components.has_alert(init):
+                    return False
+
+                browser.switch_to.default_content()
+
+                if Apex.getValue(browser, "P85_PESSOA_CLIENTE_ID"):
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message=f"Cliente inserido com sucesso, ID = {Apex.getValue(browser, 'P85_PESSOA_CLIENTE_ID')}!",
+                        routine=f"{ContaReceber.rotina} - criaNovoCliente",
+                        error_details=""
+                    )
+                    return pessoaCriada 
+
+            return False
+#END criaNovoCliente(init, cliente)
+
+
+    @staticmethod
+    def preencheCamposConta(init:tuple, conta:"ContaReceber.Conta" = None) -> Union["ContaReceber.Conta", bool]:
+        """
+        Preenche os campos da parte superior de uma conta a receber, referentes às informações gerais.
+
+        :param init:
+            Tupla comparâmetros do ambiente.
+
+        :param conta:
+            Objeto instanciado da classe BaseModel Conta, caso passado, seus valores serão priorizados durante inserção dos valores.
+
+        :return:
+            Retorna um objeto Conta com os valores inseridos na criação. Retorna False caso o método falhe em algum momento.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        queries = {
+            "queryContaId": """
+                                SELECT CONTA.CONTA_ID  
+                                FROM ERP.CONTA
+                                JOIN ERP.CONTA_ESPECIFICACAO ON CONTA.CONTA_ID = CONTA_ESPECIFICACAO.CONTA_ID
+                                LEFT JOIN ERP.LOJA ON LOJA.LOJA_ID = CONTA_ESPECIFICACAO.LOJA_ID
+                                WHERE CONTA_ESPECIFICACAO.GRUPO_LOJA_ID = 1501
+                                    AND CONTA.TIPO_CONTA_ID IN (1, 2)
+                                    AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
+                                    AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
+                            """
+                            ,
+            "queryCategoriaFinanceira": """
+                                SELECT CF.CATEGORIA_FINANCEIRA_ID  
+                                FROM ERP.CATEGORIA_FINANCEIRA CF
+                                LEFT JOIN ERP.CATEGORIA_FINANCEIRA_ESPECIFICACAO CFE ON CF.CATEGORIA_FINANCEIRA_ID = CFE.CATEGORIA_FINANCEIRA_ID
+                                LEFT JOIN ERP.CATEGORIA_FINANCEIRA CF_PAI ON CFE.CATEGORIA_FINANCEIRA_PAI_ID = CF_PAI.CATEGORIA_FINANCEIRA_ID
+                                WHERE CF.CLASSIFICACAO_CATEGORIA_FINANCEIRA_ID = 2
+                                    AND CFE.CATEGORIA_FINANCEIRA_PAI_ID IS NOT NULL
+                                    AND CFE.GRUPO_LOJA_ID = 1501
+                                    AND (CFE.CATEGORIA_FINANCEIRA_ID IN (0) OR CFE.STATUS = 1)
+                            """
+                            ,
+            "queryEmpresa": """
+                                SELECT LOJA_ID FROM ERP.LOJA WHERE GRUPO_LOJA_ID = 1501
+                            """
+                            ,
+                        
+            "queryCliente" : """
+                                SELECT
+                                    PESSOA.PESSOA_ID       
+                                FROM 
+                                    ERP.PESSOA
+                                WHERE 
+                                    GRUPO_LOJA_ID = 1501
+                                    AND STATUS = 1
+                            """
+        }
+
+        queryConta = FuncoesUteis.getQueryResults(init, queries)
+
+        valoresObrigatorios = {
+            "P85_DATA_PREVISAO_RECEBIMENTO" : "date",
+            "P85_DATA_VENCIMENTO" : "date",
+            "P85_VALOR" : (float, 20, 50)
+        }
+
+        valoresObrigatorios = FuncoesUteis.geraValoresRandom(init, valoresObrigatorios)
+
+        valoresObrigatoriosPopUp = {
+            "P85_CONTA_ID" : queryConta["Query_queryContaId"],
+            "P85_PESSOA_CLIENTE_ID" : queryConta["Query_queryCliente"],
+            "P85_CATEGORIA_FINANCEIRA" : queryConta["Query_queryCategoriaFinanceira"],
+            "P85_LOJA" : queryConta["Query_queryEmpresa"],
+        }
+        
+        valoresConta = FuncoesUteis.preencheCamposComunsEPopUp(init, conta, valoresObrigatorios, valoresObrigatoriosPopUp)
+
+        valoresCamposFinal, valoresCamposPopUpLovFinal = FuncoesUteis.separaCamposComunsEPopUp(init, valoresConta, valoresObrigatoriosPopUp)
+
+        verificaCamposConta = {
+            "P85_VALOR" : "valor",
+            "P85_DATA_VENCIMENTO" : "date",
+            "P85_DATA_PREVISAO_RECEBIMENTO" : "date",
+            "P85_DESCRICAO" : "text"
+        }
+
+        verificaCamposConta = FuncoesUteis.filtrarCamposPorDicionario(init, verificaCamposConta, valoresCamposFinal)
+
+        FuncoesUteis.prepareToCompareValues(init, valoresCamposFinal, True)
+
+        FuncoesUteis.prepareToCompareValues(init, valoresCamposPopUpLovFinal, False)
+
+        valoresRecuperar = set(valoresConta.keys())
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Set de campos criado para recuperação: {valoresRecuperar}",
+            routine=f"{ContaReceber.rotina} - preencheCamposConta",
+            error_details=""
+        )
+
+        valoresRecuperados = FuncoesUteis.recuperaValores(init, valoresRecuperar)
+
+        if not FuncoesUteis.validaCamposPorRegex(init, verificaCamposConta):
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="WARNING",
+                message="Teste encerrado por causa dos campos aceitando valores incorretos.",
+                routine=f"{ContaReceber.rotina} - preencheCamposConta",
+                error_details=""
+            )
+            return False
+        
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message="Valores da conta inseridos com sucesso!",
+            routine=f"{ContaReceber.rotina} - preencheCamposConta",
+            error_details=""
+        )
+
+        return ContaReceber.Conta(**valoresRecuperados)
+#END preencheCamposConta(init, conta)
+
+
+    @staticmethod
+    def preencheCamposDetalhes(init:tuple, detalhes:"ContaReceber.DetalhesConta" = None) -> Union["ContaReceber.DetalhesConta", bool]:
+        """
+        Preenche os detalhes de uma conta a receber.
+
+        :param init:
+            Tupla comparâmetros do ambiente.
+
+        :param detalhes:
+            Objeto instanciado da classe BaseModel DetalhesConta, como não há campos obrigatórios, será inserido apenas o que for passado.
+
+        :return:
+            Retorna um objeto DetalhesConta com os valores inseridos na criação. Retorna False caso o método falhe em algum momento.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        camposPopup = {
+            "P85_CENTRO_DE_CUSTO",
+            "P85_DOCUMENTO_FISCAL_MODELO_ID",
+            "P85_COBRADOR"
+        }
+
+        valoresDetalhes = detalhes.model_dump(exclude_none=True)
+
+        valoresCamposFinal, valoresCamposPopUpLovFinal = FuncoesUteis.separaCamposComunsEPopUp(init, valoresDetalhes, camposPopup)
+
+        if valoresCamposFinal:
+            verificaCamposDetalhes = {
+                "P85_DATA_EMISSAO" : "date",
+                "P85_DATA_REGISTRO" : "date",
+                "P85_NUMERO_PEDIDO" : "text",
+                "P85_NUMERO_DOCUMENTO" : "text",
+                "P85_CHAVE_NFE" : "text",
+                "P85_OBSERVACAO" : "text"
+            }
+
+            verificaCamposDetalhes = FuncoesUteis.filtrarCamposPorDicionario(init, verificaCamposDetalhes, valoresCamposFinal)
+
+            FuncoesUteis.prepareToCompareValues(init, valoresCamposFinal, True)
+
+            if not FuncoesUteis.validaCamposPorRegex(init, verificaCamposDetalhes):
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message="Teste encerrado por causa dos campos aceitando valores incorretos.",
+                    routine=f"{ContaReceber.rotina} - preencheCamposDetalhes",
+                    error_details=""
+                )
+                return False
+
+        if valoresCamposPopUpLovFinal:
+            FuncoesUteis.prepareToCompareValues(init, valoresCamposPopUpLovFinal, False)
+
+        valoresRecuperar = set(valoresDetalhes.keys())
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message=f"Set de campos criado para recuperação: {valoresRecuperar}",
+            routine=f"{ContaReceber.rotina} - preencheCamposDetalhes",
+            error_details=""
+        )
+
+        valoresRecuperados = FuncoesUteis.recuperaValores(init, valoresRecuperar)
+        
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message="Valores dos detalhes inseridos com sucesso!",
+            routine=f"{ContaReceber.rotina} - preencheCamposDetalhes",
+            error_details=""
+        )
+
+        return ContaReceber.DetalhesConta(**valoresRecuperados)
+#END preencheCamposDetalhes(init, detalhes)
+
+
+    @staticmethod
+    def insereContaCompleta(init:tuple, contaCompleta:"ContaReceber.Conta") -> "ContaReceber.Conta":
+        """
+        Método responsavel por chamar outros métodos de criação, recebe um objeto da classe Conta que por sua via, possui outros objetos instanciados dentro.
+        Sempre chama o método de inserir os valores principais de uma conta, caso possuis tais objetos no objeto contaCompleta, também chamará os seus devidos métodos.
+
+        IMPORTANTE: Sempre quando criado uma nova classe que será instanciada na Conta, é necessario inserir o nome da classe no dict dadosPrincipaisConta
+        que cria um objeto sem as instancias (primeiras linhas do método), se não o método não funcionará devidamente.
+
+        :param init:
+            Tupla comparâmetros do ambiente.
+
+        :param contaCompleta:
+            Objeto com os seletores e valores dos campos principais de uma conta, com possiveis intancias de outras classes.
+
+        :return:
+            Objeto Conta completo com todos atributos e possiveis instancias que foram inseridas.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        dadosPrincipaisConta = contaCompleta.model_dump(exclude={"detalhes"})
+
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message="Inserindo valores principais da Conta a Receber.",
+            routine=f"{ContaReceber.rotina} - insereContaCompleta",
+            error_details=""
+        )
+        dadosGerais = ContaReceber.preencheCamposConta(init, ContaReceber.Conta(**dadosPrincipaisConta))
+
+        if contaCompleta.detalhes:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Inserindo valores dos detalhes da conta.",
+                routine=f"{ContaReceber.rotina} - insereContaCompleta",
+                error_details=""
+            )
+            dadosDetalhes = ContaReceber.preencheCamposDetalhes(init, contaCompleta.detalhes)
+        else: dadosDetalhes = None
+
+        dadosAtualizados = {
+            k: v for k, v in {
+                "detalhes": dadosDetalhes
+            }.items() if v is not None
+        }
+        return dadosGerais.model_copy(update=dadosAtualizados)
+#END insereContaCompleta(init, contaCompleta)
+
+
+    @staticmethod
+    def testaBtnCategoria(init:tuple) -> bool:
+        """
+        Método hardcoded com a porposta unica de testar o botão "+ Categoria" e suas funcionalidades.
+
+        :param init:
+            Tupla comparâmetros do ambiente.
+
+        :return:
+            True caso o botão e suas funcionalidades funcionais, False caso contrario.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        categorias = {
+            "Multas Cobradas Clientes" : 'input.checkCategoria[value="33088"]',
+            "Venda Recarga Celular (Chip)" : 'input.checkCategoria[value="33090"]'
+        }
+
+        Components.btnClick(init, "#btn_listaCategorias")
+
+        if Components.has_frame(init, "[title='Contas a Receber - + Categoria']"):
+            for categ, seletor in categorias.items():
+                FuncoesUteis.setValue(init, "#P86_PESQUISA", categ)
+
+                Components.btnClick(init, seletor)
+
+                Apex.setValue(browser, "P86_PESQUISA", '')
+            
+            Components.btnClick(init, "#B118766256873647515") #salvar
+            browser.switch_to.default_content()
+
+            time.sleep(3)
+
+            WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P85_CATEGORIA_FINANCEIRA")))
+            element = browser.find_element(By.ID, "P85_CATEGORIA_FINANCEIRA")
+    
+            style = element.get_attribute("style") or ""
+
+            if "cursor: auto" in style:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message="Após salvar a distribuição de categoria, o campo ainda está disponível!",
+                    routine=f"{ContaReceber.rotina} - testaBtnCategoria",
+                    error_details=""
+                )
+                return False
+
+            Components.btnClick(init, "#btn_listaCategorias")
+
+            if Components.has_frame(init, "[title='Contas a Receber - + Categoria']"):
+
+                buttons = ["#B118767074576647516", "#B118766662012647516"]
+
+                for btn in buttons:
+                    Components.btnClick(init, btn)
+
+                browser.switch_to.default_content()
+
+                time.sleep(1)
+
+                browser.execute_script("$('.js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot').click()")
+
+                time.sleep(3)
+
+                WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P85_CATEGORIA_FINANCEIRA")))
+                element = browser.find_element(By.ID, "P85_CATEGORIA_FINANCEIRA")
+        
+                style = element.get_attribute("style") or ""
+
+                if "cursor: auto" in style:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Botão passou nos testes!",
+                        routine=f"{ContaReceber.rotina} - testaBtnCategoria",
+                        error_details=""
+                    )
+                    return True
+        
+        return False
+#END testaBtnCategoria(init)
+
+
+    @staticmethod
+    def testaBtnEmpresa(init:tuple) -> bool:
+        """
+        Método hardcoded com a porposta unica de testar o botão "+ Empresa" e suas funcionalidades.
+
+        :param init:
+            Tupla comparâmetros do ambiente.
+
+        :return:
+            True caso o botão e suas funcionalidades funcionais, False caso contrario.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        checkBoxesEmpresa = {
+            'input.checkCategoria[value="3605"]',
+            'input.checkCategoria[value="3625"]'
+        }
+
+        Components.btnClick(init, "#btn_listaEmpresas")
+
+        if Components.has_frame(init, "[title='Contas a Receber - + Empresa']"):
+            for checkBox in checkBoxesEmpresa:
+                Components.btnClick(init, checkBox)
+            
+            Components.btnClick(init, "#B118810677112888883") #salvar
+            browser.switch_to.default_content()
+
+            time.sleep(3)
+
+            WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P85_LOJA")))
+            element = browser.find_element(By.ID, "P85_LOJA")
+    
+            style = element.get_attribute("style") or ""
+
+            if "cursor: auto" in style:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message="Após salvar a distribuição de categoria, o campo ainda está disponível!",
+                    routine=f"{ContaReceber.rotina} - testaBtnEmpresa",
+                    error_details=""
+                )
+                return False
+
+            Components.btnClick(init, "#btn_listaEmpresas")
+
+            if Components.has_frame(init, "[title='Contas a Receber - + Empresa']"):
+
+                buttons = ["#B118811406975888884", "#B118811078430888884"]
+
+                for btn in buttons:
+                    Components.btnClick(init, btn)
+
+                browser.switch_to.default_content()
+
+                time.sleep(1)
+
+                browser.execute_script("$('.js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot').click()")
+
+                time.sleep(3)
+
+                WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P85_LOJA")))
+                element = browser.find_element(By.ID, "P85_LOJA")
+        
+                style = element.get_attribute("style") or ""
+
+                if "cursor: auto" in style:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Botão passou nos testes!",
+                        routine=f"{ContaReceber.rotina} - testaBtnEmpresa",
+                        error_details=""
+                    )
+                    return True
+        
+        return False
+#END testaBtnEmpresa(init)
+
+
+    @staticmethod
+    def testaBtnCentroCusto(init:tuple) -> bool:
+        """
+        Método hardcoded com a porposta unica de testar o botão "+ Empresa" e suas funcionalidades.
+
+        :param init:
+            Tupla comparâmetros do ambiente.
+
+        :return:
+            True caso o botão e suas funcionalidades funcionais, False caso contrario.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        checkBoxesCentroCusto = {
+            "ADMINIDTRATIVO ": 'input.checkCategoria[value="2856"]',
+            "SALÁRIOS E COMISSÕES VENDEDORES": 'input.checkCategoria[value="2854"]'
+        }
+
+        FuncoesUteis.scrollIntoView(init, "#btn_centroCusto", True, False)
+
+        if Components.has_frame(init, "[title='Contas a receber - + Centro de Lucro']"):
+            for centroCusto, checkBox in checkBoxesCentroCusto.items():
+                FuncoesUteis.setValue(init, "#P90_PESQUISA", centroCusto)
+
+                Components.btnClick(init, checkBox)
+
+                Apex.setValue(browser, "P90_PESQUISA", '')
+            
+            Components.btnClick(init, "#B119177713573631613") #salvar
+            browser.switch_to.default_content()
+
+            time.sleep(3)
+
+            WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P85_CENTRO_DE_CUSTO")))
+            element = browser.find_element(By.ID, "P85_CENTRO_DE_CUSTO")
+    
+            style = element.get_attribute("style") or ""
+
+            if "cursor: auto" in style:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message="Após salvar a distribuição de categoria, o campo ainda está disponível!",
+                    routine=f"{ContaReceber.rotina} - testaBtnCentroCusto",
+                    error_details=""
+                )
+                return False
+
+            Components.btnClick(init, "#btn_centroCusto")
+
+            WebDriverWait(browser, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "[title='Contas a receber - + Centro de Lucro']"))
+            )
+
+            if Components.has_frame(init, "[title='Contas a receber - + Centro de Lucro']"):
+
+                buttons = ["#B119178552787631614", "#B119178173883631614"]
+
+                for btn in buttons:
+                    Components.btnClick(init, btn)
+
+                browser.switch_to.default_content()
+
+                time.sleep(1)
+
+                browser.execute_script("$('.js-confirmBtn.ui-button.ui-corner-all.ui-widget.ui-button--hot').click()")
+
+                time.sleep(3)
+
+                WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#P85_CENTRO_DE_CUSTO")))
+                element = browser.find_element(By.ID, "P85_CENTRO_DE_CUSTO")
+        
+                style = element.get_attribute("style") or ""
+
+                if "cursor: auto" in style:
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="INFO",
+                        message="Botão passou nos testes!",
+                        routine=f"{ContaReceber.rotina} - testaBtnCentroCusto",
+                        error_details=""
+                    )
+                    return True
+        
+        return False
+#END testaBtnCentroCusto(init)
