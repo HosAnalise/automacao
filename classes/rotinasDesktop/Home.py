@@ -1,5 +1,4 @@
-from classes.utils.LogManager import LogManager
-Log_manager = LogManager()
+from classes.utilsDesktop.FuncoesUteisDesktop import FuncoesUteisDesktop
 
 
 
@@ -8,37 +7,76 @@ Log_manager = LogManager()
 
 
 class Home:
-    def __init__(self, app,env_vars):
+    def __init__(self, app,env_vars,log_manager):
         self.app = app
         self.title = "HOS - Farma Splash"
         self.farma_window = self.app.window(auto_id="hosFarmaWindow")
         self.application_type = env_vars.get("APPLICATION_TYPE")
+        self.screenshot_path = env_vars.get("SCREENSHOT_PATH")
+        self.user = env_vars.get("USER")
+        self.password = env_vars.get("PASSWORD")
+        self.log = log_manager
+        self.exceptions = FuncoesUteisDesktop.pywinauto_exceptions()
 
     def wait_for_home(self):
         try:
             self.app.window(title=self.title).wait("exists enabled visible ready", timeout=60)
-            Log_manager.add_log(application_type=self.application_type, level="INFO", message=f"Janela: {self.title} encontrada ", routine="", error_details="")
+            self.log.add_log(application_type=self.application_type, level="INFO", message=f"Janela: {self.title} encontrada ", routine="", error_details="")
 
-        except Exception as e:
-            Log_manager.add_log(application_type=self.application_type, level="ERROR", message="", routine="", error_details=str(e))
+        except self.exceptions as e:
+            self.log.add_log(application_type=self.application_type, level="ERROR", message="", routine="", error_details=str(e))
 
         
 
 
     def searchBar(self, search_text: str):
+
         try:
             principal_window = self.farma_window  # Substitua com o handle correto
             principal_window.wait("exists enabled visible ready", timeout=60)
+            self.log.add_log(
+                application_type=self.application_type,
+                level="INFO",
+                message="Janela principal encontrada",
+                routine="",
+                error_details=""
+            )
             
-            search_bar = principal_window.child_window(auto_id="txtSearchMenu", control_type="Edit")
-            search_bar.wait("exists visible", timeout=30)
+            search_bar = principal_window.child_window(auto_id="txtSearchMenu", control_type="Edit")\
+                .wait("exists visible", timeout=30)
+            self.log.add_log(
+                application_type=self.application_type,
+                level="INFO",
+                message="cBarra de pesquisa encontrada",
+                routine="",
+                error_details=""
+            )
             
             search_bar.set_text(search_text)
+            self.log.add_log(
+                application_type=self.application_type,
+                level="INFO",
+                message="Texto inserido na barra de pesquisa",
+                routine="",
+                error_details=""
+            )
+
             text = search_bar.texts()
-            print(f"texto da barra de pesquisa {text}")
-        except Exception as e:
-            print(f"Erro ao interagir com a barra de pesquisa: {e}")
-            raise
+            self.log.add_log(
+                application_type=self.application_type,
+                level="INFO",
+                message=f"Texto recuperado da barra de pesquisa: {text}",
+                routine="",
+                error_details=""
+            )
+        except self.exceptions as e:
+           self.log.add_log(
+                application_type=self.application_type,
+                level="ERROR",
+                message="Erro ao acessar a barra de pesquisa",
+                routine="",
+                error_details=str(e)
+            )
 
 
 
@@ -66,6 +104,32 @@ class Home:
         # Construir o auto_id a partir do nome do menu
         try:
             self.farma_window.child_window(auto_id=f"btn{menu_name}", control_type="RadioButton").wait("exists enabled visible ready", timeout=30).click()
+            self.log.add_log(level="INFO", message=f"btn{menu_name} clicado com sucesso", routine="", application_type=self.application_type, error_details='')
+
             
-        except Exception as e:
-            raise RuntimeError(f"Falha ao clicar no menu '{menu_name}': {str(e)}")
+        except self.exceptions as e:
+            self.log.add_log(level="INFO", message=f"btn{menu_name} não foi clicado", routine="", application_type=self.application_type, error_details=str(e))
+
+
+    def autenticar(self, user:str|int = False, password:str|int = False):
+
+        """
+        autentica o usuário no sistema.
+
+        :param user: Nome do usuário. Se não for fornecido, usa o valor padrão.
+        :param password: Senha do usuário. Se não for fornecido, usa o valor padrão       
+        """
+        # Lógica para autenticar o usuário
+        user = user if user else self.user
+        password = password if password else self.password
+
+        user_filed = self.farma_window.child_window(auto_id="txtUsuario", control_type="Edit").wait("exists enabled visible ready", timeout=30)
+        user_filed.set_text(user)
+
+        password_field = self.farma_window.child_window(auto_id="txtSenha", control_type="Edit").wait("exists enabled visible ready", timeout=30)
+        password_field.set_text(password)
+
+        self.farma_window.child_window(auto_id="BtnConfirmar", control_type="Button").wait("exists enabled visible ready", timeout=30).click()
+
+
+        

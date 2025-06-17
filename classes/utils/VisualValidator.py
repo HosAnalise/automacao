@@ -1,8 +1,7 @@
-from re import Match
 from applitools.selenium import Eyes, Target, BatchInfo
 from selenium.webdriver.remote.webdriver import WebDriver
 import os
-from applitools.common import MatchLevel
+from applitools.common import MatchLevel, Region
 
 
 
@@ -10,7 +9,7 @@ class VisualValidator:
     """
     Classe responsável por gerenciar testes visuais com o Applitools Eyes.
     """
-    def __init__(self, app_name: str = "Minha Aplicação", batch_name: str = "Testes Visuais"):
+    def __init__(self, app_name: str = "Automação Web", batch_name: str = "Testes Visuais"):
         """
         Inicializa o VisualValidator com nome do app e nome do batch.
         
@@ -23,6 +22,7 @@ class VisualValidator:
         """
         self.eyes: Eyes = Eyes()
         self.eyes.api_key = os.getenv("APPLITOOLS_API_KEY")
+
         if not self.eyes.api_key:
             raise ValueError("APPLITOOLS_API_KEY não está definida no ambiente!")
         
@@ -44,14 +44,21 @@ class VisualValidator:
         self.eyes.batch = self.batch
         self.eyes.open(driver, self.app_name, test_name, viewport_size)
 
-    def check_window(self, label: str) -> None:
-        """
-        Captura e valida visualmente toda a janela atual do navegador.
-        
-        Args:
-            label (str): Descrição do ponto de verificação (checkpoint).
-        """
-        self.eyes.check(label, Target.window())
+    def check_window(self, label: str, ignore_regions:list=None) -> None:
+        target = Target.window()
+
+        if ignore_regions:
+            for region in ignore_regions:
+                if isinstance(region, Region):
+                    target = target.ignore(region)
+                elif isinstance(region, tuple) and len(region) == 2:
+                    by, value = region
+                    target = target.ignore(by, value)
+                elif isinstance(region, tuple) and len(region) == 4:
+                    target = target.ignore(Region(*region))                                        
+
+        self.eyes.check(label, target)
+
 
     def check_region(self, label: str, selector: str) -> None:
         """
@@ -74,4 +81,4 @@ class VisualValidator:
         Aborta o teste visual se ele ainda não tiver sido finalizado corretamente.
         Útil para cenários onde ocorre uma exceção antes da finalização.
         """
-        self.eyes.abort_if_not_closed()
+        self.eyes.abort()

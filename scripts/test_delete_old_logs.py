@@ -4,5 +4,5 @@ log = LogManager()
 
 log.delete_logs_older_than(0)
 
-# data = log.get_logs()
+# data = log.delete_logs_older_than(0)
 # print(data)

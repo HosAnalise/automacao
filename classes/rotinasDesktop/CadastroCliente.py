@@ -36,28 +36,7 @@ class CadastroCliente(Home):
             print(f"Erro ao cadastrar o cliente: {e}")
 
             
-    def autenticar(self, user:str|int = False, password:str|int = False):
-
-        """
-        autentica o usuário no sistema.
-
-        :param user: Nome do usuário. Se não for fornecido, usa o valor padrão.
-        :param password: Senha do usuário. Se não for fornecido, usa o valor padrão       
-        """
-        # Lógica para autenticar o usuário
-        user = user if user else self.user
-        password = password if password else self.password
-
-        user_filed = self.farma_window.child_window(auto_id="txtUsuario", control_type="Edit").wait("exists enabled visible ready", timeout=30)
-        user_filed.set_text(self.user)
-
-        password_field = self.farma_window.child_window(auto_id="txtSenha", control_type="Edit").wait("exists enabled visible ready", timeout=30)
-        password_field.set_text(self.password)
-
-        self.farma_window.child_window(auto_id="BtnConfirmar", control_type="Button").wait("exists enabled visible ready", timeout=30).click()
-
-
-        print(f"Usuário {self.user} autenticado com sucesso!")
+    
 
     def cadastro_cliente_geral_identificacao(self, obj: dict = False):
         """

@@ -20,6 +20,9 @@ from pydantic import BaseModel
 import re
 
 
+from classes.utils.decorators import com_visual
+
+
 Log_manager = LogManager()
 class FuncoesUteis:
     """
@@ -212,8 +215,10 @@ class FuncoesUteis:
 
 
 # Redireciona para uma pagina especifica
+
+
     @staticmethod
-    def goToPage(init:tuple,url:str):
+    def goToPage(init:tuple,url:str,validator=None):
         """
         Redireciona pra pagina especifica
 

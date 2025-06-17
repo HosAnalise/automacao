@@ -2,38 +2,51 @@ services:
   conta_pagar:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile
+      dockerfile: docker/Dockerfile
       args:
         TESTS_DIR: ContasPagar
-        PYTESTMARK: dockerContaPagar  # Ajuste para passar o valor correto para o pytest
+        PYTESTMARK: dockerContaPagar  
+        
     image: hosanalise/conta_pagar:latest
+    environment:
+      - APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}
+
 
   conta_receber:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile
+      dockerfile: docker/Dockerfile
       args:
         TESTS_DIR: ContasReceber
-        PYTESTMARK: dockerContaReceber  # Ajuste para passar o valor correto para o pytest
+        PYTESTMARK: dockerContaReceber  
     image: hosanalise/conta_receber:latest
+    environment:
+      - APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}
+
     
   conciliacao_bancaria:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile
+      dockerfile: docker/Dockerfile
       args:
         TESTS_DIR: ConciliacaoBancaria
-        PYTESTMARK: dockerConciliacaoBancaria  # Ajuste para passar o valor correto para o pytest
+        PYTESTMARK: dockerConciliacaoBancaria  
     image: hosanalise/conciliacao_bancaria:latest
+    environment:
+      - APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}
+
 
   extrato_contas:
     build:
       context: .
-      dockerfile: dockerfiles/Dockerfile
+      dockerfile: docker/Dockerfile
       args:
         TESTS_DIR: ExtratoDeContas
-        PYTESTMARK: dockerExtratoDeContas  # Ajuste para passar o valor correto para o pytests
+        PYTESTMARK: dockerExtratoDeContas  
     image: hosanalise/extrato_contas:latest
+    environment:
+      - APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}
+
 
 
 

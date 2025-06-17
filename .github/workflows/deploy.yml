@@ -6,6 +6,10 @@ on:
       - prod
     paths:
       - 'docker-compose.yml'
+
+
+env:
+  APPLITOOLS_API_KEY: ${{ secrets.APPLITOOLS_API_KEY }}      
      
 
 jobs:
