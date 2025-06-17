@@ -1359,6 +1359,8 @@ class ContaReceber:
 
         camposAVerificarRegex = FuncoesUteis.filtrarCamposPorDicionario(init, camposAVerificarRegex, valoresCampo)
 
+        Apex.setValue(browser, "P199_VALOR", '')
+
         FuncoesUteis.prepareToCompareValues(init, valoresCampo, True)
 
         FuncoesUteis.prepareToCompareValues(init, valoresCampoPopUo, False)
@@ -1386,7 +1388,7 @@ class ContaReceber:
         
         if salvar: 
             Components.btnClick(init, "#save")
-            if not Components.has_alert(init):
+            if Components.has_alert(init):
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="WARNING",
