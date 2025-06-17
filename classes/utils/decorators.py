@@ -1,5 +1,4 @@
 from functools import wraps
-from mimetypes import guess_file_type
 from classes.utils.VisualValidator import VisualValidator
 
 def com_visual(viewport_size=(1280, 720),batch_name="Testes Visuais"):
