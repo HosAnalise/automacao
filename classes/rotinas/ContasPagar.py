@@ -10,7 +10,8 @@ from classes.utils.GerarDados import GeradorDados
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
-
+from pydantic import BaseModel, field_validator
+from typing import Optional, Union
 
 class ContasPagar:
 
@@ -117,6 +118,23 @@ class ContasPagar:
             """
     }
 
+
+    class ContaResumida(BaseModel):
+        P194_CONTA_ID : Optional[str] = None
+        P194_VALOR : Optional[str] = None
+        P194_FORMA_PAGAMENTO : Optional[str] = None
+        P194_PESSOA_ID : Optional[str] = None
+        P194_DATA_EMISSAO : Optional[str] = None
+        P194_DATA_PAGAMENTO : Optional[str] = None
+        P194_CATEGORIA_FINANCEIRA_ID : Optional[str] = None
+        P194_DESCRICAO : Optional[str] = None
+        P194_NUMERO_DOCUMENTO : Optional[str] = None
+        P194_CONFERIDO : Optional[str] = None # 0 ou 1
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
 
 
     @staticmethod
