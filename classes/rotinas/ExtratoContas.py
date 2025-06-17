@@ -9,6 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from classes.rotinas.ContasPagar import ContasPagar
+from classes.rotinas.ContasReceber import ContaReceber
 from classes.utils.GerarDados import GeradorDados  
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
@@ -1146,3 +1148,177 @@ class ExtratoContas:
             )
             return False
 #END verificaTransfCriada(init, transfCriada)
+
+    @staticmethod
+    def novaContaResumida(init:tuple, contaResumida:ContaReceber.ContaResumida | ContasPagar.ContaResumida) -> ContaReceber.ContaResumida | ContasPagar.ContaResumida | bool:
+        """
+        Cria uma conta a pagar / receber via extrato de contas, dependendo do tipo do objeto passado.
+        Chamar o método quando na tela de extrato e com o filtro lateral fechado.
+
+        :params init:
+        Tupla com parâmetros do ambiente.
+
+        :params contaResumida:
+        Objeto do tipo ContaResumida, pode ser da classe ContaReceber ou ContasPagar.
+
+        :return:
+        Objeto com os seletores e valores utilizados no cadastro da conta, False caso o método falhe em algum.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB") 
+
+        queries = {
+            "queryContaId": """
+                                SELECT CONTA.CONTA_ID  
+                                FROM ERP.CONTA
+                                JOIN ERP.CONTA_ESPECIFICACAO ON CONTA.CONTA_ID = CONTA_ESPECIFICACAO.CONTA_ID
+                                LEFT JOIN ERP.LOJA ON LOJA.LOJA_ID = CONTA_ESPECIFICACAO.LOJA_ID
+                                WHERE CONTA_ESPECIFICACAO.GRUPO_LOJA_ID = 1501
+                                    AND CONTA.TIPO_CONTA_ID IN (1, 2)
+                                    AND (CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IN (1) OR CONTA_ESPECIFICACAO.TIPO_CONTA_BANCARIA_ID IS NULL)
+                                    AND (CONTA.CONTA_ID IN (0) OR CONTA_ESPECIFICACAO.STATUS IN (1))
+                            """
+                            ,
+            "queryCliente" : """
+                                SELECT
+                                    PESSOA.PESSOA_ID       
+                                FROM 
+                                    ERP.PESSOA
+                                WHERE 
+                                    GRUPO_LOJA_ID = 1501
+                                    AND STATUS = 1
+                            """
+                            ,
+            "queryCategoriaFinanceira": """
+                                SELECT CF.CATEGORIA_FINANCEIRA_ID  
+                                FROM ERP.CATEGORIA_FINANCEIRA CF
+                                LEFT JOIN ERP.CATEGORIA_FINANCEIRA_ESPECIFICACAO CFE ON CF.CATEGORIA_FINANCEIRA_ID = CFE.CATEGORIA_FINANCEIRA_ID
+                                LEFT JOIN ERP.CATEGORIA_FINANCEIRA CF_PAI ON CFE.CATEGORIA_FINANCEIRA_PAI_ID = CF_PAI.CATEGORIA_FINANCEIRA_ID
+                                WHERE CF.CLASSIFICACAO_CATEGORIA_FINANCEIRA_ID = 2
+                                    AND CFE.CATEGORIA_FINANCEIRA_PAI_ID IS NOT NULL
+                                    AND CFE.GRUPO_LOJA_ID = 1501
+                                    AND (CFE.CATEGORIA_FINANCEIRA_ID IN (0) OR CFE.STATUS = 1)
+                            """
+        }
+
+        queriesConta = FuncoesUteis.getQueryResults(init, queries)
+
+        if isinstance(contaResumida, ContaReceber.ContaResumida):
+            tipoConta = "receber"
+            btnNovaConta = "B89274598958096047"
+            btnSalvarConta = "save"
+            iframeTitle = "Cadastro de Contas a Receber Resumido"
+
+            camposObrigatorios = {
+                "P199_VALOR" : (float, 20, 40),
+                "P199_DATA_EMISSAO" : "date",
+                "P199_DATA_RECEBIMENTO" : "date"
+            }
+
+            camposObrigatoriosPopUp = {
+                "P199_CONTA_ID" : queriesConta["Query_queryContaId"],
+                "P199_PESSOA_ID" : queriesConta["Query_queryCliente"],
+                "P199_CATEGORIA_FINANCEIRA_ID" : queriesConta["Query_queryCategoriaFinanceira"]
+            }
+
+            camposPopUp = camposObrigatoriosPopUp.copy()
+
+            verificaCamposConta = {
+                "P199_VALOR" : "valor",
+                "P199_DATA_EMISSAO" : "date",
+                "P199_DATA_RECEBIMENTO" : "date",
+                "P199_DESCRICAO" : "text"
+            }
+
+        elif isinstance(contaResumida, ContasPagar.ContaResumida):
+            tipoConta = "pagar"
+            btnNovaConta = "B89271014725096012"
+            btnSalvarConta ="B89271388586096015"
+            iframeTitle = "Cadastro de Contas a Pagar Resumido"
+
+            camposObrigatorios = {
+                "P194_VALOR" : (float, 20, 40),
+                "P194_DATA_EMISSAO" : "date",
+                "P194_DATA_PAGAMENTO" : "date"
+            }
+
+            camposObrigatoriosPopUp = {
+                "P194_CONTA_ID" : queriesConta["Query_queryContaId"],
+                "P194_PESSOA_ID" : queriesConta["Query_queryCliente"], #pode ser fornecedor também
+                "P194_CATEGORIA_FINANCEIRA_ID" : queriesConta["Query_queryCategoriaFinanceira"]
+            }
+
+            camposPopUp = {
+                "P194_CONTA_ID",
+                "P194_PESSOA_ID",
+                "P194_CATEGORIA_FINANCEIRA_ID",
+                "P194_FORMA_PAGAMENTO"
+            }
+
+            verificaCamposConta = {
+                "P194_VALOR" : "valor",
+                "P194_DATA_EMISSAO" : "date",
+                "P194_DATA_PAGAMENTO" : "date",
+                "P194_DESCRICAO" : "text",
+                "P194_NUMERO_DOCUMENTO" : "text"
+            }
+
+        camposObrigatorios = FuncoesUteis.geraValoresRandom(init, camposObrigatorios)
+
+        Components.btnClick(init, f"#{btnNovaConta}")
+
+        if Components.has_frame(init, f'[title="{iframeTitle}"]'):
+
+            valoresConta = FuncoesUteis.preencheCamposComunsEPopUp(init, contaResumida, camposObrigatorios, camposObrigatoriosPopUp)
+
+            valoresCamposFinal, valoresCamposPopUpFinal = FuncoesUteis.separaCamposComunsEPopUp(init, valoresConta, camposPopUp)
+
+            verificaCamposConta = FuncoesUteis.filtrarCamposPorDicionario(init, verificaCamposConta, valoresCamposFinal)
+
+            FuncoesUteis.prepareToCompareValues(init, valoresCamposFinal, True)
+
+            FuncoesUteis.prepareToCompareValues(init, valoresCamposPopUpFinal, False)
+
+            valoresRecuperar = set(valoresConta.keys())
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"Set de campos criado para recuperação: {valoresRecuperar}",
+                routine=f"{ExtratoContas.rotina} - novaContaResumida",
+                error_details=""
+            )
+
+            valoresRecuperados = FuncoesUteis.recuperaValores(init, valoresRecuperar)
+
+            if not FuncoesUteis.validaCamposPorRegex(init, verificaCamposConta):
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message="Teste encerrado por causa dos campos aceitando valores incorretos.",
+                    routine=f"{ExtratoContas.rotina} - novaContaResumida",
+                    error_details=""
+                )
+                return False
+            
+            Components.btnClick(init, f"#{btnSalvarConta}")
+
+            if Components.has_alert(init): return False
+            
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message=f"Conta a {tipoConta} cadastrada com sucesso!",
+                routine=f"{ExtratoContas.rotina} - novaContaResumida",
+                error_details=""
+            )
+
+            if tipoConta == "receber":
+                return ContaReceber.ContaResumida(**valoresRecuperados)
+
+            elif tipoConta == "pagar":
+                return ContasPagar.ContaResumida(**valoresRecuperados)
+            
+        return False
+#END novaContaResumida(init, contaResumida)
