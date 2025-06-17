@@ -1897,7 +1897,7 @@ class ContaReceber:
     @staticmethod
     def testaBtnCentroCusto(init:tuple) -> bool:
         """
-        Método hardcoded com a porposta unica de testar o botão "+ Empresa" e suas funcionalidades.
+        Método hardcoded com a porposta unica de testar o botão "+ Centros de Custo" e suas funcionalidades.
 
         :param init:
             Tupla comparâmetros do ambiente.
