@@ -16,6 +16,8 @@ from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
 from pypdf import PdfReader
+from pydantic import BaseModel, field_validator
+from typing import Optional, Union
 
 
 class ExtratoContas:
@@ -163,6 +165,39 @@ class ExtratoContas:
                         AND STATUS = 1
                 """
             }
+    
+    class Filtros(BaseModel):
+        P76_CONTAS: Optional[str] = None
+        P76_DATA_INICIAL: Optional[str] = None
+        P76_DATA_FINAL: Optional[str] = None
+        P76_SITUACAO: Optional[str] = None
+        P76_VALOR_MIN: Optional[str] = None
+        P76_VALOR_MAX: Optional[str] = None
+        P76_NUMERO_DOCUMENTO: Optional[str] = None
+        P76_CATEGORIAS: Optional[str] = None
+        P76_CENTRO_CUSTO: Optional[str] = None
+        P76_ORIGEM: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+    
+
+    class Transferencia(BaseModel):
+        P78_CONTA_ORIGEM_ID: Optional[str] = None
+        P78_CONTA_DESTINO_ID: Optional[str] = None
+        P78_DATA_TRANSFERENCIA: Optional[str] = None
+        P78_VALOR_TRANSFERENCIA: Optional[str] = None
+        P78_FORMA_TRANSFERENCIA: Optional[str] = None
+        P78_FORMA_PAGAMENTO: Optional[str] = None
+        P78_NUMERO_DOCUMENTO: Optional[str] = None
+        P78_DESCRICAO: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
 
 
 #insere uma conta a receber resumida

@@ -118,20 +118,144 @@ class ContasPagar:
             """
     }
 
-
-    class ContaResumida(BaseModel):
-        P194_CONTA_ID : Optional[str] = None
-        P194_VALOR : Optional[str] = None
-        P194_FORMA_PAGAMENTO : Optional[str] = None
-        P194_PESSOA_ID : Optional[str] = None
-        P194_DATA_EMISSAO : Optional[str] = None
-        P194_DATA_PAGAMENTO : Optional[str] = None
-        P194_CATEGORIA_FINANCEIRA_ID : Optional[str] = None
-        P194_DESCRICAO : Optional[str] = None
-        P194_NUMERO_DOCUMENTO : Optional[str] = None
-        P194_CONFERIDO : Optional[str] = None # 0 ou 1
+    class Filtros(BaseModel):
+        P46_SELETOR_LOJA: Optional[str] = None
+        P46_TIPO_PERIODO: Optional[str] = None
+        P46_DATA_INICIAL: Optional[str] = None
+        P46_DATA_FINAL: Optional[str] = None
+        P46_NUMERO_DOCUMENTO: Optional[str] = None
+        P46_NUMERO_PEDIDO: Optional[str] = None
+        P46_NUMERO_TITULO: Optional[str] = None
+        P46_CONTA: Optional[str] = None
+        P46_CENTRO_CUSTO: Optional[str] = None
+        P46_CATEGORIA: Optional[str] = None
+        P46_FORNECEDOR: Optional[str] = None
+        P46_TIPO_ORIGEM: Optional[str] = None
+        P46_CODIGO_BARRAS: Optional[str] = None
+        P46_CONFERIDO: Optional[str] = None
+        P46_VALOR_INICIAL: Optional[str] = None
+        P46_VALOR_FINAL: Optional[str] = None
+        P46_EFETUADO_EM: Optional[str] = None
 
         @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+
+
+    class ContaResumida(BaseModel):
+        P194_CONTA_ID: Optional[str] = None
+        P194_VALOR: Optional[str] = None
+        P194_FORMA_PAGAMENTO: Optional[str] = None
+        P194_PESSOA_ID: Optional[str] = None
+        P194_DATA_EMISSAO: Optional[str] = None
+        P194_DATA_PAGAMENTO: Optional[str] = None
+        P194_CATEGORIA_FINANCEIRA_ID: Optional[str] = None
+        P194_DESCRICAO: Optional[str] = None
+        P194_NUMERO_DOCUMENTO: Optional[str] = None
+        P194_CONFERIDO: Optional[str] = None # 0 ou 1
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+        
+    
+    class Detalhes(BaseModel):
+        P47_DATA_EMISSAO: Optional[str] = None
+        P47_DATA_REGISTRO: Optional[str] = None
+        P47_CENTRO_DE_CUSTO: Optional[str] = None
+        P47_NUMERO_PEDIDO: Optional[str] = None
+        P47_DOCUMENTO_FISCAL_MODELO_ID: Optional[str] = None
+        P47_NUMERO_DOCUMENTO: Optional[str] = None
+        P47_NUMERO_TITULO: Optional[str] = None
+        P47_CHAVE_NFE: Optional[str] = None
+        P47_CODIGO_BARRAS: Optional[str] = None
+        P47_OBSERVACAO: Optional[str] = None
+        P47_CONFERIDO: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+        
+
+    class Pagamentos(BaseModel):
+        # Novo Pagamento:
+        P70_CONTA_ID: Optional[str] = None
+        P70_FORMA_PAGAMENTO: Optional[str] = None
+        P70_DATA_PAGAMENTO: Optional[str] = None
+        P70_VALOR_PAGAMENTO: Optional[str] = None
+        P70_DESCONTO: Optional[str] = None
+        P70_JUROS: Optional[str] = None
+        P70_MULTA: Optional[str] = None
+        P70_DESPESAS: Optional[str] = None
+        P70_ACRESCIMOS: Optional[str] = None
+        P70_OBSERVACAO: Optional[str] = None
+        # Desconto Condicional:
+        P220_DESCONTO: Optional[str] = None
+        P220_OBSERVACAO: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+        
+
+    class InstrucaoPagamento(BaseModel):
+        P47_DDA: Optional[str] = None
+        P47_FORMA_INSTRUCAO_PAGAMENTO_ID: Optional[str] = None
+        P47_INSTRUCAO_OBSERVACAO: Optional[str] = None
+        # Forma Pagamento = Boleto:
+        P47_BOL_CODIGO_BARRA: Optional[str] = None
+        # Forma Pagamento = PIX:
+        P47_PIX_TIPO_CHAVE_ID: Optional[str] = None
+        P47_PIX_CHAVE: Optional[str] = None
+        # Forma Pagamento = Tranferência:
+        tipoContaDestino: Optional[str] = None # Seletores = "P47_TED_CONTA_DESTINO_ID_{x}" onde x pode ser 0, 1 ou 2.
+        P47_TED_BANCO_ID: Optional[str] = None
+        P47_TED_AGENCIA: Optional[str] = None
+        P47_TED_CONTA: Optional[str] = None
+        P47_TED_CONTA_DIGITO: Optional[str] = None
+        P47_TED_NOME_FAVORECIDO: Optional[str] = None
+        P47_TED_DOCUMENTO_FAVORECIDO: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+        
+
+    class Despesas(BaseModel):
+        P139_MOTIVO: Optional[str] = None
+        P139_DESPESA: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+        
+
+    class Conta(BaseModel):
+        P47_VALOR: Optional[str] = None
+        P47_CONTA_ID: Optional[str] = None
+        P47_PESSOA_FAVORECIDO_ID: Optional[str] = None
+        P47_DATA_VENCIMENTO: Optional[str] = None
+        P47_DATA_PREVISAO_PAGAMENTO: Optional[str] = None
+        P47_CATEGORIA_FINANCEIRA: Optional[str] = None
+        P47_LOJA: Optional[str] = None
+        P47_DESCRICAO: Optional[str] = None
+        detalhes: Optional["ContasPagar.Detalhes"] = None
+        pagamentos: Optional["ContasPagar.Pagamentos"] = None
+        instrucaoPagamento: Optional["ContasPagar.InstrucaoPagamento"] = None
+        despesas: Optional["ContasPagar.Despesas"] = None
+
+        @field_validator(
+            "P47_VALOR", "P47_CONTA_ID", "P47_PESSOA_FAVORECIDO_ID",
+            "P47_DATA_VENCIMENTO", "P47_DATA_PREVISAO_PAGAMENTO",
+            "P47_CATEGORIA_FINANCEIRA", "P47_LOJA", "P47_DESCRICAO",
+            mode="before"
+        )
         @classmethod
         def forceString(cls, v):
             return str(v) if v is not None else None

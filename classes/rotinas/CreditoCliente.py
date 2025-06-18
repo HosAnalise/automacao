@@ -20,17 +20,17 @@ class CreditoCliente:
     rotina = "Credito de Cliente"
 
     class Filtros(BaseModel):
-        P163_SITUACAO_SELECIONADA : Optional [str] = None #exemplo de get = '1, 2, 3, 5'
-        P163_ORIGEM : Optional [str] = None #exemplo de get = ['3', '1']
-        P163_TIPO_VALOR : Optional [str] = None #exemplo de get = '1'
-        P163_VALOR_MIN : Optional [str] = None #exemplo de get = '3,05'
-        P163_VALOR_MAX : Optional [str] = None #exemplo de get = '10,66'
-        P163_TIPO_DATA : Optional [str] = None #exemplo de get = '1'
-        P163_DATA_INICIAL : Optional [str] = None #exemplo de get = '13/05/2025'
-        P163_DATA_FINAL : Optional [str] = None #exemplo de get = '13/05/2025'
-        P163_MOTIVO : Optional [str] = None #exemplo de get = ['teste multiplas', 'd']
-        P163_CLIENTE : Optional [str] = None #exemplo de get = ['2747364']
-        P163_EMPRESA : Optional [str] = None #exemplo de get = ['2381', '3625']
+        P163_SITUACAO_SELECIONADA: Optional [str] = None #exemplo de get = '1, 2, 3, 5'
+        P163_ORIGEM: Optional [str] = None #exemplo de get = ['3', '1']
+        P163_TIPO_VALOR: Optional [str] = None #exemplo de get = '1'
+        P163_VALOR_MIN: Optional [str] = None #exemplo de get = '3,05'
+        P163_VALOR_MAX: Optional [str] = None #exemplo de get = '10,66'
+        P163_TIPO_DATA: Optional [str] = None #exemplo de get = '1'
+        P163_DATA_INICIAL: Optional [str] = None #exemplo de get = '13/05/2025'
+        P163_DATA_FINAL: Optional [str] = None #exemplo de get = '13/05/2025'
+        P163_MOTIVO: Optional [str] = None #exemplo de get = ['teste multiplas', 'd']
+        P163_CLIENTE: Optional [str] = None #exemplo de get = ['2747364']
+        P163_EMPRESA: Optional [str] = None #exemplo de get = ['2381', '3625']
 
         @field_validator('*', mode='before')
         @classmethod

@@ -16,6 +16,7 @@ from classes.rotinas.ExtratoContas import ExtratoContas
 from classes.rotinas.ContasReceber import ContaReceber
 from time import sleep
 from faker import Faker as fake
+from pydantic import BaseModel, field_validator, Field
 from typing import Optional
 
 
@@ -43,13 +44,76 @@ class ConciliacaoBancaria:
         "P268_TRANSFERENCIA_CONTA_ORIGEM_ID",
         "P268_TRANSFERENCIA_CONTA_DESTINO_ID",
         "P268_TRANSFERENCIA_FORMA_TRANSFERENCIA_ID",
-	    "P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO",
+        "P268_TRANSFERENCIA_UTILIZAR_DESCRICAO_LANCAMENTO",
         "P268_CONTA_PAGAR_PESSOA_ID",
         "P268_TRANSFERENCIA_DESCRICAO",
         "P268_CONTA_PAGAR_CATEGORIA_FINANCEIRA_ID",
         "P268_CONTA_PAGAR_UTILIZAR_DESCRICAO_LANCAMENTO",
         "P268_CONTA_PAGAR_DESCRICAO"
     }
+    
+    class Filtros(BaseModel):
+        P154_FILTRO_CONTA: Optional[str] = None
+        P154_FILTRO_PERIODO_POR: Optional[str] = None
+        P154_DATA_INICIAL: Optional[str] = None
+        P154_DATA_FINAL: Optional[str] = None
+        P154_FILTRO_SITUACAO: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+
+
+    class IncluirRecebimentoContaExistente(BaseModel):
+        P157_SELETOR_LOJA: Optional[str] = None
+        P157_TIPO_PERIODO: Optional[str] = None
+        P157_DATA_INICIAL: Optional[str] = None
+        P157_DATA_FINAL: Optional[str] = None
+        P157_NUMERO_DOCUMENTO: Optional[str] = None
+        P157_NUMERO_PEDIDO: Optional[str] = None
+        P157_CONTAS: Optional[str] = None
+        P157_CATEGORIAS: Optional[str] = None
+        P157_CLIENTE: Optional[str] = None
+        P157_VALOR_MIN: Optional[str] = None
+        P157_VALOR_MAX: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+        
+
+    class AssociarLancamentoExistente(BaseModel):
+        P161_SELETOR_LOJA: Optional[str] = None
+        P161_TIPO_PERIODO: Optional[str] = None
+        P161_DATA_INICIAL: Optional[str] = None
+        P161_DATA_FINAL: Optional[str] = None
+        P161_NUMERO_DOCUMENTO: Optional[str] = None
+        P161_NUMERO_PEDIDO: Optional[str] = None
+        P161_CONTAS: Optional[str] = None
+        P161_CATEGORIAS: Optional[str] = None
+        P161_CLIENTE: Optional[str] = None
+        P161_VALOR_MIN: Optional[str] = None
+        P161_VALOR_MAX: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+        
+
+    class AssociarTransferenciaExistente(BaseModel):
+        P160_DATA_INICIAL: Optional[str] = None
+        P160_DATA_FINAL: Optional[str] = None
+        P160_NUMERO_DOCUMENTO: Optional[str] = None
+        P160_VALOR_MINIMO: Optional[str] = None
+        P160_VALOR_MAXIMO: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
 
 
     @staticmethod

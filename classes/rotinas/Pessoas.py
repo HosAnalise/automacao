@@ -7,7 +7,7 @@ from classes.utils.GerarDados import GeradorDados
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, field_validator
 from typing import Optional, Union
 from faker import Faker
 fake = Faker('pt_BR')
@@ -31,16 +31,16 @@ class Pessoas:
     }
 
     class Endereco(BaseModel):
-        P6_TIPO_ENDERECO_ID : Optional[str] = None
-        P6_CEP : Optional[str] = None
-        P6_ESTADO_ID : Optional[str] = None
-        P6_CIDADE_ID : Optional[str] = None
-        P6_BAIRRO : Optional[str] = None
-        P6_ENDERECO : Optional[str] = None
-        P6_NUMERO : Optional[str] = None
-        P6_COMPLEMENTO : Optional[str] = None
-        P6_CORRESPONDENCIA : Optional[str] = None # valor deve ser '0' ou '1'
-        P6_BOLETO_ENDERECO : Optional[str] = None # valor deve ser '0' ou '1'
+        P6_TIPO_ENDERECO_ID: Optional[str] = None
+        P6_CEP: Optional[str] = None
+        P6_ESTADO_ID: Optional[str] = None
+        P6_CIDADE_ID: Optional[str] = None
+        P6_BAIRRO: Optional[str] = None
+        P6_ENDERECO: Optional[str] = None
+        P6_NUMERO: Optional[str] = None
+        P6_COMPLEMENTO: Optional[str] = None
+        P6_CORRESPONDENCIA: Optional[str] = None # valor deve ser '0' ou '1'
+        P6_BOLETO_ENDERECO: Optional[str] = None # valor deve ser '0' ou '1'
 
         @field_validator('*', mode='before')
         @classmethod
@@ -49,14 +49,14 @@ class Pessoas:
         
 
     class Contato(BaseModel):
-        P6_NOME_CONTATO : Optional[str] = None
-        P6_CONTATO_EMAIL : Optional[str] = None
-        P6_CONTATO_OBSERVACAO : Optional[str] = None
-        P6_CONTATO_CELULAR : Optional[str] = None
-        P6_CONTATO_TELEFONE : Optional[str] = None
-        P6_CPF_RESPONSAVEL : Optional[str] = None
-        P6_ENVIAR_EMAIL : Optional[str] = None # valor deve ser '0' ou '1'
-        P6_BOLETO_CONTATO : Optional[str] = None # valor deve ser '0' ou '1'
+        P6_NOME_CONTATO: Optional[str] = None
+        P6_CONTATO_EMAIL: Optional[str] = None
+        P6_CONTATO_OBSERVACAO: Optional[str] = None
+        P6_CONTATO_CELULAR: Optional[str] = None
+        P6_CONTATO_TELEFONE: Optional[str] = None
+        P6_CPF_RESPONSAVEL: Optional[str] = None
+        P6_ENVIAR_EMAIL: Optional[str] = None # valor deve ser '0' ou '1'
+        P6_BOLETO_CONTATO: Optional[str] = None # valor deve ser '0' ou '1'
 
         @field_validator('*', mode='before')
         @classmethod
@@ -65,10 +65,10 @@ class Pessoas:
         
 
     class Documentos(BaseModel):
-        P6_N_DOCUMENTO : Optional[str] = None
-        P6_TIPO_DOCUMENTO_ID : Optional[str] = None
-        P6_UF_EXPEDIDOR_ID : Optional[str] = None
-        P6_TIPO_ORGAO_EMISSOR_ID : Optional[str] = None
+        P6_N_DOCUMENTO: Optional[str] = None
+        P6_TIPO_DOCUMENTO_ID: Optional[str] = None
+        P6_UF_EXPEDIDOR_ID: Optional[str] = None
+        P6_TIPO_ORGAO_EMISSOR_ID: Optional[str] = None
 
         @field_validator('*', mode='before')
         @classmethod
@@ -77,11 +77,11 @@ class Pessoas:
         
 
     class Dependentes(BaseModel):
-        P6_NOME_DEPENDENTE : Optional[str] = None
-        P6_CATEGORIA_DEPENDENTE : Optional[str] = None
-        P6_DOCUMENTO_DEPENDENTE : Optional[str] = None
-        P6_CARTAO_DEPENDENTE : Optional[str] = None
-        P6_STATUS_DEPENDENTE : Optional[str] = None # valor deve ser '0' ou '1'
+        P6_NOME_DEPENDENTE: Optional[str] = None
+        P6_CATEGORIA_DEPENDENTE: Optional[str] = None
+        P6_DOCUMENTO_DEPENDENTE: Optional[str] = None
+        P6_CARTAO_DEPENDENTE: Optional[str] = None
+        P6_STATUS_DEPENDENTE: Optional[str] = None # valor deve ser '0' ou '1'
 
         @field_validator('*', mode='before')
         @classmethod
@@ -90,25 +90,25 @@ class Pessoas:
     
 
     class Pessoa(BaseModel):
-        tipoPessoa : Optional[str] = None # '1' = física; '2' = jurídica
-        P6_NOME : Optional[str] = None
-        P6_CPF : Optional[str] = None
-        P6_RG : Optional[str] = None
-        P6_GENERO : Optional[str] = None
-        P6_DATA_NASCIMENTO : Optional[str] = None
-        P6_APELIDO : Optional[str] = None
-        P6_CNPJ : Optional[str] = None
-        P6_RAZAO_SOCIAL : Optional[str] = None
-        P6_FANTASIA : Optional[str] = None
-        P6_IE : Optional[str] = None
-        P6_UF_INSCRICAO_ESTADUAL : Optional[str] = None
-        P6_ISENTA_IE : Optional[str] = None # 'N' = Não; '1' = Sim
-        P6_ENVIAR_PARA_REGISTRO : Optional[str] = None # Escrever 'Sim' ou 'Nao', não considerei como popUpLov
-        P6_STATUS : Optional[str] = None
+        tipoPessoa: Optional[str] = None # '1' = física; '2' = jurídica
+        P6_NOME: Optional[str] = None
+        P6_CPF: Optional[str] = None
+        P6_RG: Optional[str] = None
+        P6_GENERO: Optional[str] = None
+        P6_DATA_NASCIMENTO: Optional[str] = None
+        P6_APELIDO: Optional[str] = None
+        P6_CNPJ: Optional[str] = None
+        P6_RAZAO_SOCIAL: Optional[str] = None
+        P6_FANTASIA: Optional[str] = None
+        P6_IE: Optional[str] = None
+        P6_UF_INSCRICAO_ESTADUAL: Optional[str] = None
+        P6_ISENTA_IE: Optional[str] = None # 'N' = Não; '1' = Sim
+        P6_ENVIAR_PARA_REGISTRO: Optional[str] = None # Escrever 'Sim' ou 'Nao', não considerado como popUpLov
+        P6_STATUS: Optional[str] = None
         endereco: Optional["Pessoas.Endereco"] = None
-        contato : Optional["Pessoas.Contato"] = None
-        documentos : Optional["Pessoas.Documentos"] = None
-        dependentes : Optional["Pessoas.Dependentes"] = None
+        contato: Optional["Pessoas.Contato"] = None
+        documentos: Optional["Pessoas.Documentos"] = None
+        dependentes: Optional["Pessoas.Dependentes"] = None
 
         @field_validator(
             "tipoPessoa", "P6_NOME", "P6_CPF", "P6_RG", "P6_GENERO", 

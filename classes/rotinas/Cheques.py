@@ -22,17 +22,17 @@ class Cheques:
     rotina = "Cheques"
 
     class Filtros(BaseModel):
-        P150_SELETOR_LOJA : Optional[str] = None
-        P150_DATA_INICIAL : Optional[str] = None
-        P150_DATA_FINAL : Optional[str] = None
-        P150_CHEQUE_TIPO : Optional[str] = None
-        P150_CHEQUE_STATUS : Optional[str] = None
-        P150_NUMERO_CHEQUE : Optional[str] = None
-        P150_BANCO : Optional[str] = None
-        P150_EMITENTE : Optional[str] = None
-        P150_LOCALIZACAO : Optional[str] = None
-        P150_VALOR_INICIAL : Optional[str] = None
-        P150_VALOR_FINAL : Optional[str] = None
+        P150_SELETOR_LOJA: Optional[str] = None
+        P150_DATA_INICIAL: Optional[str] = None
+        P150_DATA_FINAL: Optional[str] = None
+        P150_CHEQUE_TIPO: Optional[str] = None
+        P150_CHEQUE_STATUS: Optional[str] = None
+        P150_NUMERO_CHEQUE: Optional[str] = None
+        P150_BANCO: Optional[str] = None
+        P150_EMITENTE: Optional[str] = None
+        P150_LOCALIZACAO: Optional[str] = None
+        P150_VALOR_INICIAL: Optional[str] = None
+        P150_VALOR_FINAL: Optional[str] = None
 
         @field_validator('*', mode='before')
         @classmethod
