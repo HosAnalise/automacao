@@ -1556,3 +1556,42 @@ class FuncoesUteis:
                 )
         return dictFiltrado
 #END filtrarCamposPorDicionario(init, dictAFiltrar, dictFiltro)
+
+
+    @staticmethod
+    def limpaCampoEPreenche(init:tuple, camposAEditar:dict):
+        """
+        Verifica se os seletores passados no dicionario já possuem valores atrelados, caso houver, zeram os campos via JS antes de inserir os valores.
+        Seu uso intencional é para alteração via send_keys de campos que ja possuem valor no momento.
+
+        :param init:
+            Tupla com parâmetros do ambiente.
+
+        :param camposAEditar:
+            Dicionário com os seletores e valores.
+
+        :param dictFiltro:
+            Dicionário com os campos desejados para comparação entre ambos dicionários.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        for seletor, value in camposAEditar.items():
+            try:
+                WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, f"#{seletor}")))
+            except:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message=f"Seletor informado não localizado!",
+                    routine=f"{FuncoesUteis.rotina} - limpaCampoEPreenche",
+                    error_details=""
+                )
+
+            if Apex.getValue(browser, seletor):
+                Apex.setValue(browser, seletor, '')
+
+            FuncoesUteis.setValue(init, f"#{seletor}", value)
+#END limpaCampoEPreenche(init, camposAEditar)
