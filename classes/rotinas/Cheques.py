@@ -492,3 +492,279 @@ class Cheques:
             
         return False
 #END criaChequeCompleto(init, infoEmitente, infoCheque)
+
+
+    @staticmethod
+    def procuraCheque(init:tuple, cheque:Cheque) -> bool:
+        """
+        Procura um cheque com as informações passadas via objeto.
+
+        :param init:
+        Tupla com parâmetros do ambiente.
+
+        :param cheque:
+        Objeto Cheque utilizado para a procura do cheque.
+
+        :return:
+        True caso ache o cheque, False caso contrário.
+        """
+        
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        try:
+            WebDriverWait(browser, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#filtrar")))
+        except:
+            FuncoesUteis.showHideFilter(init)
+
+        dictFiltro = FuncoesUteis.mapearObjeto(init, cheque, Cheques.mapeamentoObjToFiltros)
+        
+        if cheque.P130_DATA_EMISSAO:
+            Apex.setValue(browser, "P150_TIPO_DATA", '1')
+
+        FuncoesUteis.aplyFilter(init, dictFiltro)
+
+        achou = bool(browser.find_elements(By.CSS_SELECTOR, ".fa.fa-edit.icon-color.edit")) > 0
+
+        if achou:
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="INFO",
+                message="Cheque informado achado!",
+                routine=f"{Cheques.rotina} - procuraCheque",
+                error_details=""
+            )
+
+            return True
+        
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message="Cheque informado não achado!",
+            routine=f"{Cheques.rotina} - procuraCheque",
+            error_details=""
+        )
+
+        return False
+#END procuraCheque(init, cheque)
+
+
+    @staticmethod
+    def editaEmitente(init:tuple, infoEmitente:Emitente) -> Emitente | bool:
+        """
+        Edita as informações de um emitente via valores passados no objeto. Método deve ser iniciado dentro do iframe do cheque.
+
+        :param init:
+        Tupla com parâmetros do ambiente.
+
+        :param infoEmitente:
+        Objeto Emitente utilizado com as informações do emitente à editar.
+
+        :return:
+        Retorna o um objeto Emitente com os valores alterados, False caso ocorra algum erro durante o processo.
+        """
+        
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        match infoEmitente.tipoEmissao:
+            case "0":
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Emitente do tipo 'Terceiro' selecionado.",
+                    routine=f"{Cheques.rotina} - editaEmitente",
+                    error_details=""
+                )
+                sleep(2)
+                Apex.setValue(browser, "P130_CHEQUE_TIPO_ID_0", '2')
+                sleep(1)
+                
+                chavesRecuperar = {
+                    "P130_NOME_EMITENTE",
+                    "P130_CPF_CNPJ",
+                    "P130_RG",
+                    "P130_CELULAR",
+                    "P130_TELEFONE"
+                }
+                notPopUp = True
+                
+            case "1":
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Emitente do tipo 'Cliente' selecionado.",
+                    routine=f"{Cheques.rotina} - editaEmitente",
+                    error_details=""
+                )
+
+                Apex.setValue(browser, "P130_CHEQUE_TIPO_ID_1", '1')
+                chavesRecuperar = {"P130_PESSOA_EMITENTE_ID"}
+                notPopUp = False
+
+            case "2":
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message=f"Emitente do tipo 'Emissão Própria' selecionado.",
+                    routine=f"{Cheques.rotina} - editaEmitente",
+                    error_details=""
+                )
+
+                Apex.setValue(browser, "P130_CHEQUE_TIPO_ID_2", '3')
+                chavesRecuperar = {"P130_LOJA_EMITENTE_ID"}
+                notPopUp = False
+            
+            case _:
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message=f"Valor informado invalido para o tipo emissão!",
+                    routine=f"{Cheques.rotina} - editaEmitente",
+                    error_details=""
+                )
+                return False
+
+        valoresEmitente = infoEmitente.model_dump(exclude_none=True)
+
+        valoresEmitente.pop("tipoEmissao", None)
+
+        if notPopUp: FuncoesUteis.limpaCampoEPreenche(init, valoresEmitente)
+        else: FuncoesUteis.prepareToCompareValues(init, valoresEmitente, notPopUp)
+
+        valoresRecuperados = FuncoesUteis.recuperaValores(init, chavesRecuperar)
+
+        print(f"ValoresRecuperados antes:\n {valoresRecuperados}")
+
+        valoresRecuperados = {k: v for k, v in valoresRecuperados.items() if v != ''} # pegando apenas os valores que são diferentes de ''
+
+        print(f"ValoresRecuperados depois de filtrar:\n {valoresRecuperados}")
+
+        verificaCamposEmitente = {
+            "P130_NOME_EMITENTE" : "text",
+            "P130_CPF_CNPJ" : ("cpf", "cnpj"),
+            "P130_RG" : "alfanum",
+            "P130_CELULAR" : "celular",
+            "P130_TELEFONE" : "telefone"
+        }
+
+        verificaCamposEmitente = FuncoesUteis.filtrarCamposPorDicionario(init, verificaCamposEmitente, valoresRecuperados) # Apenas os seletores que tem valor
+
+        if notPopUp:
+            if not FuncoesUteis.validaCamposPorRegex(init, verificaCamposEmitente):
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="WARNING",
+                    message="Teste encerrado por causa dos campos aceitando valores incorretos.",
+                    routine=f"{Cheques.rotina} - editaEmitente",
+                    error_details=""
+                )
+                return False
+        
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message="Emitente editado com sucesso!",
+            routine=f"{Cheques.rotina} - editaEmitente",
+            error_details=""
+        )
+        
+        return Cheques.Emitente(**valoresRecuperados)
+#END editaEmitente(init, infoEmitente)
+
+
+    @staticmethod
+    def editaCheque(init:tuple, infoCheque:Cheque) -> Cheque | bool:
+        """
+        Edita as informações de um cheque via valores passados no objeto. Método deve ser iniciado dentro do iframe do cheque.
+
+        :param init:
+        Tupla com parâmetros do ambiente.
+
+        :param infoCheque:
+        Objeto Cheque utilizado com as informações do cheque à editar.
+
+        :return:
+        Retorna o um objeto Cheque com os valores alterados, False caso ocorra algum erro durante o processo.
+        """
+
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+
+        getEnv = env_vars
+        env_application_type = getEnv.get("WEB")
+
+        valoresCheque = infoCheque.model_dump(exclude_none=True)
+
+        todosCamposPopUp = {
+            "P130_LOJA",
+            "P130_LOCALIZACAO",
+            "P130_BANCO_ID"
+        }
+
+        valoresCampos, valoresCamposPopUp = FuncoesUteis.separaCamposComunsEPopUp(init, valoresCheque, todosCamposPopUp)
+
+        FuncoesUteis.limpaCampoEPreenche(init, valoresCampos)
+
+        FuncoesUteis.prepareToCompareValues(init, valoresCamposPopUp, False)
+
+        chavesRecuperar = {
+            "P130_LOJA",
+            "P130_LOCALIZACAO",
+            "P130_CMC7",
+            "P130_DATA_EMISSAO",
+            "P130_BOM_PARA",
+            "P130_BANCO_ID",
+            "P130_AGENCIA",
+            "P130_DIGITO_AGENCIA",
+            "P130_CONTA",
+            "P130_DIGITO_CONTA",
+            "P130_NUMERO_CHEQUE",
+            "P130_NUMERO_SERIE",
+            "P130_VALOR",
+            "P130_OBSERVACAO"
+        }
+
+        valoresRecuperados = FuncoesUteis.recuperaValores(init, chavesRecuperar)
+
+        valoresRecuperados = {k: v for k, v in valoresRecuperados.items() if v != ''}
+
+        verificaCamposCheque = {
+            "P130_CMC7" : "numComEspaco",
+            "P130_DATA_EMISSAO" : "date",
+            "P130_BOM_PARA" : "date",
+            "P130_AGENCIA" : "num",
+            "P130_DIGITO_AGENCIA" : "alfanum",
+            "P130_CONTA" : "num",
+            "P130_DIGITO_CONTA" : "alfanum",
+            "P130_NUMERO_CHEQUE" : "num",
+            "P130_NUMERO_SERIE" : "num",
+            "P130_VALOR" : "valor",
+            "P130_OBSERVACAO" : "text"
+        }
+
+        verificaCamposCheque = FuncoesUteis.filtrarCamposPorDicionario(init, verificaCamposCheque, valoresRecuperados)
+
+        if not FuncoesUteis.validaCamposPorRegex(init, verificaCamposCheque):
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="WARNING",
+                message="Teste encerrado por causa dos campos aceitando valores incorretos.",
+                routine=f"{Cheques.rotina} - editaCheque",
+                error_details=""
+            )
+            return False
+        
+        Log_manager.add_log(
+            application_type=env_application_type,
+            level="INFO",
+            message="Cheque editado com sucesso!",
+            routine=f"{Cheques.rotina} - editaCheque",
+            error_details=""
+        )
+
+        return Cheques.Cheque(**valoresRecuperados)
+#END editaCheque(init, infoCheque)
