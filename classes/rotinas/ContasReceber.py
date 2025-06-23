@@ -166,13 +166,14 @@ class ContaReceber:
     }
 
     class ContaResumida(BaseModel):
-        P199_CONTA_ID : Optional[str] = None
-        P199_VALOR : Optional[str] = None
-        P199_PESSOA_ID : Optional[str] = None
-        P199_DATA_EMISSAO : Optional[str] = None
-        P199_DATA_RECEBIMENTO : Optional[str] = None
-        P199_CATEGORIA_FINANCEIRA_ID : Optional[str] = None
-        P199_DESCRICAO : Optional[str] = None
+        P199_CONTA_ID: Optional[str] = None
+        P199_VALOR: Optional[str] = None
+        P199_FORMA_RECEBIMENTO: Optional[str] = None
+        P199_PESSOA_ID: Optional[str] = None
+        P199_DATA_EMISSAO: Optional[str] = None
+        P199_DATA_RECEBIMENTO: Optional[str] = None
+        P199_CATEGORIA_FINANCEIRA_ID: Optional[str] = None
+        P199_DESCRICAO: Optional[str] = None
 
         @field_validator('*', mode='before')
         @classmethod
@@ -181,16 +182,26 @@ class ContaReceber:
 
 
     class DetalhesConta(BaseModel):
-        P85_DATA_EMISSAO : Optional[str] = None
-        P85_DATA_REGISTRO : Optional[str] = None
-        P85_CENTRO_DE_CUSTO : Optional[str] = None
-        P85_NUMERO_PEDIDO : Optional[str] = None
-        P85_DOCUMENTO_FISCAL_MODELO_ID : Optional[str] = None
-        P85_NUMERO_DOCUMENTO : Optional[str] = None
-        P85_CHAVE_NFE : Optional[str] = None
-        tipoCobranca : Optional[str] = None
-        P85_COBRADOR : Optional[str] = None
-        P85_OBSERVACAO : Optional[str] = None
+        P85_DATA_EMISSAO: Optional[str] = None
+        P85_DATA_REGISTRO: Optional[str] = None
+        P85_CENTRO_DE_CUSTO: Optional[str] = None
+        P85_NUMERO_PEDIDO: Optional[str] = None
+        P85_DOCUMENTO_FISCAL_MODELO_ID: Optional[str] = None
+        P85_NUMERO_DOCUMENTO: Optional[str] = None
+        P85_CHAVE_NFE: Optional[str] = None
+        tipoCobranca: Optional[str] = None
+        P85_COBRADOR: Optional[str] = None
+        P85_OBSERVACAO: Optional[str] = None
+
+        @field_validator('*', mode='before')
+        @classmethod
+        def forceString(cls, v):
+            return str(v) if v is not None else None
+        
+    
+    class JurosMultas(BaseModel):
+        P85_JUROS_CONTA_RECEBER: Optional[str] = None
+        P85_MULTA_CONTA_RECEBER: Optional[str] = None
 
         @field_validator('*', mode='before')
         @classmethod
@@ -199,15 +210,16 @@ class ContaReceber:
 
     
     class Conta(BaseModel):
-        P85_VALOR : Optional[str] = None
-        P85_CONTA_ID : Optional[str] = None
-        P85_PESSOA_CLIENTE_ID : Optional[str] = None
-        P85_DATA_VENCIMENTO : Optional[str] = None
-        P85_DATA_PREVISAO_RECEBIMENTO : Optional[str] = None
-        P85_CATEGORIA_FINANCEIRA : Optional[str] = None
-        P85_LOJA : Optional[str] = None
-        P85_DESCRICAO : Optional[str] = None
-        detalhes : Optional["ContaReceber.DetalhesConta"] = None
+        P85_VALOR: Optional[str] = None
+        P85_CONTA_ID: Optional[str] = None
+        P85_PESSOA_CLIENTE_ID: Optional[str] = None
+        P85_DATA_VENCIMENTO: Optional[str] = None
+        P85_DATA_PREVISAO_RECEBIMENTO: Optional[str] = None
+        P85_CATEGORIA_FINANCEIRA: Optional[str] = None
+        P85_LOJA: Optional[str] = None
+        P85_DESCRICAO: Optional[str] = None
+        detalhes: Optional["ContaReceber.DetalhesConta"] = None
+        jurosMultas: Optional["ContaReceber.JurosMultas"] = None
 
         @field_validator(
         "P85_VALOR", "P85_CONTA_ID", "P85_PESSOA_CLIENTE_ID", "P85_DATA_VENCIMENTO",
@@ -1450,6 +1462,8 @@ class ContaReceber:
 
         camposAVerificarRegex = FuncoesUteis.filtrarCamposPorDicionario(init, camposAVerificarRegex, valoresCampo)
 
+        Apex.setValue(browser, "P199_VALOR", '')
+
         FuncoesUteis.prepareToCompareValues(init, valoresCampo, True)
 
         FuncoesUteis.prepareToCompareValues(init, valoresCampoPopUo, False)
@@ -1477,7 +1491,7 @@ class ContaReceber:
         
         if salvar: 
             Components.btnClick(init, "#save")
-            if not Components.has_alert(init):
+            if Components.has_alert(init):
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="WARNING",
@@ -1988,7 +2002,7 @@ class ContaReceber:
     @staticmethod
     def testaBtnCentroCusto(init:tuple) -> bool:
         """
-        Método hardcoded com a porposta unica de testar o botão "+ Empresa" e suas funcionalidades.
+        Método hardcoded com a porposta unica de testar o botão "+ Centros de Custo" e suas funcionalidades.
 
         :param init:
             Tupla comparâmetros do ambiente.

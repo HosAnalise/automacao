@@ -20,11 +20,11 @@ class CreditoFornecedor:
     rotina = "Credito de Fornecedor"
 
     class Filtros(BaseModel):
-        P166_SELETOR_LOJA : Optional [str] = None
-        P166_FORNECEDOR : Optional [str] = None
-        P163_ORIGEM : Optional [str] = None
-        P166_NUMERO_NOTA_DEVOLUCAO : Optional [str] = None
-        P166_MAIOR_QUE : Optional [str] = None # apenas quando #P166_SALDO = 0
+        P166_SELETOR_LOJA: Optional [str] = None
+        P166_FORNECEDOR: Optional [str] = None
+        P163_ORIGEM: Optional [str] = None
+        P166_NUMERO_NOTA_DEVOLUCAO: Optional [str] = None
+        P166_MAIOR_QUE: Optional [str] = None # apenas quando #P166_SALDO = 0
 
         @field_validator('*', mode='before')
         @classmethod
