@@ -7,7 +7,7 @@ import pytest
 @pytest.mark.dockercontaReceber
 def test_contaReceber_insereConta_recebimento(init):
     starTime = time.time()
-    browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
+    browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, selenium_exceptions, oracle_db_connection = init
     env_application_type = env_vars['WEB']
 
     try:
@@ -15,15 +15,13 @@ def test_contaReceber_insereConta_recebimento(init):
         FuncoesUteis.goToPage(init,ContaReceber.url)
         query = FuncoesUteis.getQueryResults(init,ContaReceber.queries)
         FuncoesUteis.showHideFilter(init,ContaReceber.filterSelector)
-        insereContaReceber = ContaReceber.insereContaReceber(init,query)
+        ContaReceber.insereContaReceber(init,query)
         ContaReceber.salvaContaReceber(init)
-        if insereContaReceber == 1:
-            ContaReceber.recebimentoContaReceber(init,query)
-        else:
-            ContaReceber.recebimentoContaReceber(init,query)
-            ContaReceber.salvaContaReceber(init)
+        ContaReceber.recebimentoContaReceber(init,query)
 
-    except (TimeoutException, NoSuchElementException, Exception) as e:
+        
+
+    except selenium_exceptions as e:
         Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContaReceber.rotina} - test_contaReceber_insereConta_recebimento", error_details=str(e))
         
     finally:

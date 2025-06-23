@@ -2,6 +2,8 @@ from applitools.selenium import Eyes, Target, BatchInfo
 from selenium.webdriver.remote.webdriver import WebDriver
 import os
 from applitools.common import MatchLevel, Region
+from selenium.webdriver.common.by import By
+
 
 
 
@@ -60,7 +62,7 @@ class VisualValidator:
         self.eyes.check(label, target)
 
 
-    def check_region(self, label: str, selector: str) -> None:
+    def check_region(self, label: str, element) -> None:
         """
         Captura e valida visualmente uma região específica da tela, definida por seletor CSS.
         
@@ -68,7 +70,7 @@ class VisualValidator:
             label (str): Descrição do ponto de verificação.
             selector (str): Seletor CSS da região a ser validada.
         """      
-        self.eyes.check(label, Target.region(selector))
+        self.eyes.check(label, Target.region(element))
 
     def close(self) -> None:
         """

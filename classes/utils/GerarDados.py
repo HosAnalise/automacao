@@ -1,8 +1,6 @@
 import random
 import string
 
-from automacao.classes.utils import GerarDados
-
 
 #Class legada, agora usamos faker um biblioteca py que gera varios conteudos aleatorios
 

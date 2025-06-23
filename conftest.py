@@ -1,10 +1,8 @@
 from collections import namedtuple
 from datetime import datetime
 import json
-import os
 import socket
 import tempfile
-from annotated_types import UpperCase
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -16,7 +14,7 @@ from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException,ElementNotInteractableException, ElementClickInterceptedException,ElementClickInterceptedException,WebDriverException,NoSuchWindowException,NoSuchWindowException,NoAlertPresentException,MoveTargetOutOfBoundsException,JavascriptException,SessionNotCreatedException,InvalidCookieDomainException,UnexpectedAlertPresentException
 import pytest
 from classes.utils.LogManager import LogManager
 from dotenv import dotenv_values
@@ -26,6 +24,7 @@ import numpy as np
 import time
 from sqlalchemy import create_engine
 from selenium.webdriver.chrome.options import Options
+
 
 
 
@@ -154,21 +153,28 @@ def get_browser_options(browser_name,headless):
 
 
 @pytest.fixture()
-def screenshots(env_vars,browser):
+def selenium_exceptions():
         
-        timestamp = timestampFormat()
+    return (
+        NoSuchElementException,
+        TimeoutException,
+        StaleElementReferenceException,
+        ElementNotInteractableException,
+        ElementClickInterceptedException,
+        ElementClickInterceptedException,
+        WebDriverException,
+        NoSuchWindowException,
+        NoSuchWindowException,
+        NoAlertPresentException,
+        MoveTargetOutOfBoundsException,
+        JavascriptException,
+        SessionNotCreatedException,
+        InvalidCookieDomainException,
+        UnexpectedAlertPresentException
 
-        # Diretório para salvar os screenshots
-        env_screenshot = env_vars.get('SCREENSHOT_PATH')
+    )
+         
 
-        if env_screenshot:
-            screenshot_dir = f"{env_screenshot}"
-            os.makedirs(screenshot_dir, exist_ok=True)  # Criar a pasta se não existir
-
-            # Caminho do arquivo de screenshot
-            screenshot_path = os.path.join(screenshot_dir, f"screenshot_web_{timestamp}.png")
-
-            return screenshot_path 
   
 
 
@@ -295,7 +301,7 @@ def login(browser, request):
 
 
 @pytest.fixture()
-def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente,screenshots):
+def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente):
 
 
     nivel_acesso, ambiente, rede, loja = get_ambiente
@@ -406,23 +412,23 @@ def seletor_ambiente(browser, login, log_manager, env_vars, get_ambiente,screens
         # # Salvar o screenshot
         # browser.save_screenshot(screenshot_path)
          # Chama a fixture 'screenshots' para tirar a captura de tela
-        screenshot_path = screenshots(env_vars, browser)
+        # screenshot_path = screenshots(env_vars, browser)
         
         # Verifica se o screenshot foi tirado corretamente
-        if screenshot_path:
-            log_manager.add_log(
-                level="INFO", 
-                message=f"Screenshot salvo em: {screenshot_path}", 
-                routine="Login",application_type='WEB', 
-                error_details=e.msg if hasattr(e, "msg") else str(e)
-            )
-        else:
-           log_manager.add_log(
-            level="ERROR", 
-            message="Falha ao salvar screenshot", 
-            routine="Login",application_type='WEB', 
-            error_details=e.msg if hasattr(e, "msg") else str(e)
-            )
+        # if screenshot_path:
+        #     log_manager.add_log(
+        #         level="INFO", 
+        #         message=f"Screenshot salvo em: {screenshot_path}", 
+        #         routine="Login",application_type='WEB', 
+        #         error_details=e.msg if hasattr(e, "msg") else str(e)
+        #     )
+        # else:
+        #    log_manager.add_log(
+        #     level="ERROR", 
+        #     message="Falha ao salvar screenshot", 
+        #     routine="Login",application_type='WEB', 
+        #     error_details=e.msg if hasattr(e, "msg") else str(e)
+        #     )
                 
         error_message = f"Erro durante a escolha do ambiente:TimeOutException ou NoSuchElementException {str(e)}"
         log_manager.add_log(
@@ -536,20 +542,24 @@ def oracle_db_connection(env_vars):
 
 
 @pytest.fixture()
-def init(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection):
-    return browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection
+def init(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection):
+    """
+
+    
+    """
+    return browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection
 
 
 
 @pytest.fixture()
-def context(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection):
+def context(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection):
     Init = namedtuple("Init", [
         "browser", "login", "log_manager", "get_ambiente",
         "env_vars", "seletor_ambiente", "screenshots", "oracle_db_connection"
     ])
     
     # Retornando a estrutura organizada com os valores recebidos como argumentos da fixture
-    return Init(browser, login, log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection)
+    return Init(browser, login, log_manager, get_ambiente, env_vars, seletor_ambiente, selenium_exceptions, oracle_db_connection)
 
 
 

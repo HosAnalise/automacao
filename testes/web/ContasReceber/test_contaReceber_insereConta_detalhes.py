@@ -3,10 +3,8 @@ from classes.rotinas.ContasReceber import ContaReceber
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.FuncoesUteis import FuncoesUteis
 import pytest
-from classes.utils.decorators import com_visual
 
-@com_visual()
-@pytest.mark.dockercontaReceber
+@pytest.mark.dockerContaReceber
 def test_contaReceber_insereConta_detalhes(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init

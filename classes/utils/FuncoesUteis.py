@@ -201,7 +201,7 @@ class FuncoesUteis:
             for chave, (v1, v2) in valoresDiferentes.items():
                 Log_manager.add_log(
                     application_type=env_application_type,
-                    level="INFO",
+                    level="ERROR",
                     message=(
                         f"Valor incorreto - {chave}: {v1} (esperado, tipo {type(v1).__name__}) "
                         f"≠ {v2} (atual, tipo {type(v2).__name__})"
@@ -616,7 +616,7 @@ class FuncoesUteis:
 
 
     @staticmethod
-    def prepareToCompareValues(init:tuple,apexValues:dict,sendKeys:bool = False):
+    def prepareToCompareValues(init:tuple,apexValues:dict,sendKeys:bool = False)->dict:
         """
         Prepara valores em campos APEX e retorna um dicionário com os valores esperados e encontrados.
         :param init: Tupla contendo:

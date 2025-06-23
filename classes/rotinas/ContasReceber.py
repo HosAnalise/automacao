@@ -1,8 +1,7 @@
-from calendar import c
 from datetime import datetime,timedelta
 import random
+from sys import exception
 import time
-from duckdb import query
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -220,7 +219,7 @@ class ContaReceber:
         def forceString(cls, v):
             return str(v) if v is not None else None
 
-@com_visual(batch_name="Conta Receber")
+    @com_visual(batch_name="Conta Receber")
     @staticmethod
     def insereContaReceber(init,query,staticValues = False,validator=None):
         """
@@ -354,9 +353,9 @@ class ContaReceber:
             if not staticValues: return recebidovalue
 #END insereContaReceber(init,query,staticValues)
 
-
+    @com_visual()
     @staticmethod
-    def detalhesContaReceber(init,query,staticValues = False):
+    def detalhesContaReceber(init,query,staticValues = False,validator = None):
         """
         Função para preencher os detalhes de uma conta a receber no sistema.
 
@@ -390,8 +389,19 @@ class ContaReceber:
         bigText700 = GeradorDados.gerar_texto(700)
         bigText500 = GeradorDados.gerar_texto(700)
 
-        try:
 
+
+    
+
+
+        try:
+            elemento = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#R221081980922428336 > div.t-Region-bodyWrap > div.t-Region-body")))
+
+            if validator:
+                validator.check_region(
+                                        label="insereContaReceberDetalhes",
+                                        element = elemento
+                                        )
             cobrador = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#P85_COBRADOR")))
             browser.execute_script("arguments[0].scrollIntoView(true);", cobrador)
             
@@ -451,9 +461,14 @@ class ContaReceber:
             )
 #END detalhesContaReceber(init,query,staticValues)
 
+    class Repeticao(BaseModel):
+        P91_OPCAO_FERIADO:Optional[str] = None
+        P91_OPCAO_COMPETENCIA:Optional[str] = None
+        P91_SELECAO_PERIODO:Optional[str] = None
 
+    @com_visual()
     @staticmethod
-    def repeticaoContaReceber(init):
+    def repeticaoContaReceber(init:tuple,obj:Repeticao = None,validator = None):
         """
         Função para automatizar a criação de uma repetição de conta a receber em uma aplicação web utilizando Selenium.
 
@@ -497,8 +512,8 @@ class ContaReceber:
             abaRepeticao = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#R221082137306428338_tab"))) 
             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: aba Repeticao encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )        
 
-            browser.execute_script("arguments[0].scrollIntoView(true);", abaRepeticao)        
-            Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Scrol até aba Repeticao", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )        
+            # browser.execute_script("arguments[0].scrollIntoView(true);", abaRepeticao)        
+            # Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Scrol até aba Repeticao", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )        
 
             if abaRepeticao:
                 abaRepeticao.click()
@@ -528,15 +543,21 @@ class ContaReceber:
                     btnRepeticao.click()
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = f"Campo: btnRepeticao clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
                     
-                    Components.has_alert(init)
-                    Components.has_alert_sucess(init)
+                    Components.has_alert(init=init)
+                    Components.has_spin(init=init)                 
 
-                    seletor = "#contaReceberRepeticao"
-                    has_frame = Components.has_frame(init,seletor)
+                    if Components.has_frame(init,"#contaReceberRepeticao"):
+                        
+                        if isinstance(obj,ContaReceber.Repeticao):
+                            for key, value in obj.model_dump(exclude_none=True).items():
+                                FuncoesUteis.setValue(init=init, seletor=key, value=value)
 
-                    if has_frame:
 
-                        randomZeroOrOne = GeradorDados.randomNumberDinamic(0,1)                                           
+                        randomZeroOrOne = GeradorDados.randomNumberDinamic(0,1) 
+
+                        WebDriverWait(browser, 10).until(
+                                                            lambda d: d.execute_script("return typeof apex !== 'undefined';")
+                                                        )                                          
 
                         if randomZeroOrOne == 0:
                             Apex.setValue(browser,"P91_OPCAO_FERIADO","A")
@@ -574,7 +595,9 @@ class ContaReceber:
 
                         # Define o valor correspondente
                         valor_selecionado = periodo_map[randomPeriodo].strip().upper()        
-                        Apex.setValue(browser, "P91_SELECAO_PERIODO", valor_selecionado)  
+                        Apex.setValue(browser, "P91_SELECAO_PERIODO", valor_selecionado)
+
+                         
 
 
                         selecaoPeriodoValue = Apex.getValue(browser, "P91_SELECAO_PERIODO")
@@ -619,6 +642,15 @@ class ContaReceber:
 
                             btnNovaSimulacao.click()
                             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
+                            
+                            if validator:
+                                validator.check_window(label="Repetição mensal")
+                                Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message="Validação visual realizada",
+                                routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
+                                error_details="")
 
                         elif selecaoPeriodoValue == "S":
                             WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P91_DIA_SEMANA")))
@@ -639,7 +671,16 @@ class ContaReceber:
 
                             btnNovaSimulacao.click()
                             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
-                        
+                            
+                            if validator:
+                                validator.check_window(label="Repetição semanal")  
+                                Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message="Validação visual realizada",
+                                routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
+                                error_details="")   
+
                         elif selecaoPeriodoValue == "E":
                             WebDriverWait(browser,30).until(EC.element_to_be_clickable((By.CSS_SELECTOR,"#P91_A_CADA_DIA")))
                             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "P91_A_CADA_DIA encontrado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
@@ -659,9 +700,18 @@ class ContaReceber:
 
                             btnNovaSimulacao.click()
                             Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão nova simulação clicado", routine=f"{ContaReceber.rotina} - repeticaoContaReceber", error_details ="" )
+                            
+                            if validator:
+                                validator.check_window(label="Repetição Regra especifica")
+                                Log_manager.add_log(
+                                application_type=env_application_type,
+                                level="INFO",
+                                message="Validação visual realizada",
+                                routine=f"{ContaReceber.rotina} - repeticaoContaReceber",
+                                error_details="")
 
                         Components.has_spin(init)
-                        Components.has_form(init)           
+                        Components.has_form(init)       
 
 
                         WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#simulacao")))
@@ -713,8 +763,9 @@ class ContaReceber:
             browser.switch_to.default_content()
 #END repeticaoContaReceber(init)            
 
-
-    def recebimentoContaReceber(init,query,staticValues = False):
+    @com_visual()
+    @staticmethod
+    def recebimentoContaReceber(init,query,staticValues = False,validator =None):
         """
         Função que simula a operação de recebimento de uma conta a receber na aplicação.
         Interage com a interface do usuário, preenche campos com dados dinâmicos e registra logs
@@ -750,10 +801,9 @@ class ContaReceber:
             clienteOriginalValue  = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P85_PESSOA_CLIENTE_ID"))
             numeroDocumentoOriginalValue = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P85_NUMERO_DOCUMENTO"))
 
-            seletor = "#contaReceberRecebimento"
-            has_frame = Components.has_frame(init,seletor)
+         
 
-            if not has_frame:               
+            if not Components.has_frame(init,"#contaReceberRecebimento"):               
 
                 # Aguarda a aba estar visível
                 abaRecebimento = WebDriverWait(browser, 30).until(
@@ -795,12 +845,17 @@ class ContaReceber:
                 has_repeat = True        
 
             if has_repeat:
-                if not has_frame:
-                    seletor = "#contaReceberRecebimento"
-                    has_frame = Components.has_frame(init,seletor)
+                
+                if Components.has_frame(init,"#contaReceberRecebimento"):  
+                    time.sleep(6)
 
+                    if validator:
+                        validator.check_window(label="Conta Receber - Recebimentos")  
+                        Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Validação visual do iframe de recebimentos criada", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
 
-                if has_frame:         
+                    WebDriverWait(browser, 10).until(
+                                                        lambda d: d.execute_script("return typeof apex !== 'undefined';")
+                                                    )
                     
                     valorDescontoDividido = round((randomValue/4),2)
                     valorDescontoDividido = FuncoesUteis.formatBrCurrency(valorDescontoDividido)
@@ -833,11 +888,11 @@ class ContaReceber:
                                                 message=f"{seletor} teve o valor {value} inserido", 
                                                 routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details="")
 
-                        apexGetValue[seletor] =  FuncoesUteis.stringToFloat(Apex.getValue(browser,seletor))     
+                        apexGetValue[seletor] =  Apex.getValue(browser,seletor)     
                         Log_manager.add_log(application_type=env_application_type, level="INFO", 
                                                 message=f"{seletor} teve o valor {apexGetValue[seletor]} encontrado", 
                                                 routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details="")
-                        clienteId = FuncoesUteis.stringToFloat(Apex.getValue(browser,"P87_PESSOA_ID") )
+                        clienteId = Apex.getValue(browser,"P87_PESSOA_ID") 
 
                     apexValuesDisplay = {
                         9:  "#P87_NUMERO_DOCUMENTO_DISPLAY",
@@ -891,8 +946,15 @@ class ContaReceber:
                     btnSaveIframeRecebimentos.click()
                     Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Botão save do iframe Recebimentos clicado", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
 
-                    Components.has_alert(init)            
-                
+                    Components.has_alert(init)    
+
+                    WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#recebimento_ir"))) 
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Report com recebimentos criado", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
+        
+                    validator.check_window(label="Report recebimentos")
+                    Log_manager.add_log(application_type =env_application_type,level= "INFO", message = "Validação visual do report de recebimentos criada", routine=f"{ContaReceber.rotina} - recebimentoContaReceber", error_details ="" )
+
+
                     
 
         except TimeoutException as e:
@@ -927,9 +989,9 @@ class ContaReceber:
                             
 #END recebimentoContaReceber(init,query,staticValues) 
 
-
+    @com_visual()
     @staticmethod
-    def jurosMultasContaReceber(init,staticValues = False):
+    def jurosMultasContaReceber(init,staticValues = False,validator=None):
         """
         Função responsável por acessar a aba de Juros e Multas de uma conta a receber,
         inserir valores aleatórios nos campos correspondentes e validar se os valores
@@ -950,12 +1012,12 @@ class ContaReceber:
         Retorno:
         - None: A função apenas executa as ações no sistema e gera logs.
         """
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,exceptions,oracle_db_connection = init
         getEnv = env_vars
         env_application_type = getEnv.get("WEB")
 
-        try:
-
+        try:      
+            
             abaJurosMultas = WebDriverWait(browser,30).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"[aria-controls='R55917550016747726']")))
             Log_manager.add_log(application_type =env_application_type,
                                 level= "INFO",
@@ -974,9 +1036,9 @@ class ContaReceber:
             randomValue = GeradorDados.randomNumberDinamic(0,4)
             randomText = GeradorDados.gerar_texto(200)
 
-            jurosDiaValor = FuncoesUteis.formatBrCurrency(GeradorDados.randomNumberDinamic(1,100)) if randomValue != 0 else randomText
-            multaValor = FuncoesUteis.formatBrCurrency(GeradorDados.randomNumberDinamic(1,100)) if randomValue != 0 else randomText
-            jurosMesValor = FuncoesUteis.formatBrCurrency(GeradorDados.randomNumberDinamic(1,100)) if randomValue != 0 else randomText
+            jurosDiaValor = str(FuncoesUteis.formatBrCurrency(GeradorDados.randomNumberDinamic(1,100))) if randomValue != 0 else randomText
+            multaValor = str(FuncoesUteis.formatBrCurrency(GeradorDados.randomNumberDinamic(1,100))) if randomValue != 0 else randomText
+            jurosMesValor = str(FuncoesUteis.formatBrCurrency(GeradorDados.randomNumberDinamic(1,100))) if randomValue != 0 else randomText
 
             apexValues = staticValues if isinstance(staticValues,dict) else {
                 "P85_JUROS_CONTA_RECEBER":jurosDiaValor,
@@ -984,10 +1046,21 @@ class ContaReceber:
                 "P85_JUROS_MES_CONTA_RECEBER":jurosMesValor
             }
 
-            print(f"valores apex {apexValues}")
-
             campos = FuncoesUteis.prepareToCompareValues(init,apexValues,True)
             FuncoesUteis.compareValues(init,campos)
+            elemento  = WebDriverWait(browser, 30).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#R55917550016747726 > div.t-Region-bodyWrap > div.t-Region-body")))
+            Log_manager.add_log(application_type =env_application_type,
+                                level= "INFO",
+                                message = "Container juros e multas encontrado",
+                                routine=f"{ContaReceber.rotina} - jurosMultasContaReceber", 
+                                error_details ="" 
+                                )
+            if validator:
+                validator.check_region(
+                                        label="insereContaReceberJurosMultas",
+                                        element=elemento
+                                        )
+
 
 
         except TimeoutException as e:

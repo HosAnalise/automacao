@@ -1,33 +1,28 @@
 import time
 from classes.rotinas.ContasReceber import ContaReceber
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from classes.utils.GerarDados import GeradorDados  
-from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
-from classes.utils.Components import Components
 import pytest
 
-@pytest.mark.dockercontaReceber
+@pytest.mark.dockerContaReceber
 def test_contaReceber_insereConta_jurosMultas(init):
     starTime = time.time()
-    browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
+    browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, selenium_exceptions, oracle_db_connection = init
     env_application_type = env_vars['WEB']
 
     try:
-
         FuncoesUteis.goToPage(init,ContaReceber.url)
         query = FuncoesUteis.getQueryResults(init,ContaReceber.queries)
         FuncoesUteis.showHideFilter(init,ContaReceber.filterSelector)
         insereContaReceber = ContaReceber.insereContaReceber(init,query)
-        ContaReceber.salvaContaReceber(init)
         if insereContaReceber == 1:
             ContaReceber.recebimentoContaReceber(init,query)
+            ContaReceber.salvaContaReceber(init)
         else:
             ContaReceber.jurosMultasContaReceber(init)    
             ContaReceber.salvaContaReceber(init)
 
             
-    except (TimeoutException, NoSuchElementException, Exception) as e:
+    except selenium_exceptions as e:
         Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{ContaReceber.rotina} - test_contaReceber_insereConta_jurosMultas", error_details=str(e))
         
     finally:
