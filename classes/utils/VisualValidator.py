@@ -33,6 +33,7 @@ class VisualValidator:
         self.app_name: str = app_name
         self.batch: BatchInfo = BatchInfo(name=batch_name)
         self.eyes.match_level = MatchLevel[MATCH_LEVEL]
+        self.eyes.configuration.set_wait_before_capture(milliseconds=3000)
 
     def open(self, driver: WebDriver, test_name: str, viewport_size: tuple[int, int] = (1280, 720)) -> None:
         """
@@ -70,7 +71,7 @@ class VisualValidator:
             label (str): Descrição do ponto de verificação.
             selector (str): Seletor CSS da região a ser validada.
         """      
-        self.eyes.check(label, Target.region(element))
+        self.eyes.check(label, Target.region(element).fully())
 
     def close(self) -> None:
         """
