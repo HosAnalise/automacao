@@ -1,5 +1,7 @@
+import inspect
 from functools import wraps
 from classes.utils.VisualValidator import VisualValidator
+import os 
 
 def com_visual(viewport_size=(1280, 720),batch_name="Testes Visuais"):
     def decorator(test_func):
@@ -17,19 +19,27 @@ def com_visual(viewport_size=(1280, 720),batch_name="Testes Visuais"):
             browser = init[0]
             test_name = test_func.__name__
 
-            validator = VisualValidator(batch_name=batch_name)
+            validator = None
 
-
-            # Abre sessão visual
-            validator.open(driver=browser, test_name=test_name, viewport_size=viewport_size)
+            use_applitools = os.getenv("USE_APPLITOOLS","True")
 
             try:
-                # Passa o validator via kwargs para o teste
-                result = test_func(*args, validator=validator, **kwargs)
-                validator.close()
+                # Passa o validator via kwargs para o teste, se aceito
+                sig = inspect.signature(test_func)
+                if use_applitools == "True":
+                    validator = VisualValidator(batch_name=batch_name)
+                    # Abre sessão visual
+                    validator.open(driver=browser, test_name=test_name, viewport_size=viewport_size)
+                if 'validator' in sig.parameters:
+                    result = test_func(*args, validator=validator, **kwargs)
+                else:
+                    result = test_func(*args, **kwargs)
+                if use_applitools == "True" and validator:
+                    validator.close()
                 return result
             except Exception:
-                validator.abort()
+                if validator:
+                    validator.abort()
                 raise
 
         return wrapper
