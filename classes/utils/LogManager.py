@@ -1,7 +1,11 @@
 from datetime import datetime, timedelta
+from email import message
+from typing import Optional
 from dotenv import load_dotenv
 import os
 import uuid  # Para gerar identificadores únicos
+from matplotlib.ticker import LogFormatter
+from pydantic import BaseModel
 from pymongo import MongoClient  # Importando MongoClient
 from pymongo.server_api import ServerApi
 from collections import defaultdict
@@ -15,6 +19,26 @@ load_dotenv()
 
 
 class LogManager:
+
+
+
+    class LogModel(BaseModel) :
+        application_type:str
+        level:str
+        message:str
+        routine:str
+        error_details:Optional[str]=None
+        timestamp:str = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
+
+    class LogForInsert(BaseModel):
+        execution_id:str
+        dev:str
+        logs: list['LogManager.LogModel']
+        timestamp:str = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
+
+
+
+
     def __init__(self):
         # Carregar variáveis do .env
         mongodb_uri = os.getenv("MONGODB_URI")

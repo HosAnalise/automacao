@@ -145,6 +145,6 @@ def test_extratoContas_devolverTransferencia(init):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution(logName=ExtratoContas.rotina)
 
         browser.quit()

@@ -9,6 +9,8 @@ classes/utils/LogManager.py
 Dockerfile
 run_tests.py
 .env.docker
+.env.desktop
+
 docker-compose.yml
 .dockerignore
 videos

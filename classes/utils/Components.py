@@ -3,6 +3,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
+from conftest import selenium_exceptions
+
 class Components:
 
     rotina = "Components"
@@ -213,7 +215,7 @@ class Components:
         :param seletor: seletor css que ira identificar o botão a ser clicado na pagina.              
         :return: True se o alerta de sucesso for encontrado, False caso contrário.
         """
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection = init
         env_application_type = env_vars.get("WEB")
             
         try:
@@ -236,7 +238,7 @@ class Components:
                     error_details=''
                 )
             return True
-        except (TimeoutException, NoSuchElementException, Exception) as e:
+        except selenium_exceptions as e:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{Components.rotina} - btnClick", error_details=str(e))
             return False
 #END btnClick(init, seletor)

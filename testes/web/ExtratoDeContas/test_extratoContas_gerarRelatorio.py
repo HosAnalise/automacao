@@ -37,6 +37,6 @@ def test_extratoContas_gerarRelatorio(init):
             error_details=''
         )
 
-    Log_manager.insert_logs_for_execution("ExtratoContas")
+    Log_manager.insert_logs_for_execution(logName=ExtratoContas.rotina)
 
     browser.quit()

@@ -2,21 +2,26 @@ from pydantic import BaseModel
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
 from pydantic import BaseModel, field_validator
 from typing import Optional, Union
 from faker import Faker
+
 fake = Faker('pt_BR')
 import random
 from time import sleep
+from classes.utils.decorators import com_visual
+
+
+
+
 
 class Pessoas:
     url = "lista-de-pessoa"
-    filterSelector = "P5_TIPO_CADASTRO"
-    rotina = "Pessoas"
+    filterSelector = "#P5_TIPO_CADASTRO"
+    rotina = "Cadastro de Pessoas"
 
     queries = {
             "tipoCadastro":   """
@@ -30,7 +35,7 @@ class Pessoas:
     }
 
     class Endereco(BaseModel):
-        P6_TIPO_ENDERECO_ID: Optional[str] = None
+        P6_TIPO_ENDERECO_ID: Optional[str] = None # 1 = Residencial; 2 =Comercial; 3 = Outros
         P6_CEP: Optional[str] = None
         P6_ESTADO_ID: Optional[str] = None
         P6_CIDADE_ID: Optional[str] = None
@@ -53,9 +58,10 @@ class Pessoas:
         P6_CONTATO_OBSERVACAO: Optional[str] = None
         P6_CONTATO_CELULAR: Optional[str] = None
         P6_CONTATO_TELEFONE: Optional[str] = None
-        P6_CPF_RESPONSAVEL: Optional[str] = None
+        P6_E_RESPONSAVEL: Optional[str] = None
         P6_ENVIAR_EMAIL: Optional[str] = None # valor deve ser '0' ou '1'
         P6_BOLETO_CONTATO: Optional[str] = None # valor deve ser '0' ou '1'
+        P6_CPF_RESPONSAVEL:Optional[str] = None
 
         @field_validator('*', mode='before')
         @classmethod
@@ -89,10 +95,12 @@ class Pessoas:
     
 
     class Pessoa(BaseModel):
+        P6_TIPO_CADASTRO_PESSOA_ID: Optional[str] = None # 1 = Cliente; 2 = Fornecedor; 3 = Fabricante; 4 = Médico; 5 = Funcionário; 6 = Convenio; 7 = Trasnportadora; 8 = Credenciadora; 9 = Representante/Fornecedor;
         tipoPessoa: Optional[str] = None # '1' = física; '2' = jurídica
         P6_NOME: Optional[str] = None
         P6_CPF: Optional[str] = None
         P6_RG: Optional[str] = None
+        P6_E_PACIENTE: Optional[str] = None
         P6_GENERO: Optional[str] = None
         P6_DATA_NASCIMENTO: Optional[str] = None
         P6_APELIDO: Optional[str] = None
@@ -120,9 +128,9 @@ class Pessoas:
         def forceString(cls, v):
             return str(v) if v is not None else None
 
-
+    @com_visual()
     @staticmethod
-    def insereEndereco(init:tuple, enderecoPessoa:"Pessoas.Endereco") -> Union["Pessoas.Endereco", bool]:
+    def insereEndereco(init:tuple, enderecoPessoa:"Pessoas.Endereco",validator = None) -> Union["Pessoas.Endereco", bool]:
         """
         Insere os valores de endereço à uma pessoa.
 
@@ -134,16 +142,23 @@ class Pessoas:
 
         :return:
             Retorna um objeto com os seletores e valores inseridos no endereço, False caso algum erro ocorra.
+
+            
         """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
+        env_application_type = getEnv.get("APPLICATION_TYPE")
 
-        FuncoesUteis.scrollIntoView(init, 'button[aria-labelledby="a_Collapsible5_endereco_heading"]', True, False)
+       
 
-        FuncoesUteis.scrollIntoView(init, "#btnSalvarEndereco")
+        FuncoesUteis.scrollIntoView(init = init, seletor='#endereco > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button', hashTag=False, clica=True)
+        
+        FuncoesUteis.scrollIntoView(init=init, seletor="#btnSalvarEndereco",hashTag=False)
+        
+
+
 
         ceps = ["95702000", "69905205", "72823070"]
 
@@ -180,9 +195,14 @@ class Pessoas:
 
         FuncoesUteis.setValue(init, "#P6_CEP", valoresCamposFinal["P6_CEP"])
 
+        if validator :
+            container  = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#endereco")))
+            validator.check_region(label="Cadastro de Pessoa - Endereço",element=container)
+
         Components.btnClick(init, "#P6_COMPLEMENTO")# clicado para que o CEP possivelmente auto complete os outros campos
 
         sleep(5)
+
 
         for seletor in (["P6_ESTADO_ID", "P6_CIDADE_ID", "P6_BAIRRO", "P6_ENDERECO", "P6_NUMERO"]):
             valorObj = getattr(enderecoPessoa, seletor, None)
@@ -247,7 +267,7 @@ class Pessoas:
 #END insereEndereco(init, enderecoPessoa)
 
     @staticmethod
-    def insereContato(init:tuple, contatoPessoa:"Pessoas.Contato") -> Union["Pessoas.Contato", bool]:
+    def insereContato(init:tuple, contatoPessoa:Contato,save:bool=True) -> Union[Contato, bool]:
         """
         Insere os valores de contato à uma pessoa.
 
@@ -264,9 +284,11 @@ class Pessoas:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
+        env_application_type = getEnv.get("APPLICATION_TYPE")
 
-        FuncoesUteis.scrollIntoView(init, 'button[aria-labelledby="a_Collapsible6_contato_heading"]', True, False)
+
+        FuncoesUteis.scrollIntoView(init=init, seletor='#contato > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button', clica=True, hashTag=False)
+        print("pq n funciona ?")
 
         if contatoPessoa.P6_CPF_RESPONSAVEL:
             Apex.setValue(browser, "P6_E_RESPONSAVEL_1", '1')
@@ -312,32 +334,34 @@ class Pessoas:
                 error_details=""
             )
             return False
+        
+        if save:
+            Components.btnClick(init, "#btnSalvarContato")
 
-        Components.btnClick(init, "#btnSalvarContato")
 
-        if Components.has_alert(init):
+            if Components.has_alert(init):
+                Log_manager.add_log(
+                    application_type=env_application_type,
+                    level="INFO",
+                    message="Alerta encontrado, contato não inserido!",
+                    routine=f"{Pessoas.rotina} - insereContato",
+                    error_details=""
+                )
+                return False
+
             Log_manager.add_log(
                 application_type=env_application_type,
                 level="INFO",
-                message="Alerta encontrado, contato não inserido!",
+                message="Contato inserido com sucesso!",
                 routine=f"{Pessoas.rotina} - insereContato",
                 error_details=""
             )
-            return False
-
-        Log_manager.add_log(
-            application_type=env_application_type,
-            level="INFO",
-            message="Contato inserido com sucesso!",
-            routine=f"{Pessoas.rotina} - insereContato",
-            error_details=""
-        )
         
         return Pessoas.Contato(**valoresRecuperados)
 #END insereContato(init, contatoPessoa)
 
     @staticmethod
-    def insereDocumento(init:tuple, documentoPessoa:"Pessoas.Documentos") -> Union["Pessoas.Documentos", bool]:
+    def insereDocumento(init:tuple, documentoPessoa:Documentos,save:bool = False) -> Documentos |  bool:
         """
         Insere os valores de documento à uma pessoa.
 
@@ -347,6 +371,9 @@ class Pessoas:
         :param enderecoPessoa:
             Objeto com seletores e valores referentes ao documento, informações recebidas priorizadas durante a inserção.
 
+        :param save: 
+            Define se os campos documentos inseridos serão salvos ou se apenas os campos serão preenchidos.
+
         :return:
             Retorna um objeto com os seletores e valores inseridos no documento, False caso algum erro ocorra.
         """
@@ -354,9 +381,9 @@ class Pessoas:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
+        env_application_type = getEnv.get("APPLICATION_TYPE")
 
-        FuncoesUteis.scrollIntoView(init, 'button[aria-labelledby="a_Collapsible7_Documento_heading"]', True, False)
+        FuncoesUteis.scrollIntoView(init, '#Documento > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button', True, False)
 
         FuncoesUteis.scrollIntoView(init, "#btnSalvarDocumento")
 
@@ -408,8 +435,9 @@ class Pessoas:
                 error_details=""
             )
             return False
-
-        Components.btnClick(init, "#btnSalvarDocumento")
+        
+        if save:
+            Components.btnClick(init, "#btnSalvarDocumento")
 
         if Components.has_alert(init):
             Log_manager.add_log(
@@ -433,7 +461,7 @@ class Pessoas:
 #END insereDocumento(init, documentoPessoa)
 
     @staticmethod
-    def insereDependente(init:tuple, dependentePessoa:"Pessoas.Dependentes") -> Union["Pessoas.Dependentes", bool]:
+    def insereDependente(init:tuple, dependentePessoa:Dependentes, save:bool = False) -> Dependentes| bool:
         """
         Insere os valores de dependente à uma pessoa.
 
@@ -443,6 +471,9 @@ class Pessoas:
         :param enderecoPessoa:
             Objeto com seletores e valores referentes ao dependente, informações recebidas priorizadas durante a inserção.
 
+        :param save: 
+            Define se os campos documentos inseridos serão salvos ou se apenas os campos serão preenchidos.    
+
         :return:
             Retorna um objeto com os seletores e valores inseridos no dependente, False caso algum erro ocorra.
         """
@@ -450,9 +481,9 @@ class Pessoas:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
+        env_application_type = getEnv.get("APPLICATION_TYPE")
 
-        FuncoesUteis.scrollIntoView(init, 'button[aria-labelledby="a_Collapsible7_dependentes_heading"]', True, False)
+        FuncoesUteis.scrollIntoView(init, '#dependentes > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button', True, False)
 
         FuncoesUteis.scrollIntoView(init, "#btnSalvarDependente")
 
@@ -500,8 +531,8 @@ class Pessoas:
                 error_details=""
             )
             return False
-
-        Components.btnClick(init, "#btnSalvarDependente")
+        if save:
+            Components.btnClick(init, "#btnSalvarDependente")
 
         if Components.has_alert(init):
             Log_manager.add_log(
@@ -523,9 +554,13 @@ class Pessoas:
         
         return Pessoas.Dependentes(**valoresRecuperados)
 #END insereDependente(init, dependentePessoa)
+    
+    
+    
 
+    @com_visual()
     @staticmethod
-    def insereDadosGeraisFisico(init:tuple, dadosPessoa:"Pessoas.Pessoa") -> Union["Pessoas.Pessoa", bool]:
+    def insereDadosGeraisFisico(init:tuple, dadosPessoa:Pessoa,validator = None) -> Union[Pessoa, bool]:
         """
         Insere os valores de dados gerais à uma pessoa física.
 
@@ -542,7 +577,7 @@ class Pessoas:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
+        env_application_type = getEnv.get("APPLICATION_TYPE")
 
         valoresObrigatorios = {
             "P6_NOME" : fake.name()
@@ -551,7 +586,11 @@ class Pessoas:
             "P6_GENERO",
             "P6_ENVIAR_PARA_REGISTRO"
         }
-        
+
+        if validator :
+            container  = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#gerais")))
+            validator.check_region(label="Cadastro de Pessoa Dados Gerais PF",element=container)
+
         valoresDados = FuncoesUteis.convertDictValoresToStr(init, FuncoesUteis.objToDictObrigatorio(init, dadosPessoa, valoresObrigatorios))
 
         # for camposRemover in ["tipoPessoa", "P6_CNPJ", "P6_RAZAO_SOCIAL", "P6_FANTASIA", "P6_IE", "P6_UF_INSCRICAO_ESTADUAL", "P6_ISENTA_IE"]:
@@ -605,9 +644,9 @@ class Pessoas:
         
         return Pessoas.Pessoa(**valoresRecuperados)
 #END insereDadosGeraisFisico(init, dadosPessoa)
-
+    @com_visual()
     @staticmethod
-    def insereDadosGeraisJuridico(init:tuple, dadosPessoa:"Pessoas.Pessoa") -> Union["Pessoas.Pessoa", bool]:
+    def insereDadosGeraisJuridico(init:tuple, dadosPessoa:"Pessoas.Pessoa",validator = None) -> Union["Pessoas.Pessoa", bool]:
         """
         Insere os valores de dados gerais à uma pessoa juridica.
 
@@ -624,7 +663,7 @@ class Pessoas:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
+        env_application_type = getEnv.get("APPLICATION_TYPE")
 
         Apex.setValue(browser, "P6_FISICA_JURIDICA", '2')
 
@@ -636,7 +675,10 @@ class Pessoas:
             valoresObrigatorios["P6_IE"] = random.choice(["460884567505", "576539554316"]) # tem validação entre IE e UF, deixar UF apenas SP
             valoresObrigatorios["P6_UF_INSCRICAO_ESTADUAL"] = "SP"
 
-        
+        container  = WebDriverWait(browser, 30).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "#gerais")))
+        if validator :
+            validator.check_region(label="Cadastro de Pessoa Dados Gerais PJ",element=container)
+
         valoresDados = FuncoesUteis.convertDictValoresToStr(init, FuncoesUteis.objToDictObrigatorio(init, dadosPessoa, valoresObrigatorios))
 
         valoresCamposFinal = valoresDados.copy()
@@ -726,7 +768,7 @@ class Pessoas:
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
 
         getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
+        env_application_type = getEnv.get("APPLICATION_TYPE")
 
         tipoPessoa = pessoa.tipoPessoa if pessoa.tipoPessoa else random.choice(["1", "2"])
 
@@ -806,3 +848,118 @@ class Pessoas:
         }
         return dadosGerais.model_copy(update=dadosAtualizados)
 #END inserePessoaCompleta(init, pessoa)
+
+
+
+
+    class AnaliseCredito:
+
+
+        @staticmethod
+        def novaAnaliseCredito(init:tuple):
+            """
+            Inicia uma nova analise Credito de Pessoa deve ser usada em conjuto com outars funções referentes a analise de crédito.
+
+            :param init:
+                Tupla comparâmetros do ambiente.
+
+            
+            """
+
+            browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection = init
+
+            getEnv = env_vars
+            env_application_type = getEnv.get("APPLICATION_TYPE")
+
+            FuncoesUteis.scrollIntoView(init=init,seletor="#analise > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button",hashTag=False)
+            Components.btnClick(init=init,seletor="#analise > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button")  
+
+            Components.btnClick(init=init,seletor="#B200488443130611404")       
+
+
+            Components.has_frame(init=init,seletor="[title='Cadastro de Pessoa']")   
+    ### END     def novaAnaliseCredito(init:tuple):
+
+
+
+            
+                
+
+
+
+        class AnalisePropria(BaseModel):
+            P277_DATA_ANALISE: Optional[str]=None
+            P277_RENDA_INFORMADA:Optional[str]=None
+            P277_LIMITE_CREDITO:Optional[str]=None
+            P277_OBSERVACAO:Optional[str]=None
+            P277_SITUACAO:Optional[str]=None
+            P277_RENDA_COMPROVADA:Optional[str]=None
+            P277_VALIDADE_ANALISE:Optional[str]=None
+            P277_DECISAO_ANALISE:Optional[str]=None
+
+
+
+
+
+        @staticmethod
+        def analisePropria(init:tuple,obj:AnalisePropria,save:bool = False):
+            """
+            Cria uma nova pessoa, preenchendo as abas que tem seus valores presentes no objeto recebido.
+
+            :param init:
+                Tupla comparâmetros do ambiente.
+
+            :param obj:
+                Objeto com seletores e valores referentes ao cadastro de pessoa total, dita se uma aba será preenchida ou não,
+                por exemplo, caso possua pelo menos um seletor presente da classe Endereco, todos campos obrigatórios da aba Endereço serão preenchidos e salvados no cadastro.
+
+            :return:
+                Retorna um objeto com todos os campos preenchidos durante o cadastro, False caso algum erro ocorra.
+            """
+
+            browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection = init
+
+            getEnv = env_vars
+            env_application_type = getEnv.get("APPLICATION_TYPE")
+
+            
+
+            Components.btnClick(init=init,seletor="#R200488916802611409 > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button")    
+            
+            FuncoesUteis.limpaCampoEPreenche(init=init, camposAEditar=obj.model_dump())
+
+            new_dict = {
+            "P277_DATA_ANALISE":"date",
+            "P277_RENDA_INFORMADA":"valor",
+            "P277_LIMITE_CREDITO":"valor",
+            "P277_OBSERVACAO":"alfanum",
+            "P277_SITUACAO":"num",
+            "P277_RENDA_COMPROVADA":"valor",
+            "P277_VALIDADE_ANALISE":"valor",
+            "P277_DECISAO_ANALISE":"num"
+            }    
+
+
+            FuncoesUteis.scrollIntoView(init=init,seletor='#btnSalvar',hashTag=False,clica=True)
+
+            regex_ok = FuncoesUteis.validaCamposPorRegex(init=init,camposAVerificar=new_dict) 
+
+            return obj if not regex_ok else regex_ok
+
+
+        
+
+
+            
+            
+
+
+
+        
+
+        
+        
+
+
+
+     

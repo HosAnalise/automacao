@@ -81,6 +81,6 @@ def test_extratoContas_criaConta_resumida(init, conta, devePassar):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution(logName=ExtratoContas.rotina)
 
         browser.quit()

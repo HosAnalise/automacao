@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 import socket
 import tempfile
+from pydantic import BaseModel
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
@@ -24,6 +25,8 @@ import numpy as np
 import time
 from sqlalchemy import create_engine
 from selenium.webdriver.chrome.options import Options
+import traceback
+import sys
 
 
 
@@ -537,17 +540,81 @@ def oracle_db_connection(env_vars):
 
 
 
+class TracebackLog(BaseModel):
+    time: str
+    error: str
+    type_error: str
+    function_error: str
+    file: str
+    row: int
+    message: str
 
+def log_erro_completo(exc: Exception, block: str = None) -> TracebackLog:
+        """
+        Retorna um objeto com informações detalhadas sobre a exceção capturada.
+        :param exc: Exceção capturada no except
+        :param block: (Opcional) Nome do contexto onde ocorreu o erro
+        :return: TracebackLog
+        """
+        exc_type, _, exc_tb = sys.exc_info()
+        tb = traceback.extract_tb(exc_tb)
+
+        if not tb:
+            return TracebackLog(
+                time=timestampFormat(),
+                error=f"Ocorreu uma exceção{f' no bloco: {block}' if block else ''}",
+                type_error=type(exc).__name__,
+                function_error="Desconhecida",
+                file="Desconhecido",
+                row=-1,
+                message=str(exc)
+            )
+
+        erro_final = tb[-1]
+
+        return TracebackLog(
+            time=datetime.now().isoformat(),
+            erro=f"Ocorreu uma exceção{f' no bloco: {block}' if block else ''}",
+            type_error=type(exc).__name__,
+            function_error=erro_final.name,
+            file=erro_final.filename,
+            row=erro_final.lineno,
+            message=str(exc)
+        )    
+
+@pytest.fixture
+def error_logger():
+    return log_erro_completo
+
+
+
+class TestContext:
+    def __init__(self,browser,log_manager,env_vars,login,selenium_exceptions,error_logger):
+        self.browser = browser
+        self.log = log_manager
+        self.env = env_vars
+        self.login = login
+        self.exceptions = selenium_exceptions
+        self.catch_errors = error_logger
+    
+@pytest.fixture(scope='session')
+def context(request):
+    browser = browser
+    log = log_manager()
+    env = env_vars()
+    login = login
+    exceptions = selenium_exceptions()
+    catch_errors = error_logger()
 
 
 
 @pytest.fixture()
-def init(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection):
+def init(browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,error_logger):
     """
 
     
     """
-    return browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection
+    return browser,login,log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,error_logger
 
 
 

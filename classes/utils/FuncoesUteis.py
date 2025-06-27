@@ -14,7 +14,7 @@ from classes.utils.Components import Components
 import random
 from classes.utils.ApexUtil import Apex
 from classes.utils.LogManager import LogManager
-from conftest import env_vars
+from conftest import env_vars, selenium_exceptions
 from typing import Any, Tuple
 from pydantic import BaseModel
 import re
@@ -544,9 +544,12 @@ class FuncoesUteis:
     @staticmethod
     def combine_lists_to_dict(keys_list:list, values_list:list)->dict:
         """
-        Combina duas Lists e transforma em um Dict
+        Combina duas Lists e transforma em um Dict.
+
+        
 
         :param keys_list: lista com as chaves que vão compor o dict.
+
         :param values_list: lista com os valores que vão compor o dict.
 
         :return: Retorna um dicionario no formato {keys_list : values_list}
@@ -619,6 +622,7 @@ class FuncoesUteis:
     def prepareToCompareValues(init:tuple,apexValues:dict,sendKeys:bool = False)->dict:
         """
         Prepara valores em campos APEX e retorna um dicionário com os valores esperados e encontrados.
+
         :param init: Tupla contendo:
             (browser, login, Log_manager, get_ambiente, env_vars,
             seletor_ambiente, screenshots, oracle_db_connection).
@@ -953,59 +957,67 @@ class FuncoesUteis:
 
 
     @staticmethod
-    def scrollIntoView(init:tuple, seletor:str, clica:bool = False, hashTag:bool = True):
+    def scrollIntoView(init: tuple, seletor: str, clica: bool = False, hashTag: bool = True):
         """
-        Recebe um seletor, é arrastado a tela até o seletor estiver em vista.
+        Rola a tela até que o elemento especificado pelo seletor esteja visível e,
+        opcionalmente, clica nele.
 
-        :params init :
-            Tupla contendo os objetos necessários para a automação:
-
-            - browser: Instância do WebDriver do Selenium.
-            - login: Objeto de login (não utilizado diretamente nesta função).
-            - Log_manager: Gerenciador de logs para registrar eventos e erros.
-            - get_ambiente: Função ou objeto para obter informações do ambiente.
-            - env_vars: Dicionário contendo variáveis do ambiente.
-            - seletor_ambiente: Seletor de ambiente (não utilizado diretamente nesta função).
-            - screenshots: Caminho para salvar capturas de tela em caso de erro.
-            - oracle_db_connection: Conexão com o banco de dados Oracle (não utilizada nesta função).
-
-        :param seletor :
-            - String de seletor utilizado para dar scroll até acha-lo. Pode ser passado com ou sem '#'.
-
-        :param hashTag:
-            - Booleano que dita se vai ser adicionado um '#' antes do seletor.
-
-        :params clica :
-            - Booleano que indica se o elemento deve ser clicado após o scroll.
+        :param init: Tupla com os objetos de automação (browser, Log_manager, etc.).
+        :param seletor: String do seletor CSS para encontrar o elemento.
+        :param clica: Booleano que indica se o elemento deve ser clicado após ser encontrado.
+        :param hashTag: Booleano que determina se um '#' deve ser adicionado ao seletor (para IDs).
+        :return: Retorna o WebElement encontrado ou None se ocorrer um erro.
         """
-        
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
-        getEnv = env_vars
-        env_application_type = getEnv.get("WEB")
+        # 1. Desempacotamento mais seguro da tupla init
+        # ATENÇÃO: A estrutura da tupla 'init' parece ser inconsistente no seu projeto.
+        # É crucial padronizá-la. Usarei uma estrutura que parece ser a mais completa.
+        browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, selenium_exceptions, error_logger = init
 
-        if hashTag:
-            if not seletor.startswith("#"):
-                seletor = f"#{seletor}"
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"O seletor foi corrigido automaticamente para '{seletor}', adicionando '#' ao inicio.",
-                    routine=f"{FuncoesUteis.rotina} - scrollIntoView",
-                    error_details=""
-                )
+        # É uma boa prática definir a rotina para os logs no início
+        rotina_log = f"FuncoesUteis.scrollIntoView" 
+        env_application_type = env_vars.get("WEB", "aplicacao_web") # Valor padrão para segurança
 
-        campo = WebDriverWait(browser,30).until(EC.presence_of_element_located((By.CSS_SELECTOR, f"{seletor}")))
-        browser.execute_script("arguments[0].scrollIntoView(true);", campo)
-        Log_manager.add_log(
-            application_type=env_application_type,
-            level="INFO",
-            message=f"Scroll até o seletor {seletor} realizado com sucesso.",
-            routine=f"{FuncoesUteis.rotina} - scrollIntoView",
-            error_details=''
-        )
+        # 2. Lógica de ajuste do seletor mantida, é uma boa prática.
+        if hashTag and not seletor.startswith("#"):
+            seletor_ajustado = f"#{seletor}"
+        else:
+            seletor_ajustado = seletor
 
-        Components.btnClick(init, f"{seletor}") if clica else None
-#END scrollIntoView(init, seletor, clica, hashTag)
+
+
+        try:
+            # 3. Espera pelo elemento e rolagem da tela
+            # Primeiro, esperamos o elemento estar presente no DOM
+            campo = WebDriverWait(browser, 20).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, seletor_ajustado))
+            )
+            # Executa o script para centralizar o elemento na tela, o que é ótimo!
+            browser.execute_script("arguments[0].scrollIntoView({block: 'center', inline: 'center'});", campo)
+            
+            Log_manager.add_log(
+                application_type=env_application_type, level="INFO",
+                message=f"Scroll para o elemento '{seletor_ajustado}' realizado com sucesso.",
+                routine=rotina_log
+            )
+
+            # 4. Lógica de clique REVISADA E OTIMIZADA
+            if clica:
+                Components.btnClick(init=init,seletor=seletor_ajustado)
+            
+            return campo # Retorna o elemento para uso futuro, se necessário
+
+        except selenium_exceptions as e:
+            logs = error_logger(exc=e, block=rotina_log)
+            Log_manager.add_log(
+                application_type=env_application_type,
+                level="ERROR",
+                message=f"{logs.time} - {logs.message}",
+                routine=rotina_log,
+                error_details=f"{logs.error} - {logs.type_error} - {logs.function_error}- {logs.file} - {str(logs.row)}"
+            )
+
+
+    #END scrollIntoView(init, seletor, clica, hashTag)
 
 
     @staticmethod
@@ -1575,8 +1587,7 @@ class FuncoesUteis:
         :param camposAEditar:
             Dicionário com os seletores e valores.
 
-        :param dictFiltro:
-            Dicionário com os campos desejados para comparação entre ambos dicionários.
+        
         """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init

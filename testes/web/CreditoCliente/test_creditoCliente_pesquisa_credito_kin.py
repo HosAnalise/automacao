@@ -43,6 +43,6 @@ def test_creditoCliente_pesquisa_credito(init):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution(logName=CreditoCliente.rotina)
 
         browser.quit()

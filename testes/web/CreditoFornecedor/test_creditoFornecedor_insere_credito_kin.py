@@ -88,6 +88,6 @@ def test_creditoFornecedor_insere_credito(init, infoCredito, devePassar):
             error_details=''
         )
 
-        Log_manager.insert_logs_for_execution()
+        Log_manager.insert_logs_for_execution(logName=CreditoFornecedor.rotina)
 
         browser.quit()
