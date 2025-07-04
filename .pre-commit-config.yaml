@@ -1,0 +1,14 @@
+# .pre-commit-config.yaml
+repos:
+-   repo: local
+    hooks:
+    -   id: generate-docker-compose
+        name: Generate docker-compose.yml dynamically
+        entry: python scripts/build.py 
+        language: python
+        # Runs every time a commit is made
+        additional_dependencies: [pyyaml]
+        pass_filenames: false
+        stages: [pre-commit]
+        # Ensures the hook is always run
+        always_run: true

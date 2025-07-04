@@ -54,25 +54,25 @@ def get_base_config(marker: str):
 
 def write_docker_compose(config, filename='docker-compose.yml'):
     """Escreve a configuração final em um arquivo YAML."""
-    print(f"📄 Gerando o arquivo '{filename}'...")
+    print(f" Gerando o arquivo '{filename}'...")
     try:
         with open(filename, 'w') as file:
             # sort_keys=False mantém a ordem de inserção, o que é mais legível
             yaml.dump(config, file, sort_keys=False, indent=2)
-        print(f"✅ Arquivo '{filename}' gerado com sucesso!")
+        print(f" Arquivo '{filename}' gerado com sucesso!")
     except Exception as e:
-        print(f"❌ Erro ao escrever o arquivo YAML: {e}")
+        print(f" Erro ao escrever o arquivo YAML: {e}")
 
 def main(marker_source='pytest.ini', output_file='docker-compose.yml'):
     """
     Cria o arquivo docker-compose.yml com base nos marcadores do pytest.
     """
-    print("🚀 Iniciando a criação do docker-compose dinâmico...")
+    print(" Iniciando a criação do docker-compose dinâmico...")
     
     # 1. Pega a lista de marcadores
     marks_list = get_markers(ini_file=marker_source)
     if not marks_list:
-        print("⚠️ Nenhum marcador encontrado. Saindo.")
+        print(" Nenhum marcador encontrado. Saindo.")
         return
 
     # 2. Inicia a configuração final
