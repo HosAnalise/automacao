@@ -1,5 +1,6 @@
 # 1. Ponto de Partida: Sua imagem base do Docker Hub. 
-FROM hosanalise/server-farma-base
+FROM hosanalise/server-farma-v5:latest
+
 
 # 2. Diretório de Trabalho: 
 WORKDIR /app
