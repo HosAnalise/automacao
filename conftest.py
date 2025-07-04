@@ -55,8 +55,23 @@ def pytest_addoption(parser):
     parser.addoption(
         "--urlToUse", action="store", default="URL_ERP", help="Url do login"
     )
+    parser.addoption(
+        "--collection",
+        action="store",
+        default="web_logs",
+        help="Nome da coleção de logs a ser testada (padrão: web_logs)",
+    )
+  
 
+@pytest.fixture
+def collection_name(request):
+    """Fixture que obtém o valor da opção --collection."""
+    return request.config.getoption("--collection")
 
+@pytest.fixture
+def days_to_delete(request):
+    """Fixture que obtém o valor da opção --daysToDelete."""
+    return int(request.config.getoption("--daysToDelete"))
 
 def timestampFormat():
     timestamp = datetime.now().strftime("%d-%m-%Y %H-%M-%S-%f")

@@ -4,6 +4,7 @@ from typing import Optional
 from dotenv import load_dotenv
 import os
 import uuid  # Para gerar identificadores únicos
+from httpx import delete
 from pydantic import BaseModel
 from pymongo import MongoClient  # Importando MongoClient
 from pymongo.server_api import ServerApi
@@ -287,34 +288,46 @@ class LogManager:
         return ranqueado
     
 
-    def delete_logs_older_than(self, days:int=None):
+
+
+    def delete_logs_older_than(self, days: int = None, collection_name: str | None = None):
         if days is None:
-            days = self.days
-        """
-        Exclui logs que são mais antigos do que o número de dias fornecido.
+            days = 7  
 
-        :param days: Número de dias para verificar se o log é mais antigo. O padrão é 7 dias.
-        """
-        # Definir a data limite como datetime
+        if collection_name:
+            self.collection = self.db[collection_name]
+
         date_limit = datetime.now() - timedelta(days=days)
+        ids_to_delete = []
 
-        # Buscar logs e converter os timestamps antes da exclusão
-        logs_to_delete = []
-
+        # Itera sobre todos os logs na coleção
         for log in self.collection.find({}):
-            try:
-                log_date = datetime.strptime(log["timestamp"], "%d/%m/%Y %H:%M:%S:%f")  # Converte string para datetime
-                if log_date < date_limit:
-                    logs_to_delete.append(log["_id"])  # Coleta os IDs dos logs antigos
-            except ValueError:
-                print(f"Erro ao converter timestamp: {log['timestamp']}")  # Debug para logs corrompidos
+            # 1. Acesso SEGURO ao timestamp usando .get()
+            timestamp_str = log.get("timestamp")
 
-        # Excluir logs antigos pelo ID
-        if logs_to_delete:
-            result = self.collection.delete_many({"_id": {"$in": logs_to_delete}})
-            print(f"{result.deleted_count} logs foram deletados.")
+            # 2. Prossegue apenas se o timestamp existir e não for vazio
+            if not timestamp_str:
+                continue # Pula para o próximo log
+
+            try:
+                # 3. Tenta converter a data
+                log_date = datetime.strptime(timestamp_str, "%d/%m/%Y %H:%M:%S:%f")
+
+                # 4. Lógica de negócio: deleta APENAS se for antigo
+                if log_date < date_limit:
+                    ids_to_delete.append(log["_id"])
+
+            except ValueError:
+                # 5. Captura erros de formatação e informa, mas não deleta
+                print(f"Aviso: Ignorando log com _id {log.get('_id')} devido a timestamp em formato inválido: '{timestamp_str}'")
+                continue
+
+        # 6. Executa a exclusão em lote, que é mais eficiente
+        if ids_to_delete:
+            result = self.collection.delete_many({"_id": {"$in": ids_to_delete}})
+            print(f"{result.deleted_count} logs antigos foram excluídos da coleção '{self.collection.name}'.")
         else:
-            print("Nenhum log antigo encontrado.")
+            print(f"Nenhum log antigo para excluir na coleção '{self.collection.name}'.")
 
     def insert_error_log(self):    
         """
@@ -331,6 +344,32 @@ class LogManager:
             print(f"Erro inserido com ID: {result.inserted_id}")
         except Exception as e:
             print(f"Erro ao inserir log de erro: {e}")
+
+
+    def clear_collection(self, collection_name: str | None = None):
+        """
+        Exclui permanentemente uma coleção inteira do banco de dados.
+
+        :param collection_name: O nome da coleção a ser excluída.
+        """
+        if not collection_name:
+            print("Erro: O nome da coleção não foi fornecido.")
+            return
+
+        print(f"Atenção: Você está prestes a limpar a coleção '{collection_name}' inteira.")
+        # Por segurança, você pode adicionar um input de confirmação aqui se for usar interativamente
+        # confirm = input(f"Digite '{collection_name}' para confirmar a exclusão: ")
+        # if confirm != collection_name:
+        #     print("Exclusão cancelada.")
+        #     return
+
+        try:
+            collection_to_clear = self.db[collection_name]
+            
+            result = collection_to_clear.delete_many({})
+            print(f"Coleção '{collection_name}' foi limpa. {result.deleted_count} documentos foram excluídos.")
+        except Exception as e:
+            print(f"Erro ao tentar limpar a coleção '{collection_name}': {e}")
 
 
 # Exemplo de uso

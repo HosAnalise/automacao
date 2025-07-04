@@ -11,6 +11,7 @@ on:
       - 'classes/rotinas/**'
       - 'docker-compose.yml'
       - 'scripts/**'
+      - 'testes/web/**'
 
 
 jobs:
