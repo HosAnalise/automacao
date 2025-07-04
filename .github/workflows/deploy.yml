@@ -1,6 +1,7 @@
 name: Docker Compose Build and Push
 
 on:
+
   push:
     branches:
       - prod
@@ -10,6 +11,7 @@ on:
       - 'classes/rotinas/**'
       - 'docker-compose.yml'
       - 'scripts/**'
+      
 
 jobs:
   build-and-push:
