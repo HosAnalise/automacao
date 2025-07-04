@@ -9,7 +9,7 @@ from classes.rotinas.ExtratoContas import ExtratoContas
 from classes.utils.Components import Components
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.rotinas.ContasPagar import ContasPagar
-from classes.rotinas.ContasReceber import ContaReceber, ContasReceber
+from classes.rotinas.ContasReceber import ContaReceber
 
 
 @pytest.mark.parametrize("conta, devePassar", [

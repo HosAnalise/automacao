@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
-from email import message
+import re
 from typing import Optional
 from dotenv import load_dotenv
 import os
 import uuid  # Para gerar identificadores únicos
-from matplotlib.ticker import LogFormatter
 from pydantic import BaseModel
 from pymongo import MongoClient  # Importando MongoClient
 from pymongo.server_api import ServerApi
@@ -36,6 +35,11 @@ class LogManager:
         logs: list['LogManager.LogModel']
         timestamp:str = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
 
+    class LogForError(BaseModel):
+        execution_id: str
+        logs: list['LogManager.LogModel']
+        timestamp: str = datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")    
+
 
 
 
@@ -61,6 +65,9 @@ class LogManager:
         self.days = dias_pra_deletar_logs
 
         self.dev = dev
+
+   
+
         
 
     def _generate_execution_id(self)->str:
@@ -115,9 +122,31 @@ class LogManager:
             print(f"Execução inserida com ID: {result.inserted_id}")
         except Exception as e:
             print(f"Erro ao inserir execução: {e}")
+        finally:
+            self.insert_error_log()    
 
 
+
+
+    def get_logs_not_async(self,collection: str = "web_logs") -> list:
+        """
+        Recupera logs de uma Collection específica do MongoDB.
+        
     
+        :param collection: Nome da Collection onde os logs serão recuperados. Padrão é 'log'.
+        """
+        
+        self.collection = self.db[collection]
+
+        if self.collection is None:
+            raise ValueError(f"Collection '{collection}' not found in dynamic_collections_sync.")
+
+        cursor = self.collection.find({})
+        logs = []
+        for log in cursor:
+            logs.append(log)
+        return logs
+
     def get_error_logs(self, execution_id:str|None = None)-> dict:
         """
         Recupera os logs com level = ERROR e categoriza eles por executionId.
@@ -175,42 +204,59 @@ class LogManager:
         return agrupado
     
 
-    def remover_logs_ambiguos(self, agrupado: dict) -> dict:
+    def remover_logs_ambiguos(self, group: dict) -> dict:
         """
-        Remove logs que não são ERROR ou que são erros conhecidos do Selenium.
-        
-        :param agrupado: dict de logs agrupados por rotina
-        :return: dict com apenas erros relevantes
+        Remove logs que não são ERROR ou que batem com padrões de erros ignorados (via regex).
+
+        :param group: dict de logs agrupados por routine
+
+        :return: dict filtrado com apenas logs relevantes
         """
-        erros_ignorados = [
-            "nosuchelementexception",
-            "timeoutexception",
-            "elementclickinterceptedexception",
-            "staleelementreferenceexception",
-            "elementnotinteractableexception",
-            "GetHandleVerifier",
-            "Message: \n",
-            "element click intercepted",
-            "has no attribute",
-            "",
-            "cannot access local variable",
+
+        # Lista de padrões que representam erros comuns/irrelevantes
+        padroes_ignorados = [
+            r"nosuchelementexception",
+            r"timeoutexception",
+            r"elementclickinterceptedexception",
+            r"staleelementreferenceexception",
+            r"elementnotinteractableexception",
+            r"gethandleverifier",
+            r"message:\s*",
+            r"element click intercepted",
+            r"has no attribute",
+            r"cannot access local variable",
+            r"stale element reference",
+            r"Valor incorreto - ",
+            r"Message: ",
+            r"Alguns valores foram inseridos incorretamente.",
+            r"positional argument",
+            r"'P"
         ]
 
-        def is_relevante(log):
-            if str(log.get("level", "")).strip().upper() != "ERROR":
-                return False
-            msg = log.get("error_details", "").lower()
-            return not any(err in msg for err in erros_ignorados)
+        # Compila todos os padrões em regex com IGNORECASE
+        regex_erros_ignorados = [re.compile(p, re.IGNORECASE) for p in padroes_ignorados]
 
+        def is_relevante(log):
+            # Garantia de tratamento mesmo que campos estejam ausentes
+            level = str(log.get("level", "")).strip().upper()
+            if level not in ("ERROR", "WARNING"):
+                return False
+
+            msg = str(log.get("error_details", "") or log.get("message", "")).strip()
+
+            # Retorna False se QUALQUER padrão bater com a mensagem
+            return not any(padrao.search(msg) for padrao in regex_erros_ignorados)
+
+        # Monta novo dicionário com apenas os logs relevantes
         filtrado = {}
 
-        for exec_id, logs in agrupado.items():
+        for exec_id, logs in group.items():
             relevantes = [log for log in logs if is_relevante(log)]
             if relevantes:
                 filtrado[exec_id] = relevantes
 
         return filtrado
-    
+        
     
     def rankear_rotinas_por_erros(self, filtrado: dict) -> dict:
         """
@@ -233,20 +279,12 @@ class LogManager:
     
 
 
-    def analisar_erros(self):
-        todos = self.get_all_logs()
+    def analisar_erros(self,collection_name:str|None = None) -> dict:
+        todos = self.get_logs_not_async()
         agrupado = self.filtrar_logs_por_rotina(todos)
         filtrado = self.remover_logs_ambiguos(agrupado)
         ranqueado = self.rankear_rotinas_por_erros(filtrado)
         return ranqueado
-
-
-
-
-
-
-
-    
     
 
     def delete_logs_older_than(self, days:int=None):
@@ -278,6 +316,21 @@ class LogManager:
         else:
             print("Nenhum log antigo encontrado.")
 
+    def insert_error_log(self):    
+        """
+        Insere logs de erro em um documento separado no banco de dados.
+        
+        :param log: Instância de LogForError contendo os logs de erro
+        """
+        log = self.analisar_erros()  # Obtém os logs de erro analisados
+        self.collection = self.db["error_logs"]  # Coleção específica para logs de erro
+        
+        try:
+            # Inserção do documento com logs de erro na coleção do MongoDB
+            result = self.collection.insert_one(log)
+            print(f"Erro inserido com ID: {result.inserted_id}")
+        except Exception as e:
+            print(f"Erro ao inserir log de erro: {e}")
 
 
 # Exemplo de uso

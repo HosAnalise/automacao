@@ -1,6 +1,6 @@
 import time
 import pytest
-from classes.rotinas.Pessoas import Pessoas
+from classes.rotinas.CadastroPessoas import Pessoas
 from classes.utils.Components import Components
 from classes.utils.FuncoesUteis import FuncoesUteis
 from faker import Faker
@@ -123,7 +123,7 @@ dados_pessoa_validos = Pessoas.Pessoa(
     ),
     
 ])
-@pytest.mark.dockerPessoas
+@pytest.mark.dockerCadastroPessoas
 def test_insere_dependente_pessoa(init, dadosPessoa, dependentePessoa, devePassar, salvar, cenario):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, selenium_exceptions, error_logger = init

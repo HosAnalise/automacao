@@ -1,3 +1,4 @@
+from re import S
 from pydantic import BaseModel
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -95,6 +96,7 @@ class Pessoas:
     
 
     class Pessoa(BaseModel):
+        P6_FISICA_JURIDICA: Optional[str] = None # '1' = Física; '2' = Jurídica
         P6_TIPO_CADASTRO_PESSOA_ID: Optional[str] = None # 1 = Cliente; 2 = Fornecedor; 3 = Fabricante; 4 = Médico; 5 = Funcionário; 6 = Convenio; 7 = Trasnportadora; 8 = Credenciadora; 9 = Representante/Fornecedor;
         tipoPessoa: Optional[str] = None # '1' = física; '2' = jurídica
         P6_NOME: Optional[str] = None
@@ -130,7 +132,7 @@ class Pessoas:
 
     @com_visual()
     @staticmethod
-    def insereEndereco(init:tuple, enderecoPessoa:"Pessoas.Endereco",validator = None) -> Union["Pessoas.Endereco", bool]:
+    def insereEndereco(init:tuple, enderecoPessoa:Endereco,salvar:bool = False,validator = None) -> Union[Endereco, bool]:
         """
         Insere os valores de endereço à uma pessoa.
 
@@ -140,10 +142,12 @@ class Pessoas:
         :param enderecoPessoa:
             Objeto com seletores e valores referentes ao endereço, informações recebidas priorizadas durante a inserção.
 
+        :param salvar: Indica se deve salvar as informações do endereço.
+
         :return:
             Retorna um objeto com os seletores e valores inseridos no endereço, False caso algum erro ocorra.
 
-            
+        
         """
 
         browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
@@ -242,8 +246,8 @@ class Pessoas:
                 error_details=""
             )
             return False
-
-        Components.btnClick(init, "#btnSalvarEndereco")
+        if salvar:
+            Components.btnClick(init, "#btnSalvarEndereco")
 
         if Components.has_alert(init):
             Log_manager.add_log(
@@ -553,10 +557,8 @@ class Pessoas:
         )
         
         return Pessoas.Dependentes(**valoresRecuperados)
-#END insereDependente(init, dependentePessoa)
-    
-    
-    
+#END insereDependente(init, dependentePessoa) 
+       
 
     @com_visual()
     @staticmethod
@@ -858,33 +860,25 @@ class Pessoas:
         @staticmethod
         def novaAnaliseCredito(init:tuple):
             """
-            Inicia uma nova analise Credito de Pessoa deve ser usada em conjuto com outars funções referentes a analise de crédito.
+            Inicia uma nova análise de crédito de pessoa. Deve ser usada em conjunto com outras funções referentes à análise de crédito.
 
             :param init:
-                Tupla comparâmetros do ambiente.
+                Tupla de parâmetros do ambiente.
 
-            
-            """
-
-            browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection = init
-
-            getEnv = env_vars
-            env_application_type = getEnv.get("APPLICATION_TYPE")
-
-            FuncoesUteis.scrollIntoView(init=init,seletor="#analise > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button",hashTag=False)
-            Components.btnClick(init=init,seletor="#analise > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button")  
+            :return:
+                Retorna um valor booleano indicando se o frame da análise de crédito foi encontrado (True) ou não (False).
+            """        
+            browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+            FuncoesUteis.scrollIntoView(init=init,seletor="#analise > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button",hashTag=False,clica=True)
 
             Components.btnClick(init=init,seletor="#B200488443130611404")       
 
-
-            Components.has_frame(init=init,seletor="[title='Cadastro de Pessoa']")   
-    ### END     def novaAnaliseCredito(init:tuple):
+            browser.switch_to.default_content() # Volta para o frame principal
 
 
+            has_frame = Components.has_frame(init=init,seletor="[title='Nova Análise de crédito']")   
 
-            
-                
-
+            return has_frame
 
 
         class AnalisePropria(BaseModel):
@@ -902,7 +896,7 @@ class Pessoas:
 
 
         @staticmethod
-        def analisePropria(init:tuple,obj:AnalisePropria,save:bool = False):
+        def novaAnalisePropria(init:tuple,obj:AnalisePropria,save:bool = False):
             """
             Cria uma nova pessoa, preenchendo as abas que tem seus valores presentes no objeto recebido.
 
@@ -915,14 +909,7 @@ class Pessoas:
 
             :return:
                 Retorna um objeto com todos os campos preenchidos durante o cadastro, False caso algum erro ocorra.
-            """
-
-            browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection = init
-
-            getEnv = env_vars
-            env_application_type = getEnv.get("APPLICATION_TYPE")
-
-            
+            """             
 
             Components.btnClick(init=init,seletor="#R200488916802611409 > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button")    
             
@@ -933,18 +920,99 @@ class Pessoas:
             "P277_RENDA_INFORMADA":"valor",
             "P277_LIMITE_CREDITO":"valor",
             "P277_OBSERVACAO":"alfanum",
-            "P277_SITUACAO":"num",
             "P277_RENDA_COMPROVADA":"valor",
             "P277_VALIDADE_ANALISE":"valor",
-            "P277_DECISAO_ANALISE":"num"
             }    
+            dicionarioFiltradoParaRegex = FuncoesUteis.filtrarCamposPorDicionario(init=init, dictAFiltrar=new_dict, dictFiltro=obj.model_dump(exclude_none=True))
 
+            if save:
+                FuncoesUteis.scrollIntoView(init=init,seletor='#btnSalvar',hashTag=False,clica=True)
 
-            FuncoesUteis.scrollIntoView(init=init,seletor='#btnSalvar',hashTag=False,clica=True)
-
-            regex_ok = FuncoesUteis.validaCamposPorRegex(init=init,camposAVerificar=new_dict) 
+            regex_ok = FuncoesUteis.validaCamposPorRegex(init=init,camposAVerificar=dicionarioFiltradoParaRegex) 
 
             return obj if not regex_ok else regex_ok
+##END analisePropria(init:tuple,obj:AnalisePropria,save:bool = False):
+
+
+
+        class DadosFechamento(BaseModel):
+            P277_DIA_VENCIMENTO: Optional[str]=None
+            P277_PRAZO_PAGAMENTO: Optional[str]=None
+            P277_TOLERANCIA_INADIMPLENCIA: Optional[str]=None
+            P277_TOLERANCIA_JUROS: Optional[str]=None
+            P277_FECHAMENTO_DIA : Optional[str]=None
+            P277_DIAS_ANTES_VENCIMENTO: Optional[str]=None
+
+
+
+
+        class AnalisePropriaDecisao(BaseModel):
+            P277_RECOMENDACAO: Optional[str]=None
+            P277_LIMITE_LIBERADO:Optional[str]=None
+            P277_LIMITE_TEMPORARIO:Optional[str]=None
+            P277_PRAZO_EXPIRACAO_TEMPORARIO:Optional[str]=None
+            P277_CONCEITO:Optional[str]=None
+            P277_PRAZO_EXPIRACAO:Optional[str]=None
+            P277_ENTRADA_MINIMA:Optional[str]=None
+            P277_OBSERVACAO_ANALISE:Optional[str]=None
+            dadosFechamento: Optional["Pessoas.AnaliseCredito.DadosFechamento"]=None
+
+
+        @staticmethod
+        def decisaoAnalise(init:tuple, obj:AnalisePropriaDecisao, save:bool = False) -> AnalisePropriaDecisao | bool:
+            """
+            Preenche os campos de decisão de análise de crédito, caso o objeto possua os valores necessários.
+
+            :param init:
+                Tupla comparâmetros do ambiente.
+
+            :param obj:
+                Objeto com seletores e valores referentes a análise de crédito.
+
+            :return:
+                Retorna um objeto com todos os campos preenchidos durante o cadastro, False caso algum erro ocorra.
+            """            
+
+            FuncoesUteis.scrollIntoView(init=init,seletor="#R200488916802611409 > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button",hashTag=False,clica=True)
+
+            FuncoesUteis.limpaCampoEPreenche(init=init, camposAEditar=obj.model_dump())
+
+            new_dict = {                        
+                "P277_RECOMENDACAO":"num",
+                "P277_LIMITE_LIBERADO":"valor",
+                "P277_LIMITE_TEMPORARIO":"valor",
+                "P277_PRAZO_EXPIRACAO_TEMPORARIO":"date",
+                "P277_CONCEITO":"alfanum",
+                "P277_PRAZO_EXPIRACAO":"date",
+                "P277_ENTRADA_MINIMA":"valor",
+                "P277_OBSERVACAO_ANALISE":"alfanum",
+                "P277_DIA_VENCIMENTO":"num",
+                "P277_PRAZO_PAGAMENTO":"num",
+                "P277_TOLERANCIA_INADIMPLENCIA":"num",
+                "P277_TOLERANCIA_JUROS":"num",
+                "P277_FECHAMENTO_DIA":"num",
+                "P277_DIAS_ANTES_VENCIMENTO":"num",
+            }
+
+            dicionarioFiltradoParaRegex = FuncoesUteis.filtrarCamposPorDicionario(init=init, dictAFiltrar=new_dict, dictFiltro=obj.model_dump(exclude_none=True))
+
+
+            if save:
+                FuncoesUteis.scrollIntoView(init=init,seletor='#btnSalvar',hashTag=False,clica=True)
+
+            regex_ok = FuncoesUteis.validaCamposPorRegex(init=init,camposAVerificar=dicionarioFiltradoParaRegex) 
+
+            return obj if not regex_ok else regex_ok
+##End decisaoAnalise(init:tuple, obj:AnalisePropria, save:bool = False):
+
+
+
+        @staticmethod
+        def salvarAnalise(init=tuple): 
+            """
+            Salva a análise atual.
+            """
+            FuncoesUteis.scrollIntoView(init=init,seletor="btnSalvar",hashTag=False,clica=True)
 
 
         

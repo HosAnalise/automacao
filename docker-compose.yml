@@ -1,52 +1,66 @@
+version: '1.0'
 services:
-  conta_pagar:
+  dockerContasPagar:
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
         TESTS_DIR: ContasPagar
-        PYTESTMARK: dockerContaPagar  
-        
-    image: hosanalise/conta_pagar:latest
-    environment:
-      - APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}
-
-
-  conta_receber:
+        PYTESTMARK: dockerContasPagar
+    image: hosanalise/dockerContasPagar:latest
+  dockerContasReceber:
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
         TESTS_DIR: ContasReceber
-        PYTESTMARK: dockerContaReceber  
-    image: hosanalise/conta_receber:latest
-    environment:
-      - APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}
-
-    
-  conciliacao_bancaria:
+        PYTESTMARK: dockerContasReceber
+    image: hosanalise/dockerContasReceber:latest
+  dockerConciliacaoBancaria:
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
         TESTS_DIR: ConciliacaoBancaria
-        PYTESTMARK: dockerConciliacaoBancaria  
-    image: hosanalise/conciliacao_bancaria:latest
-    environment:
-      - APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}
-
-
-  extrato_contas:
+        PYTESTMARK: dockerConciliacaoBancaria
+    image: hosanalise/dockerConciliacaoBancaria:latest
+  dockerCreditoCliente:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        TESTS_DIR: CreditoCliente
+        PYTESTMARK: dockerCreditoCliente
+    image: hosanalise/dockerCreditoCliente:latest
+  dockerExtratoDeContas:
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
         TESTS_DIR: ExtratoDeContas
-        PYTESTMARK: dockerExtratoDeContas  
-    image: hosanalise/extrato_contas:latest
-    environment:
-      - APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}
-
-
-
-
+        PYTESTMARK: dockerExtratoDeContas
+    image: hosanalise/dockerExtratoDeContas:latest
+  dockerCreditoFornecedor:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        TESTS_DIR: CreditoFornecedor
+        PYTESTMARK: dockerCreditoFornecedor
+    image: hosanalise/dockerCreditoFornecedor:latest
+  dockerCheques:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        TESTS_DIR: Cheques
+        PYTESTMARK: dockerCheques
+    image: hosanalise/dockerCheques:latest
+  dockerCadastroPessoas:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        TESTS_DIR: CadastroPessoas
+        PYTESTMARK: dockerCadastroPessoas
+    image: hosanalise/dockerCadastroPessoas:latest

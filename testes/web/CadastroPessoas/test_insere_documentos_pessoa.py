@@ -2,7 +2,7 @@ import time
 import pytest
 # ERRO CORRIGIDO: Removido import desnecessário e incorreto.
 # from sqlalchemy import true 
-from classes.rotinas.Pessoas import Pessoas
+from classes.rotinas.CadastroPessoas import Pessoas
 from classes.utils.Components import Components
 from classes.utils.FuncoesUteis import FuncoesUteis
 from faker import Faker
@@ -123,7 +123,7 @@ dados_pessoa_validos = Pessoas.Pessoa(
         False, True, "Falha: Órgão emissor não selecionado"
     ),
 ])
-@pytest.mark.dockerPessoas
+@pytest.mark.dockerCadastroPessoas
 # ERRO CORRIGIDO: Ordem dos parâmetros na definição da função.
 def test_insere_documento_pessoa(init, dadosPessoa, documentoPessoa, devePassar, salvar, cenario):
     starTime = time.time()

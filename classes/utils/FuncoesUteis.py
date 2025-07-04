@@ -1303,8 +1303,9 @@ class FuncoesUteis:
 
         for seletor, tipo in camposAVerificar.items():
             valor = Apex.getValue(browser, seletor)
+            
 
-            if not valor:
+            if not valor or valor == "":
                 Log_manager.add_log(
                     application_type=env_application_type,
                     level="WARNING",
@@ -1595,6 +1596,8 @@ class FuncoesUteis:
         env_application_type = getEnv.get("WEB")
 
         for seletor, value in camposAEditar.items():
+            if value is None:
+                value = ''
             try:
                 WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, f"#{seletor}")))
             except:

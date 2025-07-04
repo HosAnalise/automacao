@@ -5,7 +5,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.Components import Components
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.rotinas.ContasReceber import ContaReceber
-from classes.rotinas.Pessoas import Pessoas
+from classes.rotinas.CadastroPessoas import Pessoas
 
 @pytest.mark.parametrize("novaPessoa, devePassar", [
     (

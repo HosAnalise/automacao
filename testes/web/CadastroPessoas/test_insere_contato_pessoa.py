@@ -1,6 +1,6 @@
 import time
 import pytest
-from classes.rotinas.Pessoas import Pessoas
+from classes.rotinas.CadastroPessoas import Pessoas
 from classes.utils.Components import Components
 from classes.utils.FuncoesUteis import FuncoesUteis
 from faker import Faker
@@ -156,7 +156,7 @@ dados_pessoa_validos = Pessoas.Pessoa(
     ),
     # Adicione aqui outros cenários focados em quebrar os dados do CONTATO...
 ])
-@pytest.mark.dockerPessoas
+@pytest.mark.dockerCadastroPessoas
 # Removi fiscaJuridica que não estava sendo usado
 def test_insere_contato_pessoa(init, dadosPessoa, contatoPessoa, devePassar, salvar, cenario):
     starTime = time.time()
@@ -214,7 +214,9 @@ def test_insere_contato_pessoa(init, dadosPessoa, contatoPessoa, devePassar, sal
             assert resultado_contato is False, f"Falha no cenário: '{cenario}'"
 
     except selenium_exceptions as e:
+        print(f"Exceção do Selenium: {e}")
         logs = error_logger(exc=e, block=f"{Pessoas.rotina} - test_insere_contato_pessoa")
+        print(f"teste traceback{logs}")
         Log_manager.add_log(
             application_type=env_application_type,
             level="ERROR",

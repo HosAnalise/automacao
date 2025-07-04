@@ -14,7 +14,7 @@ from classes.utils.decorators import com_visual
 
 from pydantic import BaseModel, field_validator
 from typing import Optional, Union
-from classes.rotinas.Pessoas import Pessoas
+from classes.rotinas.CadastroPessoas import Pessoas
 
 class ContaReceber:
     url="contas-a-receber"

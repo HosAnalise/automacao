@@ -5,40 +5,42 @@ on:
     branches:
       - prod
     paths:
+      # O trigger agora também observa a pasta de scripts,
+      # caso uma mudança no script de build precise gerar um novo deploy.
+      - 'classes/rotinas/**'
       - 'docker-compose.yml'
-
-
-env:
-  APPLITOOLS_API_KEY: ${{ secrets.APPLITOOLS_API_KEY }}      
-     
+      - 'scripts/**'
 
 jobs:
   build-and-push:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout do código
+        # Usando a versão mais recente e segura do action
+        uses: actions/checkout@v4
 
-      - name: Login Docker Hub
-        uses: docker/login-action@v2
+      - name: Login no Docker Hub
+        # Usando a versão mais recente e segura do action
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build todas imagens com docker-compose
-        run: docker-compose up --build -d
+      - name: Compilar docker-compose.yml dinamicamente
+        # Executa seu script Python para gerar o docker-compose.yml final.
+        # Certifique-se de que o Python está no PATH do seu runner.
+        run: python scripts/build.py
+        shell: bash # ou pwsh, dependendo do shell padrão do seu runner
 
-      - name: Push imagens do docker-compose
-        run: |
-          $IMAGES = docker-compose config | Select-String -Pattern 'image:' | ForEach-Object { $_.Line.Split(":")[1].Trim() }
+      - name: Build das imagens do Docker Compose
+        # Apenas constrói as imagens, sem iniciar os contêineres.
+        # É mais rápido e focado para CI.
+        run: docker-compose build
 
-          foreach ($IMAGE in $IMAGES) {
-              # Adicionando o prefixo 'docker.io/' se necessário
-              if ($IMAGE -notmatch '^docker.io/') {
-                  $IMAGE = "docker.io/$IMAGE"
-              }
-              Write-Host "Fazendo push de $IMAGE"
-              docker push $IMAGE
-          }
+      - name: Push das imagens para o Docker Hub
+        # Comando nativo do Docker Compose para enviar todas as imagens
+        # definidas no arquivo para o registry. Simples e eficaz!
+        run: docker-compose push
 
+      
