@@ -19,7 +19,10 @@ def get_base_config(marker: str):
     """
     Retorna a configuração de um serviço do docker-compose como um dicionário Python,
     baseado em um marcador do pytest.
+    
     """
+
+
     # Sanitiza o nome do marcador para ser um nome de serviço válido
     safe_service_name = re.sub(r'[^a-zA-Z0-9_-]', '', marker)
     
