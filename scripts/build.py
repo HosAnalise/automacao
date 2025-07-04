@@ -24,7 +24,7 @@ def get_base_config(marker: str):
 
 
     # Sanitiza o nome do marcador para ser um nome de serviço válido
-    safe_service_name = re.sub(r'[^a-zA-Z0-9_-]', '', marker)
+    safe_service_name = re.sub(r'[^a-zA-Z0-9_-]', '', marker).lower()
     
     # --- LÓGICA DINÂMICA ---
     # Deriva o nome do diretório de testes a partir do nome do marcador.
@@ -43,7 +43,7 @@ def get_base_config(marker: str):
                         'TESTS_DIR': tests_dir,
                         'PYTESTMARK': marker
                     }
-                },
+                }, 
                 'image': f'hosanalise/{safe_service_name}:latest',
                 # 'environment': [
                 #     'APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}'
