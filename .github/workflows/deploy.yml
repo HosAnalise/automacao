@@ -11,7 +11,7 @@ on:
       - 'classes/rotinas/**'
       - 'docker-compose.yml'
       - 'scripts/**'
-      
+
 
 jobs:
   build-and-push:
@@ -36,9 +36,6 @@ jobs:
         # É mais rápido e focado para CI.
         run: docker-compose build
 
-      - name: Push das imagens para o Docker Hub
-        # Comando nativo do Docker Compose para enviar todas as imagens
-        # definidas no arquivo para o registry. Simples e eficaz!
-        run: docker-compose push
+    
 
       
