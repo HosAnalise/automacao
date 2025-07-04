@@ -3,6 +3,9 @@ from datetime import datetime, time
 import subprocess
 import time as time_module
 
+
+
+
 def dentro_do_horario(hora_inicio, hora_fim):
     """
     Verifica se o horário atual está dentro do intervalo permitido.
