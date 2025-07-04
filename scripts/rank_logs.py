@@ -8,4 +8,4 @@ def test_error():
 
 
 
-    print(log_manager.analisar_erros())
+    print(log_manager.analisar_erros())   
