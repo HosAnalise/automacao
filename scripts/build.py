@@ -63,7 +63,7 @@ def write_docker_compose(config, filename='docker-compose.yml'):
     except Exception as e:
         print(f" Erro ao escrever o arquivo YAML: {e}")
  
-def main(marker_source='pytest.ini', output_file='docker-compose.yml'):
+def main(marker_source='pytest.ini', output_file='docker-compose.yml'): 
     """  
     Cria o arquivo docker-compose.yml com base nos marcadores do pytest.
     """

@@ -17,7 +17,7 @@ COPY classes/rotinas /app/classes/rotinas
 COPY conftest.py /app/conftest.py
 COPY pytest.ini /app/pytest.ini
 COPY testes/web/${TESTS_DIR} /app/testes/web/${TESTS_DIR}
-COPY run_tests.py /app/run_tests.py
+COPY scripts/run_tests.py /app/run_tests.py
 
 # 5. Comando de Execução: 
 CMD ["sh", "-c", "python run_tests.py --tarefa ${PYTESTMARK}"]
