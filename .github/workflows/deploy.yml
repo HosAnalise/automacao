@@ -5,42 +5,39 @@ on:
     branches:
       - prod
     paths:
-      # O trigger agora também observa a pasta de scripts,
-      # caso uma mudança no script de build precise gerar um novo deploy.
       - 'classes/rotinas/**'
       - 'docker-compose.yml'
       - 'scripts/**'
 
 jobs:
   build-and-push:
+    # Use o runner self-hosted para todas as etapas
     runs-on: self-hosted
 
     steps:
       - name: Checkout do código
-        # Usando a versão mais recente e segura do action
         uses: actions/checkout@v4
 
+      # 1. Gera o arquivo no workspace do job
+      - name: Compilar docker-compose.yml dinamicamente
+        run: python scripts/build.py
+
+      # 2. (Opcional, mas ótimo para depuração) Verifica se o arquivo foi criado corretamente
+      - name: Verificar o docker-compose.yml gerado
+        run: cat docker-compose.yml
+
+      # 3. Faz o login no Docker Hub
       - name: Login no Docker Hub
-        # Usando a versão mais recente e segura do action
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Compilar docker-compose.yml dinamicamente
-        # Executa seu script Python para gerar o docker-compose.yml final.
-        # Certifique-se de que o Python está no PATH do seu runner.
-        run: python scripts/build.py
-        shell: bash # ou pwsh, dependendo do shell padrão do seu runner
-
+      # 4. Usa o arquivo gerado para construir as imagens
       - name: Build das imagens do Docker Compose
-        # Apenas constrói as imagens, sem iniciar os contêineres.
-        # É mais rápido e focado para CI.
-        run: docker-compose build
+        # Nota: O comando moderno é 'docker compose' (sem hífen)
+        run: docker compose build
 
+      # 5. Usa o mesmo arquivo para fazer o push
       - name: Push das imagens para o Docker Hub
-        # Comando nativo do Docker Compose para enviar todas as imagens
-        # definidas no arquivo para o registry. Simples e eficaz!
-        run: docker-compose push
-
-      
+        run: docker compose push

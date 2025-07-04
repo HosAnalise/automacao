@@ -213,6 +213,7 @@ def test_analise_credito_pessoa(init, pessoaValida, objAnalisePropria, devePassa
         # --------------------------------------------------------------------
         # ASSERT: Verificação do resultado
         # --------------------------------------------------------------------
+        
         # Verifica se a análise foi salva (ou não), conforme o esperado pelo cenário
         # 'resultado_obtido' será um objeto (True-like) se a análise for encontrada, e False caso contrário.
         assert (resultado_obtido is not False) == devePassar, f"Falha no cenário '{cenario}'. Resultado esperado: {devePassar}, Resultado obtido: {resultado_obtido is not False}"
