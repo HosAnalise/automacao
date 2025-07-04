@@ -322,7 +322,7 @@ class LogManager:
         
         :param log: Instância de LogForError contendo os logs de erro
         """
-        log = self.analisar_erros()  # Obtém os logs de erro analisados
+        log = self.analisar_erros() 
         self.collection = self.db["error_logs"]  # Coleção específica para logs de erro
         
         try:
