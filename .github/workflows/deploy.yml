@@ -20,14 +20,7 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      # - name: Verificar ambiente do Runner
-      #   run: |        
-      #     docker --version
-      #     docker-compose --version # Se usar a V1
-      #     docker compose version  # Se usar a V2
-      #     docker info
-      #   continue-on-error: true
-
+  
       - name: Checkout do código
         # Usando a versão mais recente e segura do action
         uses: actions/checkout@v4
