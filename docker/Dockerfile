@@ -19,4 +19,4 @@ COPY pytest.ini /app/pytest.ini
 COPY testes/web/${TESTS_DIR} /app/testes/web/${TESTS_DIR}
 
 # 5. Comando de Execução:
-CMD pytest -m "${PYTESTMARK}"
+CMD pytest -m "${PYTESTMARK}"  
