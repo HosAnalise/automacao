@@ -37,10 +37,15 @@ jobs:
       - name: Build das imagens do Docker Compose
         # Apenas constrói as imagens, sem iniciar os contêineres.
         # É mais rápido e focado para CI.
-        run: docker-compose build
+        run: docker-compose up
 
       - name: Push das imagens do Docker Compose
         run: docker-compose push
+      
+      - name: Rodar as imagens Docker
+        run: |
+          docker-compose up -d
+          docker ps
 
       - name: Verificar imagens Docker
         run: |
