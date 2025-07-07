@@ -22,13 +22,11 @@ jobs:
     steps:
       - name: Verificar ambiente do Runner
         run: |
-          echo "--- Verificando Informações do Usuário e Docker ---"
           whoami
           groups
           docker --version
           docker-compose --version # Se usar a V1
           docker compose version  # Se usar a V2
-          echo "--- Verificando Conectividade do Docker Daemon ---"
           docker info
         continue-on-error: true
 
@@ -52,7 +50,7 @@ jobs:
 
       - name: Push das imagens do Docker Compose
         run: docker-compose push
-        
+
       - name: Verificar imagens Docker
         run: |
           docker images
