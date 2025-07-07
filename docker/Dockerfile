@@ -20,3 +20,4 @@ COPY testes/web/${TESTS_DIR} /app/testes/web/${TESTS_DIR}
  
 # 5. Comando de Execução:
 CMD pytest -m "${PYTESTMARK}"  
+  
