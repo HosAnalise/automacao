@@ -8,7 +8,6 @@ WORKDIR /app
 # 3. Argumentos e Variáveis de Ambiente
 ARG TESTS_DIR
 ARG PYTESTMARK
-ENV PYTESTMARK=$PYTESTMARK
 
 # 4. Cópia de Arquivos
 COPY .env.docker /app/.env
