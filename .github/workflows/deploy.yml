@@ -20,6 +20,18 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Verificar ambiente do Runner
+        run: |
+          echo "--- Verificando Informações do Usuário e Docker ---"
+          whoami
+          groups
+          docker --version
+          docker-compose --version # Se usar a V1
+          docker compose version  # Se usar a V2
+          echo "--- Verificando Conectividade do Docker Daemon ---"
+          docker info
+        continue-on-error: true
+
       - name: Checkout do código
         # Usando a versão mais recente e segura do action
         uses: actions/checkout@v4
@@ -38,6 +50,10 @@ jobs:
         # É mais rápido e focado para CI.
         run: docker-compose build
 
-    
-
-      
+      - name: Push das imagens do Docker Compose
+        run: docker-compose push
+        
+      - name: Verificar imagens Docker
+        run: |
+          docker images
+          docker-compose images
