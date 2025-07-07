@@ -21,9 +21,7 @@ jobs:
 
     steps:
       - name: Verificar ambiente do Runner
-        run: |
-          whoami
-          groups
+        run: |        
           docker --version
           docker-compose --version # Se usar a V1
           docker compose version  # Se usar a V2
