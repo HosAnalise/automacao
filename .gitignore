@@ -5,7 +5,6 @@ classes/utils/LogManager.py
 .pyc*
 
 
-*.deb
 run_tests.py
 .env.docker
 .env.desktop

@@ -1,48 +1,56 @@
-name: Docker Compose Build and Push
+# name: Docker Compose Build, Push and Deploy
 
 on:
-
   push:
     branches:
       - prod
     paths:
-      # O trigger agora também observa a pasta de scripts,
-      # caso uma mudança no script de build precise gerar um novo deploy.
       - 'classes/rotinas/**'
       - 'docker-compose.yml'
       - 'scripts/**'
       - 'testes/web/**'
       - 'docker/Dockerfile'
 
-
 jobs:
-  build-and-push:
+  build-and-deploy: # Renomeado para refletir a ação completa
     runs-on: self-hosted
 
     steps:
-  
       - name: Checkout do código
-        # Usando a versão mais recente e segura do action
         uses: actions/checkout@v4
 
       - name: Login no Docker Hub
-        # Usando a versão mais recente e segura do action
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-     
-
-      - name: Build das imagens do Docker Compose
-        # Apenas constrói as imagens, sem iniciar os contêineres.
-        # É mais rápido e focado para CI.
+      
+      # PASSO CORRIGIDO: Apenas construir as imagens
+      - name: Build das imagens Docker via Compose
         run: docker-compose build
 
-      - name: Push das imagens do Docker Compose
+      # PASSO MANTIDO: Enviar as imagens para o registry
+      - name: Push das imagens para o Docker Hub
         run: docker-compose push
-
-      - name: Verificar imagens Docker
+      
+      # PASSO DE DEPLOY CORRIGIDO E ROBUSTO
+      - name: Deploy dos serviços com Docker Compose
         run: |
+          # 1. Derruba qualquer versão antiga dos contêineres que possa estar rodando
+          # Isso garante um deploy limpo e evita conflitos.
+          docker-compose down
+
+          # 2. Sobe os novos contêineres em modo detached (-d)
+          # O Docker Daemon, que é um serviço do sistema, irá gerenciar os contêineres,
+          # desvinculando-os do processo do runner.
+          docker-compose up -d 
+      
+      # Verificação final para garantir que tudo subiu corretamente
+      - name: Verificar status dos contêineres e imagens
+        run: |
+          echo "---- Imagens Locais ----"
           docker images
-          docker-compose images
+          echo "---- Contêineres em Execução ----"
+          docker ps
+          echo "---- Status dos Serviços do Compose ----"
+          docker-compose ps
