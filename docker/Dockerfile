@@ -8,6 +8,7 @@ WORKDIR /app
 # 3. Argumentos e Variáveis de Ambiente
 ARG TESTS_DIR
 ARG PYTESTMARK
+ENV PYTESTMARK=${PYTESTMARK:-"all"}  
  
 # 4. Cópia de Arquivos  
 COPY .env.docker /app/.env
@@ -18,4 +19,4 @@ COPY pytest.ini /app/pytest.ini
 COPY testes/web/${TESTS_DIR} /app/testes/web/${TESTS_DIR}
   
 # 5. Comando de Execução:
-CMD pytest -m ${PYTESTMARK}
+CMD ["pytest", "-m", "${PYTESTMARK}"]
