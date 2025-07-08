@@ -43,7 +43,7 @@ jobs:
           # 2. Sobe os novos contêineres em modo detached (-d)
           # O Docker Daemon, que é um serviço do sistema, irá gerenciar os contêineres,
           # desvinculando-os do processo do runner.
-          docker-compose up -d
+          docker-compose run 
       
       # Verificação final para garantir que tudo subiu corretamente
       - name: Verificar status dos contêineres e imagens
