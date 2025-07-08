@@ -9,7 +9,7 @@ WORKDIR /app
 ARG TESTS_DIR
 ARG PYTESTMARK
 
-# 4. Cópia de Arquivos 
+# 4. Cópia de Arquivos  
 COPY .env.docker /app/.env
 COPY classes/utils /app/classes/utils  
 COPY classes/rotinas /app/classes/rotinas
