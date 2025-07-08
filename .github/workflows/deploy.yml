@@ -44,7 +44,7 @@ jobs:
       
       - name: Rodar as imagens Docker
         run: |
-          docker-compose up -d
+          docker-compose run --rm
           docker ps
 
       - name: Verificar imagens Docker

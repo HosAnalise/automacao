@@ -11,7 +11,7 @@ ARG PYTESTMARK
 
 # 4. Cópia de Arquivos
 COPY .env.docker /app/.env
-COPY classes/utils /app/classes/utils
+COPY classes/utils /app/classes/utils 
 COPY classes/rotinas /app/classes/rotinas
 COPY conftest.py /app/conftest.py
 COPY pytest.ini /app/pytest.ini 
