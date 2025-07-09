@@ -74,7 +74,7 @@ def main(marker_source='pytest.ini', output_file='docker-compose.yml'):
         return
 
     # 2. Inicia a configuração final
-    final_config = {'version': '1.0', 'services': {}}
+    final_config = {'version': '3.8', 'services': {}}
 
     # 3. Itera sobre os marcadores, construindo o dicionário de serviços 
     for mark in marks_list:
