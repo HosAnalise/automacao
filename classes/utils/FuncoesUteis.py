@@ -1247,7 +1247,7 @@ class FuncoesUteis:
 
 
     @staticmethod
-    def validaCamposPorRegex(init:tuple, camposAVerificar:dict[str, str | Tuple[str, str]]) -> bool:
+    def validaCamposPorRegex(init:tuple, camposAVerificar:dict[str, str | Tuple[str, str]], apexOrNot:bool = True) -> bool:
         """
         Valida os campos não popuplov da tela com base no tipo definido no dicionário recebido.
 
@@ -1302,8 +1302,13 @@ class FuncoesUteis:
         totalFalse = 0
 
         for seletor, tipo in camposAVerificar.items():
-            valor = Apex.getValue(browser, seletor)
-            
+            if apexOrNot:
+                valor = Apex.getValue(browser, seletor)
+            else:
+                elemento  = WebDriverWait(browser, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, seletor))
+                )
+                valor = elemento.text
 
             if not valor or valor == "":
                 Log_manager.add_log(
