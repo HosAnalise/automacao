@@ -29,25 +29,22 @@ def get_base_config(marker: str):
     # --- LÓGICA DINÂMICA ---
     # Deriva o nome do diretório de testes a partir do nome do marcador.
     # Ex: 'dockerContaPagar' -> 'ContaPagar'
-    tests_dir = marker.replace('docker', '', 1)
 
     return {
-        'version': '1.0',
+        'version': '3.8',
+        'x-test-runner': {
+            'build': {
+                'context': '.',
+                'dockerfile': 'docker/Dockerfile',
+                
+            },
+            'image': f'hosanalise/suite-de-testes:latest',
+            'container_name': f'hosanalise_{safe_service_name}',
+        },
         'services': {
             safe_service_name: {
-                'build': {
-                    'context': '.',
-                    'dockerfile': 'docker/Dockerfile',
-                    'args': {
-                        # Valores agora são dinâmicos!
-                        'TESTS_DIR': tests_dir,
-                        'PYTESTMARK': marker
-                    }
-                }, 
-                'image': f'hosanalise/{safe_service_name}:latest',
-                # 'environment': [
-                #     'APPLITOOLS_API_KEY=${APPLITOOLS_API_KEY}'
-                # ]
+                '<<': '*test-runner',
+                'command': [ "pytest", "-m", f"docker{safe_service_name}", f"testes/web/{safe_service_name}" ]
             }
         }
     }
