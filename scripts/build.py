@@ -31,21 +31,23 @@ def get_base_config(marker: str):
     # Ex: 'dockerContaPagar' -> 'ContaPagar'
 
     return {
-        'version': '3.8',
-        'x-test-runner': {
-            'build': {
-                'context': '.',
-                'dockerfile': 'docker/Dockerfile',
-                
-            },
-            'image': f'hosanalise/suite-de-testes:latest',
-            'container_name': f'hosanalise_{safe_service_name}',
-        },
+        'version': '1.0',
         'services': {
             safe_service_name: {
-                '<<': '*test-runner',
-                'command': [ "pytest", "-m", f"docker{safe_service_name}", f"testes/web/{safe_service_name}" ]
-            }
+                'build': {
+                    'context': '.',
+                    'dockerfile': 'docker/Dockerfile',
+                    'args': {
+                        # Valores agora são dinâmicos!
+                        
+                        'PYTESTMARK': marker
+                    }
+                }, 
+                'image': f'hosanalise/{safe_service_name}:latest',
+                
+            },
+            'commands': ['pytest', f'--markers={marker}'],               
+            
         }
     }
 
