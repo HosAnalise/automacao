@@ -1,0 +1,90 @@
+version: '1.0'
+services:
+  dockercontaspagar:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerContasPagar
+    image: hosanalise/dockercontaspagar:latest
+    command:
+    - pytest
+    - -m
+    - dockerContasPagar
+  dockercontasreceber:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerContasReceber
+    image: hosanalise/dockercontasreceber:latest
+    command:
+    - pytest
+    - -m
+    - dockerContasReceber
+  dockerconciliacaobancaria:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerConciliacaoBancaria
+    image: hosanalise/dockerconciliacaobancaria:latest
+    command:
+    - pytest
+    - -m
+    - dockerConciliacaoBancaria
+  dockercreditocliente:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerCreditoCliente
+    image: hosanalise/dockercreditocliente:latest
+    command:
+    - pytest
+    - -m
+    - dockerCreditoCliente
+  dockerextratodecontas:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerExtratoDeContas
+    image: hosanalise/dockerextratodecontas:latest
+    command:
+    - pytest
+    - -m
+    - dockerExtratoDeContas
+  dockercreditofornecedor:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerCreditoFornecedor
+    image: hosanalise/dockercreditofornecedor:latest
+    command:
+    - pytest
+    - -m
+    - dockerCreditoFornecedor
+  dockercheques:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerCheques
+    image: hosanalise/dockercheques:latest
+    command:
+    - pytest
+    - -m
+    - dockerCheques
+  dockercadastropessoas:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerCadastroPessoas
+    image: hosanalise/dockercadastropessoas:latest
+    command:
+    - pytest
+    - -m
+    - dockerCadastroPessoas
