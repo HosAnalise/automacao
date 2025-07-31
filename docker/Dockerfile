@@ -15,6 +15,7 @@ COPY .env.docker /app/.env
 COPY classes /app/classes
 COPY conftest.py /app/conftest.py
 COPY pytest.ini /app/pytest.ini
+COPY scripts/scheduler.py /app/scripts/scheduler.py
 # A GRANDE MUDANÇA: Copia a pasta 'web' inteira, com todos os testes.
 COPY testes/web /app/testes/web
 
