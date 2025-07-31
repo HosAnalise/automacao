@@ -7,7 +7,7 @@ from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
 import pytest
 
-@pytest.mark.dockercontaReceber
+@pytest.mark.dockerContasReceber
 def test_contaReceber_excluiContaReceber(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init

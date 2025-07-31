@@ -4,7 +4,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from classes.utils.FuncoesUteis import FuncoesUteis
 import pytest
 
-@pytest.mark.dockerContaPagar
+@pytest.mark.dockerContasPagar
 def test_contaPagar_insereConta_pagamentos_desconto(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init

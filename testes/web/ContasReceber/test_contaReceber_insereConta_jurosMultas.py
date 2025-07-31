@@ -3,7 +3,7 @@ from classes.rotinas.ContasReceber import ContaReceber
 from classes.utils.FuncoesUteis import FuncoesUteis
 import pytest
 
-@pytest.mark.dockerContaReceber
+@pytest.mark.dockerContasReceber
 def test_contaReceber_insereConta_jurosMultas(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, selenium_exceptions, oracle_db_connection = init

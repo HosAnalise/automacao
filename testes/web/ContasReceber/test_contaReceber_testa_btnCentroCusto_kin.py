@@ -15,7 +15,7 @@ from classes.rotinas.ContasReceber import ContaReceber
     )
     
 ])
-@pytest.mark.dockerContaReceber
+@pytest.mark.dockerContasReceber
 def test_contaReceber_botao_centroDeCusto(init, infoConta, devePassar):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init

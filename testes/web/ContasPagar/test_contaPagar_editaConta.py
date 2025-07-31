@@ -5,7 +5,7 @@ from classes.utils.Components import Components
 from classes.utils.FuncoesUteis import FuncoesUteis
 import pytest
 
-@pytest.mark.dockerContaPagar
+@pytest.mark.dockerContasPagar
 def test_contaPagar_editaConta(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
