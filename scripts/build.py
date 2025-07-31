@@ -44,7 +44,7 @@ def get_base_config(marker: str):
                     }
                 }, 
                 'image': f'hosanalise/{safe_service_name}:latest',
-                'command': ['pytest', '-m', marker],                         
+                'command': ['python', '--tarefa', marker],                         
             },
             
         }
