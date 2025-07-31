@@ -5,7 +5,7 @@ from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.rotinas.ExtratoContas import ExtratoContas
 import pytest
 
-@pytest.mark.dockerExtratoContas
+@pytest.mark.dockerExtratoDeContas
 def test_extratoContas_gerarRelatorio(init):
     starTime = time.time()
     browser, login, Log_manager, get_ambiente, env_vars, seletor_ambiente, screenshots, oracle_db_connection = init
