@@ -43,11 +43,11 @@ def main():
     print(f"Iniciando verificação contínua entre {hora_inicio} e {hora_fim}...")
 
     while True:
-        if dentro_do_horario(hora_inicio, hora_fim):
-            executar_tarefa(args.tarefa)
-        else:
-            print(f"[{datetime.now()}] Fora do horário permitido. Aguardando...")
-        time_module.sleep(args.intervalo_verificacao)
+        # if dentro_do_horario(hora_inicio, hora_fim):
+        # else:
+        #     print(f"[{datetime.now()}] Fora do horário permitido. Aguardando...")
+        # time_module.sleep(args.intervalo_verificacao)
+        executar_tarefa(args.tarefa)
 
 if __name__ == "__main__":
     main()
