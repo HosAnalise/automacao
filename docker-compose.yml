@@ -9,6 +9,7 @@ services:
     image: hosanalise/dockercontaspagar:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerContasPagar
   dockercontasreceber:
@@ -20,6 +21,7 @@ services:
     image: hosanalise/dockercontasreceber:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerContasReceber
   dockerconciliacaobancaria:
@@ -31,6 +33,7 @@ services:
     image: hosanalise/dockerconciliacaobancaria:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerConciliacaoBancaria
   dockercreditocliente:
@@ -42,6 +45,7 @@ services:
     image: hosanalise/dockercreditocliente:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerCreditoCliente
   dockerextratodecontas:
@@ -53,6 +57,7 @@ services:
     image: hosanalise/dockerextratodecontas:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerExtratoDeContas
   dockercreditofornecedor:
@@ -64,6 +69,7 @@ services:
     image: hosanalise/dockercreditofornecedor:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerCreditoFornecedor
   dockercheques:
@@ -75,6 +81,7 @@ services:
     image: hosanalise/dockercheques:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerCheques
   dockercadastropessoas:
@@ -86,6 +93,7 @@ services:
     image: hosanalise/dockercadastropessoas:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerCadastroPessoas
   dockermetas:
@@ -97,5 +105,6 @@ services:
     image: hosanalise/dockermetas:latest
     command:
     - python
+    - scheduler.py
     - --tarefa
     - dockerMetas
