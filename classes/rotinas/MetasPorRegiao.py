@@ -1,5 +1,7 @@
-from itertools import count
 
+from re import S
+
+from bson import Regex
 from classes.utils.Components import Components
 from pydantic import BaseModel
 from selenium.webdriver.common.by import By
@@ -8,19 +10,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from classes.utils.ApexUtil import Apex
 from classes.utils.FuncoesUteis import FuncoesUteis
 from classes.utils.Components import Components
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 
-class MetasComissoes:
+class MetasPorRegiao:
 
-    rotina = 'MetasComissoes'
+    rotina = 'MetasPorRegiao'
     url='metas-por-regiao'
 
 
 
 
     @staticmethod
-    def criarMeta(init):
+    def criarMeta(init:tuple):
 
         browser = init[0]
 
@@ -35,25 +37,13 @@ class MetasComissoes:
 
     class Metas(BaseModel):
         P311_DESCRICAO: str
-        P311_SELETOR_LOJA: float
+        P311_SELETOR_LOJA: list[str]
         P311_STATUS: str
 
-        @field_validator('P311_DESCRICAO')
-        def descricao_must_not_be_empty(cls, v):
-            if not v:
-                raise ValueError('A descrição não pode estar vazia.')
-            return v
-
-        @field_validator('P311_SELETOR_LOJA')
-        def seletor_loja_must_be_positive(cls, v):
-            if v <= 0:
-                raise ValueError('O valor deve ser positivo.')
-            return v
-        
 
 
     @staticmethod
-    def criarMetaComissao(init, meta: Metas):
+    def criarMetaComissao(init:tuple, meta: Metas):
 
        
         regex = {
@@ -70,10 +60,10 @@ class MetasComissoes:
         return meta if not regex_ok else regex_ok
 
     @staticmethod
-    def salvarMeta(init, meta: Metas):
+    def salvarMeta(init:tuple, meta: Metas):
 
 
-        if isinstance(meta, MetasComissoes.Metas):
+        if isinstance(meta, MetasPorRegiao.Metas):
             Components.btnClick(init=init,seletor="#B362593820643618646")
             return True
         else:
@@ -84,7 +74,7 @@ class MetasComissoes:
         
 
     @staticmethod
-    def editarMeta(init, value):
+    def editarMeta(init:tuple, value):
         """
         Edita o valor da meta para todos os elementos encontrados pelo seletor '.apex-item-text.valorMetaLoja'.
 
@@ -124,4 +114,72 @@ class MetasComissoes:
 
         if (float(valor_liquido) * elemento_count) != (float(value) * elemento_count):
             raise ValueError("Os valores não correspondem.")
-                        
+        
+    class SubMetas(BaseModel):
+        P311_DESCRICAO_SUBMETA: str
+        P311_LOJA_SUBMETA: str
+        P311_CATEGORIA_ID: list[str]
+        P311_HORARIO_INICIO: str
+        P311_HORARIO_FIM: str
+        P311_VALOR_SUBMETA: str
+
+    def subMetas(init:tuple):
+
+        return Components.btnClick(init=init, seletor="#R303905487677075712 > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button > span")
+
+
+    def criarSubMeta(init:tuple, submeta: SubMetas)->SubMetas|None:
+        """
+        Cria uma submeta com os dados fornecidos.
+        :param init: Lista contendo o browser e outros parâmetros necessários para manipulação dos componentes.
+        :param submeta: Objeto SubMetas contendo os dados da submeta a ser criada.
+        :return: Retorna a submeta criada ou None se houver erro.        
+        """
+
+
+        Regex = {
+            "P311_DESCRICAO_SUBMETA": 'alfanum',
+            "P311_HORARIO_INICIO": 'horario_sem_segundos',
+            "P311_HORARIO_FIM": 'horario_sem_segundos',
+            "P311_VALOR_SUBMETA": 'valor'
+        }
+
+        FuncoesUteis.limpaCampoEPreenche(init=init, camposAEditar=submeta.model_dump())
+        dicionarioFiltradoParaRegex = FuncoesUteis.filtrarCamposPorDicionario(init=init, dictAFiltrar=Regex, dictFiltro=submeta.model_dump(exclude_none=True))
+
+        regex_ok = FuncoesUteis.validaCamposPorRegex(init=init, camposAVerificar=dicionarioFiltradoParaRegex)
+
+        return submeta if not regex_ok else regex_ok
+    
+
+    def adicionarSubMeta(init:tuple)-> bool:
+        """
+        Salva a submeta criada.
+        :param init: Lista contendo o browser e outros parâmetros necessários para manipulação dos componentes.
+        :param submeta: Objeto SubMetas contendo os dados da submeta a ser salva.
+        :return: Retorna True se a submeta foi salva com sucesso, False caso contrário.
+        """
+
+        return Components.btnClick(init=init, seletor="#B303907145743075729")
+
+    def limparCamposSubMeta(init:tuple):
+        """
+        Limpa os campos de submeta.
+        :param init: Lista contendo o browser e outros parâmetros necessários para manipulação dos componentes.
+        :return: Retorna True se os campos foram limpos com sucesso, False caso contrário.
+        """
+
+        return Components.btnClick(init=init, seletor="#limparSubmeta")
+    
+
+    def comissoesPremios(init:tuple):
+        """
+        Acessa a seção de comissões e prêmios.
+        :param init: Lista contendo o browser e outros parâmetros necessários para manipulação dos componentes.
+        :return: Retorna True se a seção foi acessada com sucesso, False caso contrário.
+        """
+
+        return Components.btnClick(init=init, seletor="#R363928222315810106 > div.t-Region-header > div.t-Region-headerItems.t-Region-headerItems--controls > button > span")
+    
+
+

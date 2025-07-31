@@ -88,3 +88,14 @@ services:
     - pytest
     - -m
     - dockerCadastroPessoas
+  dockermetas:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        PYTESTMARK: dockerMetas
+    image: hosanalise/dockermetas:latest
+    command:
+    - pytest
+    - -m
+    - dockerMetas

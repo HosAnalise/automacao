@@ -1,6 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 import json
+import os
 import socket
 import tempfile
 from pydantic import BaseModel
@@ -27,6 +28,7 @@ from sqlalchemy import create_engine
 from selenium.webdriver.chrome.options import Options
 import traceback
 import sys
+from classes.utils.Email import EmailModel, EmailComposer,EmailSender
 
 
 
@@ -193,12 +195,6 @@ def selenium_exceptions():
     )
          
 
-  
-
-
-
-
-
 @pytest.fixture()
 def browser(request):
     envValue = getEnv()
@@ -223,7 +219,9 @@ def browser(request):
         except TimeoutException:
             pytest.exit("Erro crítico: navegador não inicializou corretamente.")
 
-        return driver
+        yield driver
+
+        driver.quit()
     
     elif mode == "SELENOID":
         browser = envValue.get("BROWSER")
@@ -243,10 +241,14 @@ def browser(request):
             "videoCodec": "mpeg4"
         })
 
-        return webdriver.Remote(
+        driver = webdriver.Remote(
             command_executor=remote_url,
             options=options
         )
+
+        yield driver
+
+        driver.quit()
 
 
 
@@ -278,17 +280,68 @@ def get_ambiente(request):
 
 
 
+
+def _send_login_failure_notification(env_vars, browser, log_manager):
+    """ Envia uma notificação por e-mail quando o login falha.    """
+
+    screenshot_path = ".assets/login_failure.png"  
+    try:
+        os.makedirs(os.path.dirname(screenshot_path), exist_ok=True)
+        browser.save_screenshot(screenshot_path)
+        log_manager.add_log(level="INFO", message=f"Screenshot de falha salva em '{screenshot_path}'", routine="Login")
+    except Exception as e:
+        screenshot_path = None 
+        log_manager.add_log(level="ERROR", message="Falha crítica ao salvar screenshot.", routine="Login", error_details=str(e))
+
+    EMAIL_REMETENTE = env_vars.get('EMAIL_REMETENTE')
+    SENHA_REMETENTE = env_vars.get('SENHA_REMETENTE')
+
+    if not EMAIL_REMETENTE or not SENHA_REMETENTE:
+        raise ValueError("As variáveis de ambiente EMAIL_REMETENTE e SENHA_REMETENTE não foram definidas.")
+
+    email_list = log_manager.get_logs_not_async(collection='emails')
+
+    servidor_outlook = {
+        "host": "smtp.office365.com",
+        "port": 587,
+        "email": EMAIL_REMETENTE,
+        "senha": SENHA_REMETENTE
+    }
+    enviador = EmailSender(**servidor_outlook)   
+    
+    for email in email_list:
+        try:
+            dados_email = EmailModel(
+                destinatario=email['email'],
+                assunto="Falha no Login do Gestão",
+                corpo="Olá, houve falha no login do sistema, em anexo uma imagem contendo print do erro ocorrido. Favor verificar com urgência.",
+                caminho_imagem=screenshot_path,  
+                nome_arquivo_anexo="login_failure.png"
+            )
+        except Exception as e:
+            print(f"Erro na validação dos dados do e-mail: {e}")
+            exit()
+
+        print("Montando a mensagem...")
+        compositor = EmailComposer(remetente=EMAIL_REMETENTE, data=dados_email)
+        mensagem_pronta = compositor.build_message()   
+
+        print("Enviando o e-mail...")
+        enviador.send(mensagem_pronta)
+
+
+
 @pytest.fixture()
-def login(browser, request):  
+def login(browser, request, log_manager):  
     """Realiza o login no sistema e retorna o WebDriver já autenticado."""
     user = request.config.getoption("user")  # Pegando o valor do parâmetro de usuário via CLI
     url = request.config.getoption("urlToUse")
     env_vars = getEnv()
-    log_manager = LogManager()
     erp_url = env_vars.get(f'{url}', '')
     emailField = env_vars.get('EMAIL_FIELD', '')
     passwordField = env_vars.get('PASSWORD_FIELD', '')
     btnLogin = env_vars.get('BTN_LOGIN', '')
+
 
     if not erp_url:
         pytest.exit("Erro crítico: ERP_URL não encontrada no .env")
@@ -309,8 +362,14 @@ def login(browser, request):
         WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, passwordField))).send_keys(senha)
         WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, btnLogin))).click()
 
-        WebDriverWait(browser, 10).until(EC.url_changes(f"{erp_url}login"))
-    except (TimeoutException, NoSuchElementException) as e:
+        try:
+             WebDriverWait(browser, 30).until(EC.url_changes(f"{erp_url}login"))
+
+        except TimeoutException:
+            log_manager.add_log(level="ERROR", message="Tempo limite excedido ao esperar pela mudança de URL após o login", routine="Login", application_type='WEB')
+            _send_login_failure_notification(env_vars, browser, log_manager)
+
+    except selenium_exceptions as e:
         log_manager.add_log(level="ERROR", message="Erro ao interagir com a página de login", routine="Login", error_details=str(e))
         pytest.exit("Erro crítico: encerrando testes devido ao erro de login.")
         

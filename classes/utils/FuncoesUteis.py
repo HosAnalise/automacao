@@ -1264,6 +1264,8 @@ class FuncoesUteis:
             - "telefone". = '(12) 3456-7890'
             - "celular". = '(12) 34567-8901'
             - "cep". - '12345-678'
+            - "horario_com_segundos". = '12:34:56' || Aceita apenas o formato de horas com segundos, não aceita minutos ou horas sem segundos.
+            - "horario_sem_segundos". = '12:34' || Aceita apenas o formato de horas sem segundos, não aceita minutos ou horas com segundos.
 
         :param init:
             Tupla com parâmetros do ambiente.
@@ -1295,7 +1297,9 @@ class FuncoesUteis:
             "cpf": r"^\d{3}\.\d{3}\.\d{3}-\d{2}$",
             "telefone": r"^\(\d{2}\) \d{4}-\d{4}$",
             "celular": r"^\(\d{2}\) \d{5}-\d{4}$",
-            "cep": r"^\d{5}-?\d{3}$"
+            "cep": r"^\d{5}-?\d{3}$",   
+            "horario_com_segundos": r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$",
+            "horario_sem_segundos": r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
         }
 
         totalTrue = 0
