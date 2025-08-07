@@ -1,6 +1,5 @@
 from datetime import datetime
 import locale
-from multiprocessing.spawn import prepare
 import socket
 import time
 import pytest
@@ -14,13 +13,11 @@ from classes.utils.Components import Components
 import random
 from classes.utils.ApexUtil import Apex
 from classes.utils.LogManager import LogManager
-from conftest import env_vars, selenium_exceptions
 from typing import Any, Tuple
 from pydantic import BaseModel
 import re
 
 
-from classes.utils.decorators import com_visual
 
 
 Log_manager = LogManager()
@@ -1313,16 +1310,7 @@ class FuncoesUteis:
                     EC.presence_of_element_located((By.CSS_SELECTOR, seletor))
                 )
                 valor = elemento.text
-
-            if not valor or valor == "":
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="WARNING",
-                    message=f"O campo {seletor} não foi encontrado ou está vazio.",
-                    routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
-                    error_details=""
-                )
-                continue
+            
             # se o valor recebido é uma tupla
             if isinstance(tipo, tuple) and len(tipo) == 2:
                 padrao1 = regexTipos.get(tipo[0])
@@ -1337,6 +1325,16 @@ class FuncoesUteis:
                         error_details=""
                     )
                     totalFalse += 1
+                    continue
+
+                if valor is None or valor == "":
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="WARNING",
+                        message=f"O campo {seletor} não possui valor para validação.",
+                        routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
+                        error_details=""
+                    )                    
                     continue
 
                 if re.fullmatch(padrao1, valor) or re.fullmatch(padrao2, valor):
@@ -1361,6 +1359,16 @@ class FuncoesUteis:
             # Se for um tipo único (string)
             else:
                 padrao = regexTipos.get(tipo)
+                
+                if valor is None or valor == "":
+                    Log_manager.add_log(
+                        application_type=env_application_type,
+                        level="WARNING",
+                        message=f"O campo {seletor} não possui valor para validação.",
+                        routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
+                        error_details=""
+                    )                    
+                    continue
 
                 if not padrao:
                     Log_manager.add_log(

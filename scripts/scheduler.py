@@ -1,9 +1,9 @@
 import argparse
-from datetime import datetime, time
+from datetime import datetime
 import subprocess
-import time as time_module
+from classes.utils.LogManager import LogManager
 
-
+log = LogManager()
 
 
 def dentro_do_horario(hora_inicio, hora_fim):
@@ -21,7 +21,7 @@ def executar_tarefa(tarefa):
     Executa o comando pytest com os parâmetros especificados.
     """
     print(f"[{datetime.now()}] Dentro do horário permitido. Executando pytest para {tarefa}...")
-    subprocess.call(["pytest", "-m", tarefa, "-s"])
+    subprocess.call(["pytest","-v","-n", "auto", "-m", tarefa, "-s"])
 
 def main():
     """
@@ -48,6 +48,8 @@ def main():
         #     print(f"[{datetime.now()}] Fora do horário permitido. Aguardando...")
         # time_module.sleep(args.intervalo_verificacao)
         executar_tarefa(args.tarefa)
+        log.delete_logs_older_than(days=2,collection_name='web_logs')  # Limpa logs mais antigos que 2 dias
+        log.delete_logs_older_than(days=2,collection_name='error_logs')  # Limpa logs mais antigos que 2 dias
 
 if __name__ == "__main__":
     main()

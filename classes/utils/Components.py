@@ -3,11 +3,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-from conftest import selenium_exceptions
 
 class Components:
 
     rotina = "Components"
+    ERROR_MESSAGE_SELECTOR = "#APEX_ERROR_MESSAGE"
 
     @staticmethod
     def has_alert_success(init: tuple) -> bool:
@@ -35,7 +35,7 @@ class Components:
             )
             return True
 
-        except (TimeoutException, NoSuchElementException, Exception) as e:
+        except (TimeoutException, NoSuchElementException) as e:
             Log_manager.add_log(
                 application_type="Web",
                 level="INFO",
@@ -70,7 +70,7 @@ class Components:
                 Log_manager.add_log(application_type ='Web',level= "ERROR", message = f"FormError encontrado , error:{content}", routine=f"{Components.rotina} - has_form", error_details ="" )
                 return True
 
-        except (TimeoutException, NoSuchElementException, Exception) as e :
+        except (TimeoutException, NoSuchElementException) as e:
             Log_manager.add_log(application_type ='Web',level= "INFO", message = "FormError não encontrado", routine=f"{Components.rotina} - has_form", error_details =f"{e}" )  
             return False 
 #END has_form(init)
@@ -125,26 +125,28 @@ class Components:
     @staticmethod
     def has_alert(init:tuple)->bool:
         """
-        Verifica se há um alerta na página.
+        Verifica se há um alerta de erro na página.
 
         :param init: Tupla contendo os objetos necessários:
             (browser, login, Log_manager, get_ambiente, env_vars,
             seletor_ambiente, screenshots, oracle_db_connection)
-        :return: True se o alerta de sucesso for encontrado, False caso contrário.
+        :return: True se o alerta de erro for encontrado, False caso contrário.
         """
-        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,screenshots,oracle_db_connection = init
+        browser,login,Log_manager,get_ambiente,env_vars,seletor_ambiente,selenium_exceptions,oracle_db_connection = init
 
         try:
 
-            alert = WebDriverWait(browser,10).until(EC.visibility_of_element_located((By.CSS_SELECTOR,"#t_Alert_Notification")))
+            alert = WebDriverWait(browser,10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, Components.ERROR_MESSAGE_SELECTOR)))
+            alert_text = alert.text.strip() if alert else ""
+            content = alert_text if alert_text else "Alerta vazio"
             if alert:
-                content = alert.text    
-                Log_manager.add_log(application_type ="Web",level= "ERROR", message = f" error:{content}", routine=f"{Components.rotina} - has_alert", error_details ="" )
+                Log_manager.add_log(application_type ="Web",level= "INFO", message = f"Alerta encontrado: {content}", routine=f"{Components.rotina} - has_alert", error_details ="" )
+                Log_manager.add_log(application_type ="Web",level= "INFO", message = f" error:{content}", routine=f"{Components.rotina} - has_alert", error_details ="" )
                 return True
     
 
-        except (TimeoutException, NoSuchElementException, Exception) as e :
-            Log_manager.add_log(application_type ="Web",level= "INFO", message = "Alert não encontrado", routine=f"{Components.rotina} - has_alert", error_details =f"{e}" )   
+        except selenium_exceptions as e :
+            Log_manager.add_log(application_type ="Web",level= "INFO", message = "Alerta de erro não encontrado", routine=f"{Components.rotina} - has_alert", error_details =f"{e}" )   
             return False
 #END has_alert(init)
 
@@ -174,7 +176,7 @@ class Components:
             return has
     
 
-        except (TimeoutException, NoSuchElementException, Exception) as e :
+        except (TimeoutException, NoSuchElementException) as e:
             Log_manager.add_log(application_type ="Web",level= "INFO", message = "Alert não encontrado", routine=f"{Components.rotina} - has_spin", error_details =f"{e}" )   
             return False
 #END has_spin(init)
@@ -198,7 +200,7 @@ class Components:
             WebDriverWait(browser,10).until(EC.url_contains(url))
             Log_manager.add_log(application_type=env_application_type, level="INFO", message=f"O trecho {url} esta presente na url da pagina atual", routine=f"{Components.rotina} - url_contains", error_details='')
             return True
-        except (TimeoutException, NoSuchElementException, Exception) as e:
+        except (TimeoutException, NoSuchElementException) as e:
             Log_manager.add_log(application_type=env_application_type, level="ERROR", message=str(e), routine=f"{Components.rotina} - url_contains", error_details=str(e))
             return False
 #END url_contains(init, url)

@@ -224,8 +224,8 @@ def browser(request):
         driver.quit()
     
     elif mode == "SELENOID":
-        browser = envValue.get("BROWSER")
-        version = envValue.get('VERSION')
+        browser = envValue.get("BROWSER",'chrome')
+        version = envValue.get('VERSION', '128.0')
         remote_url = envValue.get('SELENOID_URL')
         remote_url = "http://localhost:4444/wd/hub"
 

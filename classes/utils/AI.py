@@ -1,5 +1,4 @@
 # classes/utils/AI.py
-from click import prompt
 import google.generativeai as genai
 import os
 import json

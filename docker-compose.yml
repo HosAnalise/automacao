@@ -96,15 +96,15 @@ services:
     - scheduler.py
     - --tarefa
     - dockerCadastroPessoas
-  dockermetas:
+  dockermetasporregiao:
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        PYTESTMARK: dockerMetas
-    image: hosanalise/dockermetas:latest
+        PYTESTMARK: dockerMetasPorRegiao
+    image: hosanalise/dockermetasporregiao:latest
     command:
     - python
     - scheduler.py
     - --tarefa
-    - dockerMetas
+    - dockerMetasPorRegiao

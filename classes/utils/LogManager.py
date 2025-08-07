@@ -4,7 +4,6 @@ from typing import Optional
 from dotenv import load_dotenv
 import os
 import uuid  # Para gerar identificadores únicos
-from httpx import delete
 from pydantic import BaseModel
 from pymongo import MongoClient  # Importando MongoClient
 from pymongo.server_api import ServerApi
@@ -77,7 +76,7 @@ class LogManager:
         """
         return str(uuid.uuid4())  # Gerando um ID único para a execução
 
-    def add_log(self,application_type:str, level:str, message:str, routine:str, error_details:str|None =None):
+    def add_log(self, level:str, message:str, routine:str, error_details:str|None =None,application_type:str = "web"):
         """
         Adiciona um log ao array de logs em memória.
         
@@ -188,22 +187,23 @@ class LogManager:
         return list(self.collection.find({}))
     
 
-    def filtrar_logs_por_rotina(self, docs: list) -> dict:
+    def filtrar_logs_por_rotina(self,docs: list) -> dict:
         """
-        Agrupa os logs por execution_id.
+        Agrupa os logs por prefixo da execution_id (parte antes do underscore).
         
         :param docs: lista de documentos brutos do Mongo
-        :return: dict com execution_id como chave e lista de logs como valor
+        :return: dict com prefixo como chave e lista de logs como valor
         """
-        agrupado = defaultdict(list)
+        group = defaultdict(list)
 
         for doc in docs:
-            exec_id = doc.get("execution_id", "sem_execucao")
-            for log in doc.get("logs", []):
-                agrupado[exec_id].append(log)
+            exec_id = doc.get("execution_id", "no_excutuion")
+            prefixo = exec_id.split("- test")[0] if "- test" in exec_id else exec_id.split("_")[0] if "_" in exec_id else exec_id
 
-        return agrupado
-    
+            for log in doc.get("logs", []):
+                group[prefixo].append(log)
+
+        return group    
 
     def remover_logs_ambiguos(self, group: dict) -> dict:
         """
@@ -340,7 +340,7 @@ class LogManager:
         
         try:
             # Inserção do documento com logs de erro na coleção do MongoDB
-            result = self.collection.insert_one(log)
+            result = self.collection.insert_one(log) if log else None
             print(f"Erro inserido com ID: {result.inserted_id}")
         except Exception as e:
             print(f"Erro ao inserir log de erro: {e}")

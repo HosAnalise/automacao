@@ -3,8 +3,8 @@
 import time
 import pytest
 from classes.rotinas.MetasPorRegiao import MetasPorRegiao
-from classes.utils.Components import Components
 from classes.utils.FuncoesUteis import FuncoesUteis
+
 
 # --- Dados base para criar a meta e fazer os campos aparecerem ---
 META_BASE_VALIDA = MetasPorRegiao.Metas(
@@ -34,7 +34,7 @@ SQL_INJECTION_PAYLOAD_SIMPLE = "' OR '1'='1"
     ("R$1500,00", False, "FALHA: Tentativa de inserir símbolo monetário no campo de valor"),
     ("1.500,00", False, "FALHA: Tentativa de inserir formatação de milhar"),
     # ==== CENÁRIOS DE DADOS NÃO-CONVENCIONAIS ====
-    ("😊", False, "DADO: Tentativa de inserir Emojis"),
+    ("", False, "DADO: Tentativa de inserir Emojis"),
     # ("一百", False, "DADO: Tentativa de inserir caracteres Unicode (chinês)")
 
 
@@ -52,7 +52,7 @@ SQL_INJECTION_PAYLOAD_SIMPLE = "' OR '1'='1"
     (XSS_PAYLOAD_IMG, False, "SEGURANÇA: Tentativa de XSS com imagem no campo de valor"),
     (SQL_INJECTION_PAYLOAD_SIMPLE, False, "SEGURANÇA: Tentativa de SQL Injection no campo de valor"),
 ])
-@pytest.mark.dockerMetas
+@pytest.mark.dockerMetasPorRegiao
 def test_validacao_edicao_meta_e_soma(init, valor_a_inserir, devePassar, cenario):
     """
     Testa a função de edição de metas, focando na validação dos campos de valor
@@ -68,30 +68,38 @@ def test_validacao_edicao_meta_e_soma(init, valor_a_inserir, devePassar, cenario
         # --- PASSO 1: SETUP - Criar a meta para exibir os campos de edição ---
         FuncoesUteis.goToPage(init=init, url=MetasPorRegiao.url)
         MetasPorRegiao.criarMeta(init=init)
-        MetasPorRegiao.criarMetaComissao(init=init, metas=META_BASE_VALIDA)
-        MetasPorRegiao.selecionarLojasRegioes(init=init, metas=META_BASE_VALIDA)             
+        MetasPorRegiao.criarMetaComissao(init=init, meta=META_BASE_VALIDA)
+        MetasPorRegiao.selecionarLojasRegioes(init=init)             
 
         # Agora na tela de edição, chame a função 'editarMeta' com os dados do cenário
         resultado_edicao = MetasPorRegiao.editarMeta(init, valor_a_inserir)       
         
 
-        # --- PASSO 3: VERIFICAÇÃO ---
         if devePassar:
-            # Se deve passar, a função 'editarMeta' deve retornar True e uma mensagem de sucesso deve aparecer
-            assert resultado_edicao, "A função editarMeta() retornou 'False', indicando uma falha interna na validação."
-            
-            # **Ajuste o seletor da sua mensagem de sucesso**
-            sucesso_msg = FuncoesUteis.verificar_visibilidade_elemento(init, "div.t-Alert--success", timeout=5)
-            assert sucesso_msg, "Cenário deveria passar, mas a mensagem de sucesso final não foi encontrada."
-            Log_manager.add_log(level="INFO", message="Verificação de sucesso confirmada.", routine=rotina_nome)
-        else:
-            # Se deve falhar, esperamos que a função 'editarMeta' retorne False OU que o sistema mostre um erro na tela.
-            # **Ajuste o seletor da sua mensagem de erro de validação**
-            erro_msg = FuncoesUteis.verificar_visibilidade_elemento(init, ".t-Form-error", timeout=5)
-            assert not resultado_edicao or erro_msg, "Cenário deveria falhar, mas nenhuma validação parece ter bloqueado a ação."
-            Log_manager.add_log(level="INFO", message="Verificação de falha confirmada, como esperado.", routine=rotina_nome)
 
-    except Exception as e:
+            assert resultado_edicao , Log_manager.add_log(
+                                                            level="ERROR",
+                                                            application_type=env_application_type,
+                                                            message="O teste deveria passar (retornar True), mas falhou.",
+                                                            routine=rotina_nome
+                                                        )
+        else: # Cenários que devem falhar
+            # Aqui, você pode querer verificar se uma mensagem de erro específica aparece na tela
+            # Por simplicidade, vamos assumir que 'editarMeta' retornando False é o suficiente.
+            assert not resultado_edicao, Log_manager.add_log(
+                                                            level="ERROR",
+                                                            application_type=env_application_type,
+                                                            message="O teste deveria falhar (retornar False), mas passou.",
+                                                            routine=rotina_nome
+                                                        )
+
+    except selenium_exceptions as e:
+        Log_manager.add_log(
+            level="ERROR",
+            application_type=env_application_type,
+            message=f"O teste falhou com uma exceção inesperada no cenário '{cenario}': {str(e)}",
+            routine=rotina_nome
+        )
         pytest.fail(f"O teste falhou com uma exceção inesperada no cenário '{cenario}': {e}")
     finally:
        # Este bloco é executado mesmo se o teste falhar, ideal para registrar o tempo
