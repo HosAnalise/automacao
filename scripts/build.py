@@ -31,7 +31,7 @@ def get_base_config(marker: str):
     # Ex: 'dockerContaPagar' -> 'ContaPagar'
 
     return {
-        'version': '1.0',
+        
         'services': {
             safe_service_name: {
                 'build': {
@@ -74,7 +74,7 @@ def main(marker_source='pytest.ini', output_file='docker-compose.yml'):
         return
 
     # 2. Inicia a configuração final
-    final_config = {'version': '3.8', 'services': {}}
+    final_config = {'services': {}}
 
     # 3. Itera sobre os marcadores, construindo o dicionário de serviços 
     for mark in marks_list:

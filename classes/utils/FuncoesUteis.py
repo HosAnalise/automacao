@@ -1330,7 +1330,7 @@ class FuncoesUteis:
                 if valor is None or valor == "":
                     Log_manager.add_log(
                         application_type=env_application_type,
-                        level="WARNING",
+                        level="INFO",
                         message=f"O campo {seletor} não possui valor para validação.",
                         routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                         error_details=""
@@ -1363,7 +1363,7 @@ class FuncoesUteis:
                 if valor is None or valor == "":
                     Log_manager.add_log(
                         application_type=env_application_type,
-                        level="WARNING",
+                        level="INFO",
                         message=f"O campo {seletor} não possui valor para validação.",
                         routine=f"{FuncoesUteis.rotina} - validaCamposPorRegex",
                         error_details=""
