@@ -847,60 +847,7 @@ class FuncoesUteis:
 #END getURL(init)
 
 
-    @staticmethod
-    def compareValuesDesktop(obj:dict) -> bool:
-        """
-        Compara pares de valores em um dicionário e registra logs de sucesso ou erro.
-
-        :param obj: (dict): Dicionário onde cada chave mapeia para uma tupla (valor_esperado, valor_atual).
-
-        :return:
-            bool: True se todos os valores forem iguais, False se houver diferenças.Também cria logs que mostram os valores com diferenças
-        """
-        
-        env_application_type = env_vars.get("WEB")
-
-        if not isinstance(obj, dict):
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="WARNING",
-                message="compareValues - O objeto passado não é um dicionário válido.",
-                routine=f"{FuncoesUteis.rotina} - compareValuesDesktop",
-                error_details=""
-            )
-            return False
-
-        valoresDiferentes = {chave: (v1, v2) for chave, (v1, v2) in obj.items() if v1 != v2}
-
-        if not valoresDiferentes:
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="INFO",
-                message="Todos valores foram inseridos corretamente.",
-                routine=f"{FuncoesUteis.rotina} - compareValuesDesktop",
-                error_details=""
-            )
-            return True
-        else:
-            Log_manager.add_log(
-                application_type=env_application_type,
-                level="WARNING",
-                message="Alguns valores foram inseridos incorretamente.",
-                routine=f"{FuncoesUteis.rotina} - compareValuesDesktop",
-                error_details=""
-            )
-            
-            for chave, (v1, v2) in valoresDiferentes.items():
-                Log_manager.add_log(
-                    application_type=env_application_type,
-                    level="INFO",
-                    message=f"Valor incorreto - {chave}: {v1} (esperado) ≠ {v2} (atual)",
-                    routine=f"{FuncoesUteis.rotina} - compareValuesDesktop",
-                    error_details=""
-                )
-
-            return False
-#END compareValuesDesktop(obj)
+  
 
 
     @staticmethod

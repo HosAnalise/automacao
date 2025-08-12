@@ -21,6 +21,7 @@ def executar_tarefa(tarefa):
     Executa o comando pytest com os parâmetros especificados.
     """
     print(f"[{datetime.now()}] Dentro do horário permitido. Executando pytest para {tarefa}...")
+
     subprocess.call(["pytest","-v","-n", "auto", "-m", tarefa, "-s"])
 
 def main():

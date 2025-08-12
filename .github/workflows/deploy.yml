@@ -21,6 +21,8 @@ jobs:
       
       # PASSO CORRIGIDO: Apenas construir as imagens
       - name: Build das imagens Docker via Compose
+        env:
+          COMPOSE_BAKE: true
         run: docker-compose build
 
       # PASSO DE DEPLOY CORRIGIDO E ROBUSTO
