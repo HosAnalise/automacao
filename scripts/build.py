@@ -37,7 +37,7 @@ def get_base_config(marker: str):
                 'build': {
                     'context': '.',
                     'dockerfile': 'docker/Dockerfile',
-                    'args': {
+                    'args': {   
                         # Valores agora são dinâmicos!
                         
                         'PYTESTMARK': marker
