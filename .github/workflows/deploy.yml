@@ -27,8 +27,8 @@ jobs:
       
       # PASSO CORRIGIDO: Apenas construir as imagens
       - name: Build das imagens Docker via Compose
-        env:
-          COMPOSE_BAKE: true
+        # env:
+        #   COMPOSE_BAKE: true
         run: docker-compose build
 
       # PASSO MANTIDO: Enviar as imagens para o registry
