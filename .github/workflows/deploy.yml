@@ -17,7 +17,13 @@ jobs:
 
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v4  
+        uses: actions/checkout@v4
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       
       # PASSO CORRIGIDO: Apenas construir as imagens
       - name: Build das imagens Docker via Compose
@@ -25,6 +31,10 @@ jobs:
           COMPOSE_BAKE: true
         run: docker-compose build
 
+      # PASSO MANTIDO: Enviar as imagens para o registry
+      - name: Push das imagens para o Docker Hub
+        run: docker-compose push
+      
       # PASSO DE DEPLOY CORRIGIDO E ROBUSTO
       - name: Deploy dos serviços com Docker Compose
         run: |
