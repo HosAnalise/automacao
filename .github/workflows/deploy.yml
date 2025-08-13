@@ -29,7 +29,6 @@ jobs:
       - name: Build das imagens Docker via Compose
         env:
           COMPOSE_BAKE: true
-        working-directory: ./automacao 
         run: docker-compose build
 
       # PASSO MANTIDO: Enviar as imagens para o registry
