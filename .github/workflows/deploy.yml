@@ -13,7 +13,7 @@ on:
 
 jobs:
   build-and-deploy: # Renomeado para refletir a ação completa
-    runs-on: self-hosted
+    runs-on: [self-hosted,home_runner]
 
     steps:
       - name: Checkout do código
