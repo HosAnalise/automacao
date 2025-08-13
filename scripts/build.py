@@ -4,7 +4,7 @@ import configparser
 import argparse # Dica Pro: Usar argparse para scripts de linha de comando!
 
 def get_markers(ini_file='pytest.ini'):
-    """Retorna uma lista de marcadores definidos no arquivo pytest.ini. """
+    """Retorna uma lista de marcadores definidos no arquivo pytest.ini."""
     config = configparser.ConfigParser()
     config.read(ini_file)
     
