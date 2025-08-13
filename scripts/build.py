@@ -57,7 +57,7 @@ def write_docker_compose(config, filename='docker-compose.yml'):
         with open(filename, 'w') as file:
             # sort_keys=False mantém a ordem de inserção, o que é mais legível
             yaml.dump(config, file, sort_keys=False, indent=2)
-        print(f" Arquivo '{filename}' gerado com sucesso!")
+        print(f" Arquivo '{filename}' gerado com sucesso! ")
     except Exception as e:
         print(f" Erro ao escrever o arquivo YAML: {e}")
  
