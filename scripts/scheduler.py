@@ -49,8 +49,7 @@ def main():
         #     print(f"[{datetime.now()}] Fora do horário permitido. Aguardando...")
         # time_module.sleep(args.intervalo_verificacao)
         executar_tarefa(args.tarefa)
-        log.delete_logs_older_than(days=2,collection_name='web_logs')  # Limpa logs mais antigos que 2 dias
-        log.delete_logs_older_than(days=2,collection_name='error_logs')  # Limpa logs mais antigos que 2 dias
+        
 
 if __name__ == "__main__":
     main()
