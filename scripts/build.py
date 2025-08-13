@@ -18,7 +18,7 @@ def get_markers(ini_file='pytest.ini'):
 def get_base_config(marker: str):
     """
     Retorna a configuração de um serviço do docker-compose como um dicionário Python,
-    baseado em um marcador do pytest!
+    baseado em um marcador do pytest!!
     
     """
 
