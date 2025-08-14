@@ -1,16 +1,4 @@
 services:
-  ? ''
-  : build:
-      context: .
-      dockerfile: docker/Dockerfile
-      args:
-        PYTESTMARK: ''
-    image: hosanalise/:latest
-    command:
-    - python
-    - scheduler.py
-    - --tarefa
-    - ''
   dockercontaspagar:
     build:
       context: .
