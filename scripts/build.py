@@ -12,7 +12,7 @@ def get_markers(ini_file='pytest.ini'):
     markers_string = config.get('pytest', 'markers', fallback='')
     
     # List comprehension para limpar e filtrar os marcadores
-    marker_list = [marker.strip() for marker in markers_string.split(':')[0].split('\n') if marker.strip()]
+    marker_list = [marker.strip() for marker in markers_string.split(':')[0].split('\n') if marker.split('\n')]
     return marker_list
 
 def get_base_config(marker: str):
