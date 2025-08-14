@@ -1,16 +1,18 @@
 services:
-  dockercontaspagar:
+  dockercontaspagarcontasapagaromoduloquelistatodasascontasapagardosistema:
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        PYTESTMARK: dockerContasPagar
-    image: hosanalise/dockercontaspagar:latest
+        PYTESTMARK: "dockerContasPagar : Contas a pagar \xC3\xA9 o modulo que lista\
+          \ todas as contas a pagar do sistema."
+    image: hosanalise/dockercontaspagarcontasapagaromoduloquelistatodasascontasapagardosistema:latest
     command:
     - python
     - scheduler.py
     - --tarefa
-    - dockerContasPagar
+    - "dockerContasPagar : Contas a pagar \xC3\xA9 o modulo que lista todas as contas\
+      \ a pagar do sistema."
   dockercontasreceber:
     build:
       context: .
