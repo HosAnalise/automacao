@@ -2,6 +2,7 @@
 import google.generativeai as genai
 import os
 import json
+from pydantic import BaseModel
 from pypdf import PdfReader
 
 
@@ -57,8 +58,64 @@ class AI:
         except Exception as e:
             print(f"Ocorreu um erro ao gerar embeddings: {e}")
             return []
+        
 
-    
+    class JiraIssueEmbedding(BaseModel):
+        event: str
+        issue_key: str
+        issue_name: str
+        issue_description: str
+        summary: str
+
+    def generate_embedding_jira(self, jira_issue: JiraIssueEmbedding) -> list[float]:
+        """
+        Gera um vetor de embedding para a descrição de uma issue do Jira.
+
+        :param issue_description: A descrição da issue.
+        :return: Um vetor de embedding (lista de floats).
+        """
+
+        def obj_to_text(obj: AI.JiraIssueEmbedding) -> str:
+            return f"Evento: {obj.event}\n" \
+                   f"Chave da Issue: {obj.issue_key}\n" \
+                   f"Nome da Issue: {obj.issue_name}\n" \
+                   f"Descrição da Issue: {obj.issue_description}\n" \
+                   f"Resumo: {obj.summary}\n"
+
+        if not jira_issue:
+            return None
+
+        try:
+            result = genai.embed_content(
+                model=self.embedding_model,
+                content=[obj_to_text(jira_issue)],
+                task_type="RETRIEVAL_DOCUMENT"
+            )
+            return result['embedding']
+        except Exception as e:
+            print(f"Ocorreu um erro ao gerar embeddings: {e}")
+            return None
+
+    def generate_embedding_of_all_routines(self,json:json) -> list[float]:
+        """
+        Gera um vetor de embedding para todas as rotinas fornecidas.
+
+        :param rotinas: Uma lista de rotinas.
+        :return: Um vetor de embedding (lista de floats).
+        """
+        if not json:
+            return None
+
+        try:
+            result = genai.embed_content(
+                model=self.embedding_model,
+                content=[json],
+                task_type="RETRIEVAL_DOCUMENT"
+            )
+            return result['embedding']
+        except Exception as e:
+            print(f"Ocorreu um erro ao gerar embeddings: {e}")
+            return None
 
     def analisar_e_comparar_pdfs(self, pdf1: str, pdf2: str) -> bool:
         """
