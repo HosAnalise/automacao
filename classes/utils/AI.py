@@ -4,6 +4,8 @@ import os
 import json
 from pydantic import BaseModel
 from pypdf import PdfReader
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 
 class AI:
@@ -71,7 +73,8 @@ class AI:
         """
         Gera um vetor de embedding para a descrição de uma issue do Jira.
 
-        :param issue_description: A descrição da issue.
+        :param jira_issue: A descrição da issue.
+
         :return: Um vetor de embedding (lista de floats).
         """
 
@@ -100,7 +103,8 @@ class AI:
         """
         Gera um vetor de embedding para todas as rotinas fornecidas.
 
-        :param rotinas: Uma lista de rotinas.
+        :param json: Uma lista de rotinas.
+
         :return: Um vetor de embedding (lista de floats).
         """
         if not json:
@@ -124,9 +128,7 @@ class AI:
         :param pdf1: Caminho para o primeiro arquivo PDF.
         :param pdf2: Caminho para o segundo arquivo PDF.
         :return: Booleano indicando se os PDFs são idênticos.
-        """
-
-        
+        """       
         
         try:
             reader1 = PdfReader(pdf1)
@@ -161,21 +163,54 @@ class AI:
 
             response = self.generative_model.generate_content(prompt)
 
-
-
-
-
             return response.text.strip().lower() if response else False
         
         except Exception as e:
             print(f"Erro ao comparar PDFs: {e}")
             return False
         
-
-    
-
+    def calculate_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
+        if not embedding1 or not embedding2:
+            return 0.0
+        
+        vec1 = np.array(embedding1)
+        vec2 = np.array(embedding2)
 
         
+        if vec1.ndim == 2:
+            vec1 = vec1[0]
+        
+        if vec2.ndim == 2:
+            vec2 = vec2[0]
+
+        similarity = cosine_similarity([vec1], [vec2])[0]
+
+        return similarity[0]
+
+    def rank_documents(self, similarity_scores: list[float], top_k: int = 3) -> list[dict[str, any]]:
+        """
+        Classifica os documentos com base em seus scores de similaridade e retorna os melhores.
+
+        Args:
+            similarity_scores: Uma lista de scores de similaridade.
+            top_k: O número de melhores resultados a serem retornados.
+
+        Returns:
+            Uma lista de dicionários, cada um contendo o índice original
+            do documento e seu score de similaridade.
+        """
+        ordered_indices = np.argsort(similarity_scores)[::-1]
+
+        ranking = []
+        # Itera apenas sobre os N melhores índices (top_k)
+        for idx in ordered_indices[:top_k]:
+            ranking.append({
+                "original_index": int(idx),  
+                "score": float(similarity_scores[int(idx)])
+            })
+            
+        return ranking
+
 # --- Exemplo de como usar a classe centralizada ---
 if __name__ == '__main__':
     ia_helper = AI()

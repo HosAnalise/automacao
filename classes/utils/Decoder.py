@@ -108,6 +108,8 @@ class Decode:
     
     @staticmethod
     def generate_json():
+
+        Decode.open_connection()
      
         query = """
             SELECT 
