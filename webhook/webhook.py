@@ -27,11 +27,13 @@ def jira_webhook_handler():
 
     embedding2 = ai.generate_embedding_of_all_routines(Decode.generate_json())
 
-    similarity = ai.calculate_similarity(embedding1, embedding2)
 
-    ranked_documents = ai.rank_documents([similarity])
 
-    print(f"Ranked documents {ranked_documents}")
+    # similarity = ai.calculate_similarity(embedding1, embedding2)
+
+    # ranked_documents = ai.rank_documents([similarity])
+
+    # print(f"Ranked documents {ranked_documents}")
 
     return jsonify({"status": "recebido"}), 200
 

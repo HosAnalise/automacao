@@ -154,7 +154,7 @@ class Decode:
             }
             processed_data.append(obj)
         
-        return json.dumps(processed_data, ensure_ascii=False, indent=4)
+        return processed_data
     
 
 

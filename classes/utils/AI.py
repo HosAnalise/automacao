@@ -1,4 +1,6 @@
 # classes/utils/AI.py
+import heapq
+from unittest import result
 import google.generativeai as genai
 import os
 import json
@@ -86,40 +88,46 @@ class AI:
                    f"Resumo: {obj.summary}\n"
 
         if not jira_issue:
-            return None
+            return []
 
         try:
             result = genai.embed_content(
                 model=self.embedding_model,
                 content=[obj_to_text(jira_issue)],
-                task_type="RETRIEVAL_DOCUMENT"
+                task_type="RETRIEVAL_QUERY"
             )
-            return result['embedding']
+            return result['embedding'][0]
         except Exception as e:
             print(f"Ocorreu um erro ao gerar embeddings: {e}")
             return None
 
-    def generate_embedding_of_all_routines(self,json:json) -> list[float]:
+    def generate_embedding_of_all_routines(self,json:list[dict]) -> list[list[float]]:
         """
         Gera um vetor de embedding para todas as rotinas fornecidas.
 
         :param json: Uma lista de rotinas.
 
-        :return: Um vetor de embedding (lista de floats).
+        :return: Uma lista de embeddings (lista de listas de floats).
         """
         if not json:
-            return None
+            return []
 
         try:
+            content_to_embed = [
+                f"Nome: {obj.get('meta', '')}\nDescrição: {obj.get('content', '')}" 
+                for obj in json
+            ]
             result = genai.embed_content(
-                model=self.embedding_model,
-                content=[json],
-                task_type="RETRIEVAL_DOCUMENT"
-            )
+                    model=self.embedding_model,
+                    content=content_to_embed,
+                    task_type="RETRIEVAL_DOCUMENT"
+                )
             return result['embedding']
         except Exception as e:
             print(f"Ocorreu um erro ao gerar embeddings: {e}")
-            return None
+            return []
+
+
 
     def analisar_e_comparar_pdfs(self, pdf1: str, pdf2: str) -> bool:
         """
@@ -199,17 +207,15 @@ class AI:
             Uma lista de dicionários, cada um contendo o índice original
             do documento e seu score de similaridade.
         """
-        ordered_indices = np.argsort(similarity_scores)[::-1]
+        top_k_items = heapq.nlargest(top_k, enumerate(similarity_scores), key=lambda item: item[1])
 
-        ranking = []
-        # Itera apenas sobre os N melhores índices (top_k)
-        for idx in ordered_indices[:top_k]:
-            ranking.append({
-                "original_index": int(idx),  
+        return [
+            {
+                "original_index": int(idx),
                 "score": float(similarity_scores[int(idx)])
-            })
-            
-        return ranking
+            }
+            for idx, _ in top_k_items
+        ]
 
 # --- Exemplo de como usar a classe centralizada ---
 if __name__ == '__main__':
