@@ -1,9 +1,6 @@
-# classes/utils/AI.py
 import heapq
-from unittest import result
 import google.generativeai as genai
 import os
-import json
 from pydantic import BaseModel
 from pypdf import PdfReader
 from sklearn.metrics.pairwise import cosine_similarity
@@ -216,6 +213,7 @@ class AI:
             }
             for idx, _ in top_k_items
         ]
+               
 
 # --- Exemplo de como usar a classe centralizada ---
 if __name__ == '__main__':
