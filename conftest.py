@@ -4,6 +4,7 @@ import json
 import os
 import socket
 import tempfile
+from xml.dom.minidom import Attr
 from pydantic import BaseModel
 import requests
 from selenium import webdriver
@@ -29,6 +30,7 @@ from selenium.webdriver.chrome.options import Options
 import traceback
 import sys
 from classes.utils.Email import EmailModel, EmailComposer,EmailSender
+from classes.utils.Components import Components
 
 
 
@@ -281,7 +283,7 @@ def get_ambiente(request):
 
 
 
-def _send_login_failure_notification(env_vars, browser, log_manager):
+def _send_login_failure_notification(env_vars, browser, log_manager,error:str = None):
     """ Envia uma notificação por e-mail quando o login falha.    """
 
     screenshot_path = ".assets/login_failure.png"  
@@ -301,23 +303,24 @@ def _send_login_failure_notification(env_vars, browser, log_manager):
 
     email_list = log_manager.get_logs_not_async(collection='emails')
 
-    servidor_outlook = {
-        "host": "smtp.office365.com",
+    servidor_gmail = {
+        "host": "smtp.gmail.com",
         "port": 587,
         "email": EMAIL_REMETENTE,
         "senha": SENHA_REMETENTE
     }
-    enviador = EmailSender(**servidor_outlook)   
+    enviador = EmailSender(**servidor_gmail)   
     
     for email in email_list:
         try:
+            
             dados_email = EmailModel(
-                destinatario=email['email'],
-                assunto="Falha no Login do Gestão",
-                corpo="Olá, houve falha no login do sistema, em anexo uma imagem contendo print do erro ocorrido. Favor verificar com urgência.",
-                caminho_imagem=screenshot_path,  
-                nome_arquivo_anexo="login_failure.png"
-            )
+                                    destinatario=email['email'],
+                                    assunto="Falha no Login do Gestão",
+                                    corpo=f"Olá, houve falha no login do sistema,Erro:{error}. Em anexo uma imagem contendo print do erro ocorrido. Favor verificar com urgência. Esse e-mail foi gerado via automação",
+                                    caminho_imagem=screenshot_path,
+                                    nome_arquivo_anexo="login_failure.png"
+                                    )
         except Exception as e:
             print(f"Erro na validação dos dados do e-mail: {e}")
             exit()
@@ -331,50 +334,77 @@ def _send_login_failure_notification(env_vars, browser, log_manager):
 
 
 
+LOGIN_TIMEOUT = 10  # Tempo de espera para elementos na página de login
+POST_LOGIN_TIMEOUT = 30 # Tempo de espera para o carregamento da página após o login
+ERROR_ALERT_TIMEOUT = 5 # Tempo curto para verificar se uma mensagem de erro apareceu
+
+
 @pytest.fixture()
-def login(browser, request, log_manager):  
-    """Realiza o login no sistema e retorna o WebDriver já autenticado."""
-    user = request.config.getoption("user")  # Pegando o valor do parâmetro de usuário via CLI
-    url = request.config.getoption("urlToUse")
+def login(browser, request, log_manager,selenium_exceptions):
+    """
+    Realiza o login no sistema, valida o sucesso ou falha, e retorna o WebDriver autenticado.
+    """
+    user = request.config.getoption("user")
+    url_key = request.config.getoption("urlToUse")
     env_vars = getEnv()
-    erp_url = env_vars.get(f'{url}', '')
-    emailField = env_vars.get('EMAIL_FIELD', '')
-    passwordField = env_vars.get('PASSWORD_FIELD', '')
-    btnLogin = env_vars.get('BTN_LOGIN', '')
 
-
-    if not erp_url:
-        pytest.exit("Erro crítico: ERP_URL não encontrada no .env")
-
+    erp_url = env_vars.get(url_key, '')
     email = env_vars.get(f"{user.upper()}_EMAIL", '')
-    senha = env_vars.get(f"{user.upper()}_PASSWORD", '')
+    password = env_vars.get(f"{user.upper()}_PASSWORD", '')
 
-    if not email or not senha:
-        pytest.exit(f"Erro crítico: dados de login não encontrados para o usuário {user}.")
+    email_field_selector = env_vars.get('EMAIL_FIELD', '')
+    password_field_selector = env_vars.get('PASSWORD_FIELD', '')
+    btn_login_selector = env_vars.get('BTN_LOGIN', '')
+    error_message_selector = Components.ERROR_MESSAGE_SELECTOR
 
+    if not all([erp_url, email, password, email_field_selector, password_field_selector, btn_login_selector]):
+        pytest.exit("Erro crítico: Variáveis de ambiente ou seletores essenciais para o login não foram encontrados.")
+        
     try:
         browser.get(f"{erp_url}login")
-        log_manager.add_log(level="INFO", message="Página login carregada", routine="Login", error_details='',application_type='WEB',
-)
-
-        # Realizando login
-        WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, emailField))).send_keys(email)
-        WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, passwordField))).send_keys(senha)
-        WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, btnLogin))).click()
-
-        try:
-             WebDriverWait(browser, 30).until(EC.url_changes(f"{erp_url}login"))
-
-        except TimeoutException:
-            log_manager.add_log(level="ERROR", message="Tempo limite excedido ao esperar pela mudança de URL após o login", routine="Login", application_type='WEB')
-            _send_login_failure_notification(env_vars, browser, log_manager)
-
+        log_manager.add_log(level="INFO", message="Página de login carregada.", routine="Login")
+        
+        wait = WebDriverWait(browser, LOGIN_TIMEOUT)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, email_field_selector))).send_keys(email)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, password_field_selector))).send_keys(password)
+        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, btn_login_selector))).click()
+        log_manager.add_log(level="INFO", message="Formulário de login preenchido e enviado.", routine="Login")
+        return browser
     except selenium_exceptions as e:
-        log_manager.add_log(level="ERROR", message="Erro ao interagir com a página de login", routine="Login", error_details=str(e))
-        pytest.exit("Erro crítico: encerrando testes devido ao erro de login.")
+        log_manager.add_log(level="ERROR", message="Timeout ao tentar preencher o formulário de login.", routine="Login", error_details=str(e))
+        _send_login_failure_notification(env_vars, browser, log_manager,error=str(e))
+        pytest.fail("Falha crítica: Não foi possível interagir com a página de login. Verifique os seletores ou a disponibilidade da página.")
+    except Exception as e: 
+        log_manager.add_log(level="ERROR", message="Erro inesperado durante a interação com o login.", routine="Login", error_details=str(e))
+        _send_login_failure_notification(env_vars, browser, log_manager,error=str(e))
+        pytest.fail(f"Erro inesperado no Selenium durante o login: {e}")
+        
+    try:
+        error_alert = WebDriverWait(browser, ERROR_ALERT_TIMEOUT).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, error_message_selector))
+        )
+        error_text = error_alert.text.strip() if error_alert else "Alerta de erro encontrado, mas sem texto."
+        if "Credenciais de Log-in Inválidas" in error_text:
+            pass
+        else:
+            log_manager.add_log(level="ERROR", message=f"Falha no login. Mensagem de erro exibida: '{error_text}'", routine="Login")
+            _send_login_failure_notification(env_vars, browser, log_manager,error=error_text)
+            pytest.fail(f"Login falhou. Motivo: {error_text}")
+
+    except TimeoutException:
+       
+        log_manager.add_log(level="INFO", message="Nenhum alerta de erro imediato encontrado. Verificando redirecionamento de sucesso...", routine="Login")
+        try:
+            WebDriverWait(browser, POST_LOGIN_TIMEOUT).until(EC.url_changes(f"{erp_url}login"))
+            log_manager.add_log(level="INFO", message="Login realizado com sucesso! URL alterada.", routine="Login")
+        except TimeoutException:
+            log_manager.add_log(level="ERROR", message="Falha no login: A página não redirecionou após a tentativa.", routine="Login")
+            _send_login_failure_notification(env_vars, browser, log_manager,error="A página não redirecionou após a tentativa.")
+            pytest.fail("Login falhou. A URL não mudou após a submissão das credenciais.")
+
+    return browser
         
     
-    return browser
 
 
 @pytest.fixture()
@@ -548,7 +578,6 @@ def compare_images_advanced():
 
 
 
-@pytest.fixture()
 def has_connection():
 
     def _has_connection_socket():

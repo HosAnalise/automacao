@@ -43,11 +43,11 @@ class LogManager:
 
 
 
-    def __init__(self):
+    def __init__(self, collection: Optional[str] = None):
         # Carregar variáveis do .env
         mongodb_uri = os.getenv("MONGODB_URI")
         db_name = os.getenv("DB_NAME")
-        collection_name = os.getenv("COLLECTION_NAME")
+        collection_name = os.getenv("COLLECTION_NAME") if collection is None else collection
         dev = os.getenv("DEV")
         dias_pra_deletar_logs = os.getenv('DAYS_TO_DELETE_LOGS')
         dias_pra_deletar_logs = int(dias_pra_deletar_logs) if dias_pra_deletar_logs else 7 
@@ -92,7 +92,6 @@ class LogManager:
             "routine": routine,
             "error_details": error_details,
             "timestamp": datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
-
         }
 
         # Adiciona o log ao array de logs

@@ -122,13 +122,13 @@ if __name__ == "__main__":
     mensagem_pronta = compositor.build_message()
 
     # c) Configure o "Carteiro" para o Outlook
-    servidor_outlook = {
-        "host": "smtp.office365.com",
+    servidor_gmail = {
+        "host": "smtp.gmail.com",
         "port": 587,
         "email": EMAIL_REMETENTE,
         "senha": SENHA_REMETENTE
     }
-    enviador = EmailSender(**servidor_outlook)
+    enviador = EmailSender(**servidor_gmail)
 
     # d) Envie!
     print("Enviando o e-mail...")
