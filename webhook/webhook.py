@@ -1,12 +1,14 @@
 from flask import Flask, request, jsonify
 from classes.utils.AI import AI
-from classes.utils.Decoder import Decode
 from classes.utils.ChromaDBManager import ChromaDBManager
+from scripts.build import get_markers
+
 
 app = Flask(__name__)
 
 @app.route('/webhook/jira', methods=['POST'])
 def jira_webhook_handler():
+
     data = request.get_json()
     
     event = data.get('webhookEvent')
@@ -14,7 +16,9 @@ def jira_webhook_handler():
     description = data.get('issue', {}).get('fields', {}).get('description', '')
     summary = data.get('issue', {}).get('fields', {}).get('summary', '')
     issue_name = data.get('issue', {}).get('fields', {}).get('name', '')
-    print(f"Evento recebido: {event}, Issue Key: {issue_key},  Nome da Issue: {issue_name}")
+    tester = data.get('issue', {}).get('customfield_10077', [{}])[0].get('value', 'teste')
+    print(f"Recebido evento: {event} para a issue: {issue_key} - {issue_name}, atribuída a: {tester}")
+
 
     try:
         chromadb_manager = ChromaDBManager()
@@ -28,19 +32,21 @@ def jira_webhook_handler():
             summary=summary
         )
 
-        embedding1 = ai.generate_embedding_jira(jiraEmbedding)
+        # query_result = chromadb_manager.query_collection(
+        #     collection=chromadb_manager.get_or_create_collection(name="MANUAIS_DE_ROTINAS"),
+        #     query_embeddings=ai.generate_embedding_jira(jiraEmbedding),
+        #     n_results=10
+        
+        # )
 
-        collection = chromadb_manager.get_or_create_collection(name="MANUAIS_DE_ROTINAS")
+        # chromadb_manager.get_or_create_collection(name="TEMP_BFS_MANUAIS")
 
-        print(f"Total de documentos na coleção: {collection.count()}")
 
-        query_result = chromadb_manager.query_collection(
-            collection=chromadb_manager.get_or_create_collection(name="MANUAIS_DE_ROTINAS"),
-            query_embeddings=embedding1
-        )
 
-        for ids in query_result:
-            print(f"ID encontrado: {ids[0].split(':')[0]}\n")
+
+
+
+        
 
     except Exception as e:
         print(f"Erro ao processar webhook do Jira: {e}")
