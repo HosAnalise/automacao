@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from classes.utils.AI import AI
 from classes.utils.Decoder import Decode
+from classes.utils.ChromaDBManager import ChromaDBManager
 
 app = Flask(__name__)
 
@@ -13,27 +14,37 @@ def jira_webhook_handler():
     description = data.get('issue', {}).get('fields', {}).get('description', '')
     summary = data.get('issue', {}).get('fields', {}).get('summary', '')
     issue_name = data.get('issue', {}).get('fields', {}).get('name', '')
+    print(f"Evento recebido: {event}, Issue Key: {issue_key},  Nome da Issue: {issue_name}")
 
-    ai = AI()
-    jiraEmbedding = AI.JiraIssueEmbedding(
-        event=event,
-        issue_key=issue_key,
-        issue_name=issue_name,
-        issue_description=description,
-        summary=summary
-    )
+    try:
+        chromadb_manager = ChromaDBManager()
+        ai = AI()
 
-    embedding1 = ai.generate_embedding_jira(jiraEmbedding)
+        jiraEmbedding = AI.JiraIssueEmbedding(
+            event=event,
+            issue_key=issue_key,
+            issue_name=issue_name,
+            issue_description=description,
+            summary=summary
+        )
 
-    embedding2 = ai.generate_embedding_of_all_routines(Decode.generate_json())
+        embedding1 = ai.generate_embedding_jira(jiraEmbedding)
 
+        collection = chromadb_manager.get_or_create_collection(name="MANUAIS_DE_ROTINAS")
 
+        print(f"Total de documentos na coleção: {collection.count()}")
 
-    # similarity = ai.calculate_similarity(embedding1, embedding2)
+        query_result = chromadb_manager.query_collection(
+            collection=chromadb_manager.get_or_create_collection(name="MANUAIS_DE_ROTINAS"),
+            query_embeddings=embedding1
+        )
 
-    # ranked_documents = ai.rank_documents([similarity])
+        for ids in query_result:
+            print(f"ID encontrado: {ids[0].split(':')[0]}\n")
 
-    # print(f"Ranked documents {ranked_documents}")
+    except Exception as e:
+        print(f"Erro ao processar webhook do Jira: {e}")
+
 
     return jsonify({"status": "recebido"}), 200
 
