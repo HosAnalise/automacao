@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from pypdf import PdfReader
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import backoff
+
 
 
 class AI:
@@ -98,6 +100,17 @@ class AI:
             print(f"Ocorreu um erro ao gerar embeddings: {e}")
             return None
 
+
+    def is_rate_limit_error(e):
+        """Verifica se a exceção contém o código de status 429."""
+        return "429" in str(e)
+
+
+
+
+    @backoff.on_exception(backoff.expo,
+                      exception=Exception,
+                      giveup=lambda e: not AI.is_rate_limit_error(e))
     def generate_embedding_of_all_routines(self,json:list[dict]) -> list[list[float]]:
         """
         Gera um vetor de embedding para todas as rotinas fornecidas.
@@ -125,6 +138,10 @@ class AI:
             return []
 
 
+    def tranform_document_in_lot_for_embedd(self,dict_to_batch:list[dict]) -> list[list[dict]]:
+
+        batch_size=10
+        return [dict_to_batch[i:i + batch_size] for i in range(0, len(dict_to_batch), batch_size)]
 
     def analisar_e_comparar_pdfs(self, pdf1: str, pdf2: str) -> bool:
         """

@@ -126,7 +126,7 @@ class Decode:
                 ON PB.PAGINA_BASE_NIVEL_ACESSO_ID = PBN.PAGINA_BASE_NIVEL_ACESSO_ID
 
             WHERE
-                exists (SELECT * FROM ERP.BASE_CONHECIMENTO_FILA_RAG a WHERE a.PAGINA_BASE_ID = PB.PAGINA_BASE_ID AND a.SINCRONIZADO = 0)
+                exists (SELECT * FROM ERP.BASE_CONHECIMENTO_FILA_RAG a WHERE a.PAGINA_BASE_ID = PB.PAGINA_BASE_ID )
         """   
         data = Decode.fetch_data(query,None,None)
         timestamp = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S:%f")
@@ -153,7 +153,7 @@ class Decode:
                 "content": content
             }
             processed_data.append(obj)
-        
+
         return processed_data
     
 

@@ -1,12 +1,18 @@
+import os
 import chromadb
 from chromadb.api.client import Client
 from chromadb.api.models.Collection import Collection
 from typing import List, Optional, Any, Dict
 
+
+
+
 # Analogia: Pense nesta classe como um "Controle Remoto Universal" para o ChromaDB.
 # A versão original era como um controle que só tinha o botão de ligar.
 # Esta nova versão tem botões de volume, canais, input, etc.,
 # dando a você acesso a mais funcionalidades de forma segura e organizada.
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
 
 class ChromaDBManager:
     """
@@ -25,7 +31,7 @@ class ChromaDBManager:
             client (Optional[Client]): Uma instância de cliente ChromaDB.
                                        Se None, um EphemeralClient será criado.
         """
-        self.client: Client = client or chromadb.EphemeralClient()
+        self.client: Client = client or chromadb.PersistentClient('assets')
 
     def get_or_create_collection(self, name: str) -> Collection:
         """
@@ -38,6 +44,7 @@ class ChromaDBManager:
         Returns:
             Collection: A instância da coleção.
         """
+
         # Este método é mais seguro e conveniente que ter create e get separados.
         return self.client.get_or_create_collection(name=name)
 
@@ -61,7 +68,7 @@ class ChromaDBManager:
             metadatas (Optional[List[Dict[str, Any]]]): Metadados associados a cada item.
             embeddings (Optional[List[List[float]]]): Embeddings pré-calculados.
         """
-        collection.add(
+        collection.upsert(
             embeddings=embeddings,
             documents=documents,
             metadatas=metadatas,
