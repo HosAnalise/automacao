@@ -1,4 +1,5 @@
 import heapq
+from typing import Optional
 import google.generativeai as genai
 import os
 from pydantic import BaseModel
@@ -69,6 +70,7 @@ class AI:
         issue_name: str
         issue_description: str
         summary: str
+        tester: Optional[str] = None
 
     def generate_embedding_jira(self, jira_issue: JiraIssueEmbedding) -> list[float]:
         """

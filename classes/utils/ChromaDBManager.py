@@ -11,7 +11,6 @@ from typing import List, Optional, Any, Dict
 # A versão original era como um controle que só tinha o botão de ligar.
 # Esta nova versão tem botões de volume, canais, input, etc.,
 # dando a você acesso a mais funcionalidades de forma segura e organizada.
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 
 class ChromaDBManager:
@@ -75,6 +74,17 @@ class ChromaDBManager:
             ids=ids
         )
         print(f"Adicionados {len(ids)} itens à coleção '{collection.name}'.")
+
+
+
+
+    def process_query_result(self,query_result: dict) -> list[str]:
+
+            return [
+                id_str.split(':')[0]
+                for id_list in query_result.get('ids', []) if id_list
+                for id_str in id_list if id_str
+            ]    
 
 
     def query_collection(
