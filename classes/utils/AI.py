@@ -65,12 +65,15 @@ class AI:
         
 
     class JiraIssueEmbedding(BaseModel):
-        event: str
-        issue_key: str
-        issue_name: str
-        issue_description: str
-        summary: str
-        tester: Optional[str] = None
+        event: Optional[str] = None
+        issue_key: Optional[str] = None
+        issue_name: Optional[str] = None
+        issue_description: Optional[str] = None
+        summary: Optional[str] = None
+        tester: Optional[str|dict] = None
+        epic: Optional[str] = None
+        priority: Optional[str] = None
+        project : Optional[str] = None
 
     def generate_embedding_jira(self, jira_issue: JiraIssueEmbedding) -> list[float]:
         """
@@ -86,7 +89,8 @@ class AI:
                    f"Chave da Issue: {obj.issue_key}\n" \
                    f"Nome da Issue: {obj.issue_name}\n" \
                    f"Descrição da Issue: {obj.issue_description}\n" \
-                   f"Resumo: {obj.summary}\n"
+                   f"Resumo: {obj.summary}\n" \
+                   f"Testador: {obj.tester if obj.tester else 'N/A'}"
 
         if not jira_issue:
             return []
@@ -118,6 +122,7 @@ class AI:
         Gera um vetor de embedding para todas as rotinas fornecidas.
 
         :param json: Uma lista de rotinas.
+
 
         :return: Uma lista de embeddings (lista de listas de floats).
         """

@@ -2,9 +2,9 @@ from jira import JIRA
 from jira.resources import Issue
 from jira.exceptions import JIRAError
 from classes.utils.LogManager import LogManager
+import os
 
 log_manager = LogManager()
-import os
 
 
 class JiraApi:
@@ -130,6 +130,33 @@ class JiraApi:
                                     routine="JiraApi.get_issue"
                                  )
             return None  
+        
+    def insert_comment(self, issue_id: str, comment: str) -> bool:
+        """
+        Insere um comentário em uma issue específica do Jira.
+
+        :param issue_id: O ID da issue onde o comentário será inserido.
+        :param comment: O texto do comentário a ser inserido.
+
+        :return: True se o comentário foi inserido com sucesso, False caso contrário.
+        """
+        try:
+            jira = self.connect()
+            if not jira:
+                return False
+
+            jira.add_comment(issue_id, comment)
+            return True
+        except JIRAError as e:
+            log_manager.add_error(
+                                    level="ERROR",
+                                    message=f"Erro ao inserir comentário no Jira: {e}",
+                                    application_type="JIRA",
+                                    error_details=str(e),
+                                    routine="JiraApi.insert_comment"
+                                 )
+            print(f"Erro ao inserir comentário no Jira: {e}")
+            return False    
 
 
 

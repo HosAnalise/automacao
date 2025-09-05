@@ -8,6 +8,19 @@ import oracledb
 import warnings
 from bs4 import MarkupResemblesLocatorWarning
 import requests
+from pydantic import BaseModel, HttpUrl
+
+class Meta(BaseModel):
+    documentoId: int
+    documentoMenuId: int
+    titulo: str
+    geradoEm: str
+    nivelAcesso: str
+    url: HttpUrl
+
+class Documento(BaseModel):
+    meta: Meta
+    content: str
 
 
 getEnv = dotenv_values(".env")
@@ -107,7 +120,7 @@ class Decode:
            
     
     @staticmethod
-    def generate_json():
+    def generate_json()-> list[Documento]:
 
         Decode.open_connection()
      
@@ -140,19 +153,17 @@ class Decode:
             func = "ERP.BD_LINK_REDIRECIONAMENTO.GERAR_LINK_REDIRECIONAMENTO"
             link = Decode.fetch_data(None,func,params)
 
-            
-            obj = {
-                "meta": {
-                    "documentoId": row[0],
-                    "documentoMenuId": row[3],
-                    "titulo": row[1],
-                    "geradoEm": timestamp,
-                    "nivelAcesso": row[5],
-                    "url": link
-                },
-                "content": content
-            }
-            processed_data.append(obj)
+
+            meta = Meta(
+                documentoId=row[0],
+                documentoMenuId=row[3],
+                titulo=row[1],
+                geradoEm=timestamp,
+                nivelAcesso=row[5],
+                url=link
+            )
+
+            processed_data.append(Documento(meta=meta, content=content))
 
         return processed_data
     

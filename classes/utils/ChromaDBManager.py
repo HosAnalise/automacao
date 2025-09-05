@@ -93,7 +93,8 @@ class ChromaDBManager:
         query_texts: Optional[List[str]] = None,
         query_embeddings: Optional[List[List[float]]] = None,
         n_results: int = 5,
-        where_filter: Optional[Dict[str, Any]] = None
+        where_filter: Optional[Dict[str, Any]] = None,
+        where_filter_document: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Executa uma consulta na coleção por texto ou por embeddings.
@@ -118,7 +119,8 @@ class ChromaDBManager:
             query_embeddings=query_embeddings,
             query_texts=query_texts,
             n_results=n_results,
-            where=where_filter
+            where=where_filter,
+            where_document=where_filter_document
         )
         return results
 
