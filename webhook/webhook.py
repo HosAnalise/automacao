@@ -1,9 +1,12 @@
 import logging
 import threading
 from flask import Flask, request, jsonify
+from classes.utils.JiraApi import JiraApi
 from classes.utils.AI import AI
 from classes.utils.ChromaDBManager import ChromaDBManager
-from classes.utils.Decoder import Decode
+import chromadb
+
+# from classes.utils.Decoder import Decode
 
 
 
@@ -47,11 +50,11 @@ app = Flask(__name__)
 
 
 
-
+COLLECTION = "MANUAIS_DE_ROTINAS_CHUNKED"
 
 def process_jira_webhook(data: dict) -> AI.JiraIssueEmbedding:
     """
-    Processa os dados recebidos do webhook do Jira.
+    Processa os dados recebidos do webhook do Jira e retorna um objeto JiraIssueEmbedding.
 
     Args:
         data (dict): O payload JSON recebido do webhook.
@@ -59,21 +62,20 @@ def process_jira_webhook(data: dict) -> AI.JiraIssueEmbedding:
 
     return AI.JiraIssueEmbedding(
             event = data.get('webhookEvent'),
-            issue_key = data.get('issue', {}).get('key'),
-            issue_description = data.get('issue', {}).get('fields', {}).get('description', '').replace('\n', ' ').replace('\r', ' '),
-            issue_name = data.get('issue', {}).get('fields', {}).get('summary', ''),
-            tester = data.get('issue', {}).get('fields', {}).get('customfield_10077', {})[0].get('value',None),
-            epic= data.get('issue', {}).get('fields', {}).get('parent', {}).get('fields', None).get('summary', None)
+            issue_key = data.get('issue', {}).get('key') if data.get('issue', {}).get('key', None) else '',
+            issue_description = data.get('issue', {}).get('fields', {}).get('description', '').replace('\n', ' ').replace('\r', ' ') if data.get('issue', {}).get('fields', {}).get('description', None) else '',
+            issue_name = data.get('issue', {}).get('fields', {}).get('summary', '') if data.get('issue', {}).get('fields', {}).get('summary', None) else '',
+            tester = data.get('issue', {}).get('fields', {}).get('customfield_10077', {})[0].get('value',None) if data.get('issue', {}).get('fields', {}).get('customfield_10077', None) else None,
+            epic= data.get('issue', {}).get('fields', {}).get('parent', {}).get('fields', None).get('summary', None) if data.get('issue', {}).get('fields', {}).get('parent', None) else None,
         )
 
 
-def filter_embeddings(embeddings: list[dict]) -> list[dict]:
+def clean_documents(embeddings: list[dict]) -> list[str]:
     """
-    Filtra e retorna os top_n embeddings com base na similaridade.
+    Remove quebras de linha e espaços em branco e caracteres indesejados.
 
     Args:
         embeddings (list[dict]): Lista de embeddings com suas similaridades.
-        top_n (int): Número de embeddings a retornar.
 
     Returns:
         list[dict]: Lista dos top_n embeddings mais similares.
@@ -82,14 +84,15 @@ def filter_embeddings(embeddings: list[dict]) -> list[dict]:
         return []
     
     return [
-        emb.replace('\n', ' ').replace('\r', ' ').replace('\xa0', ' ')
-        for emb_arr in embeddings.get('documents', [])
-        for emb in emb_arr
+        emb_arr[0].replace('\n', ' ').replace('\r', ' ').replace('\xa0', ' ') if emb_arr else ""
+        for emb_arr in embeddings.documents 
+        
     ]
 
-def generate_content_from_embedding(data) -> str:
+
+def find_similar_documents(jira_details: AI.JiraIssueEmbedding) -> str:
     """
-    Gera conteúdo baseado no embedding da issue do Jira.
+    Procura conteúdo baseado no embedding da issue do Jira.
 
     Args:
        data (AI.JiraIssueEmbedding): Detalhes da issue do Jira.
@@ -97,22 +100,61 @@ def generate_content_from_embedding(data) -> str:
     Returns:
         str: O conteúdo gerado.
     """
-    jira_details = process_jira_webhook(data)
+    CLIENT = chromadb.CloudClient(
+    api_key='ck-Eov2T8HGLCmepvmLaiAhuCiLAt4m6b229RiSLZryy1P9',
+    tenant='147a5208-c5cb-4dfd-8a84-00784b03999e',
+    database='Automacao'
+    )
 
+    if not jira_details.issue_description:
+        return logging.info(f"Nenhuma descrição encontrada na issue {jira_details.issue_key}. Nenhuma ação tomada.")
 
-    chromadb_manager = ChromaDBManager()
+    chromadb_manager = ChromaDBManager(client=CLIENT)
 
-    collection = chromadb_manager.get_or_create_collection(name="MANUAIS_DE_ROTINAS")
+    collection = chromadb_manager.get_or_create_collection(name=COLLECTION)
+    query_result = chromadb_manager.query_collection(
+        collection=collection,
+        query_texts=[jira_details.issue_description, jira_details.issue_name],
+        n_results=10,
+        # where_filter={"titulo": {"$in": [ jira_details.issue_name,jira_details.epic]}},
+                                                )
 
+    return [] if not query_result or not query_result.documents else query_result
 
+def verify_comment_exists(comments: list[str]) -> bool:
+    """
+    Verifica se um comentários específicos já existem na lista de comentários.
 
-    response =  chromadb_manager.query_collection(  collection=collection,
-                                                    query_texts=[jira_details.issue_description, jira_details.issue_name],
-                                                    n_results=5,
-                                                    # where_filter={"titulo": {"$in": [ jira_details.issue_name,jira_details.epic]}},
-                                                ) 
-    filter_embeddingsd = filter_embeddings(response)
-    logging.info(f"Embeddings filtrados: {filter_embeddingsd}")
+    Args:
+        comments (list[str]): Lista de comentários.
+
+    Returns:
+        bool: True se o comentário existir, False caso contrário.
+    """
+    for comment in comments:
+        if any(phrase in comment for phrase in ["Cenários de teste gerados por IA. Revisão humana necessária","Nenhuma descrição de issue ou documentos fornecidos. impossivel gerar cenários de teste.","Cenario-"]):
+            return True 
+    return False
+
+    
+def init(data):
+
+    jira_details = process_jira_webhook(data=data)
+    response =  find_similar_documents(jira_details=jira_details)
+
+    cleaned_docs = clean_documents(embeddings=response) 
+    text_embeddings = "\n".join(cleaned_docs)
+
+    ai = AI()
+
+    issue_text  = ai.qa_agent(issue_description = jira_details.issue_description, documents = text_embeddings)
+
+    jira = JiraApi()
+
+    comments = jira.get_text_comments(issue_id=jira_details.issue_key)    
+
+    jira.insert_comment(issue_id=jira_details.issue_key, comment=issue_text) if verify_comment_exists(comments=comments) == False else logging.info(f"O comentário já existe na issue {jira_details.issue_key}. Nenhuma ação tomada.")
+
 
 @app.route('/webhook/jira', methods=['POST'])
 def jira_webhook_handler():
@@ -120,16 +162,13 @@ def jira_webhook_handler():
     Endpoint que recebe o webhook, valida os dados e dispara o processamento
     em segundo plano.
     """
+    
     data = request.get_json()
     if not data:
-        return jsonify({"error": "Payload inválido"}), 400
-    
+        return jsonify({"error": "Payload inválido"}), 400  
 
-    # logging.info(f"Webhook recebido com sucesso: {data}")
-   
 
-    
-    thread = threading.Thread(target=generate_content_from_embedding, args=(data,))
+    thread = threading.Thread(target=init, args=(data,))
     thread.start()
 
    

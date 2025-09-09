@@ -1,8 +1,10 @@
-import os
 import chromadb
 from chromadb.api.client import Client
 from chromadb.api.models.Collection import Collection
-from typing import List, Optional, Any, Dict
+from typing import List, Optional, Any, Dict, Union
+from numpy.typing import NDArray as NpNDArray
+from pydantic import BaseModel
+
 
 
 
@@ -85,7 +87,23 @@ class ChromaDBManager:
                 for id_list in query_result.get('ids', []) if id_list
                 for id_str in id_list if id_str
             ]    
+    # Dentro da sua classe ChromaDBManager ou, idealmente, em um arquivo de modelos separado
 
+    class QueryResult(BaseModel):
+        ids: List[List[str]]
+        distances: Optional[List[List[float]]] = None
+        metadatas: Optional[List[List[Dict[str, Any]]]] = None
+        
+        # Use o tipo do pydantic-numpy aqui
+        embeddings: Optional[List[List[Union[List[float], NpNDArray[Any]]]]] = None
+        
+        documents: Optional[List[List[str]]] = None
+        uris: Optional[List[List[str]]] = None
+        
+        model_config = {
+            "from_attributes": True,
+            "arbitrary_types_allowed": True
+        }
 
     def query_collection(
         self,
@@ -122,7 +140,7 @@ class ChromaDBManager:
             where=where_filter,
             where_document=where_filter_document
         )
-        return results
+        return self.QueryResult.model_validate(obj=results)
 
     def get_collection(self, name: str) -> Optional[Collection]:
         """

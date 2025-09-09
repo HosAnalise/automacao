@@ -131,6 +131,50 @@ class JiraApi:
                                  )
             return None  
         
+    def get_comments(self, issue_id: str):
+        """
+        Obtém os comentários de uma issue específica do Jira pelo seu ID.
+        """
+        try:
+            jira = self.connect()
+            if not jira:
+                return None
+
+
+            return jira.comments(issue_id)
+        except JIRAError as e:
+            log_manager.add_error(
+                                    level="ERROR",
+                                    message=f"Erro ao obter comentários do Jira: {e}",
+                                    application_type="JIRA",
+                                    error_details=str(e),
+                                    routine="JiraApi.get_comments"
+                                 )
+            print(f"Erro ao obter comentários do Jira: {e}")
+            return None
+    def get_text_comments(self, issue_id: str) -> list[str] | None:
+        """
+        Obtém os textos dos comentários de uma issue específica do Jira pelo seu ID.
+        """
+        try:
+            jira = self.connect()
+            if not jira:
+                return None
+
+            comments = jira.comments(issue_id)
+            return [comment.body for comment in comments]
+        except JIRAError as e:
+            log_manager.add_error(
+                                    level="ERROR",
+                                    message=f"Erro ao obter textos dos comentários do Jira: {e}",
+                                    application_type="JIRA",
+                                    error_details=str(e),
+                                    routine="JiraApi.get_text_comments"
+                                 )
+            print(f"Erro ao obter textos dos comentários do Jira: {e}")
+            return None    
+
+
     def insert_comment(self, issue_id: str, comment: str) -> bool:
         """
         Insere um comentário em uma issue específica do Jira.
