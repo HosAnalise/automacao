@@ -1,22 +1,15 @@
-from gc import collect
 import heapq
 import logging
-from typing import Optional
-from unittest.mock import Base
-import chromadb
-from duckdb import description
 import google.generativeai as genai
-# from proto import Field
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
-from sklearn.metrics.pairwise import cosine_similarity
+# from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-import backoff
+# import backoff
 import os
-from pydantic_ai.models.google import GoogleModel
-from pydantic_ai.providers.google import GoogleProvider
-from pydantic_ai.agent import Agent
-
+from pydantic_ai.agent import Agent    
+from typing import List, Optional, Any
+from pydantic import BaseModel, Field
 from classes.utils import ChromaDBManager
 from classes.utils.JiraApi import JiraApi
 
@@ -125,35 +118,35 @@ class AI:
 
 
 
-    @backoff.on_exception(backoff.expo,
-                      exception=Exception,
-                      giveup=lambda e: not AI.is_rate_limit_error(e))
-    def generate_embedding_of_all_routines(self,json:list[dict]) -> list[list[float]]:
-        """
-        Gera um vetor de embedding para todas as rotinas fornecidas.
+    # @backoff.on_exception(backoff.expo,
+    #                   exception=Exception,
+    #                   giveup=lambda e: not AI.is_rate_limit_error(e))
+    # def generate_embedding_of_all_routines(self,json:list[dict]) -> list[list[float]]:
+    #     """
+    #     Gera um vetor de embedding para todas as rotinas fornecidas.
 
-        :param json: Uma lista de rotinas.
+    #     :param json: Uma lista de rotinas.
 
 
-        :return: Uma lista de embeddings (lista de listas de floats).
-        """
-        if not json:
-            return []
+    #     :return: Uma lista de embeddings (lista de listas de floats).
+    #     """
+    #     if not json:
+    #         return []
 
-        try:
-            content_to_embed = [
-                f"Nome: {obj.get('meta', '')}\nDescrição: {obj.get('content', '')}" 
-                for obj in json
-            ]
-            result = genai.embed_content(
-                    model=self.embedding_model,
-                    content=content_to_embed,
-                    task_type="RETRIEVAL_DOCUMENT"
-                )
-            return result['embedding']
-        except Exception as e:
-            print(f"Ocorreu um erro ao gerar embeddings: {e}")
-            return []
+    #     try:
+    #         content_to_embed = [
+    #             f"Nome: {obj.get('meta', '')}\nDescrição: {obj.get('content', '')}" 
+    #             for obj in json
+    #         ]
+    #         result = genai.embed_content(
+    #                 model=self.embedding_model,
+    #                 content=content_to_embed,
+    #                 task_type="RETRIEVAL_DOCUMENT"
+    #             )
+    #         return result['embedding']
+    #     except Exception as e:
+    #         print(f"Ocorreu um erro ao gerar embeddings: {e}")
+    #         return []
 
 
     def tranform_document_in_lot_for_embedd(self,dict_to_batch:list[dict]) -> list[list[dict]]:
@@ -209,23 +202,23 @@ class AI:
             print(f"Erro ao comparar PDFs: {e}")
             return False
         
-    def calculate_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
-        if not embedding1 or not embedding2:
-            return 0.0
+    # def calculate_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
+    #     if not embedding1 or not embedding2:
+    #         return 0.0
         
-        vec1 = np.array(embedding1)
-        vec2 = np.array(embedding2)
+    #     vec1 = np.array(embedding1)
+    #     vec2 = np.array(embedding2)
 
         
-        if vec1.ndim == 2:
-            vec1 = vec1[0]
+    #     if vec1.ndim == 2:
+    #         vec1 = vec1[0]
         
-        if vec2.ndim == 2:
-            vec2 = vec2[0]
+    #     if vec2.ndim == 2:
+    #         vec2 = vec2[0]
 
-        similarity = cosine_similarity([vec1], [vec2])[0]
+    #     similarity = cosine_similarity([vec1], [vec2])[0]
 
-        return similarity[0]
+    #     return similarity[0]
 
     def rank_documents(self, similarity_scores: list[float], top_k: int = 3) -> list[dict[str, any]]:
         """
@@ -324,210 +317,164 @@ class AI:
 # --- Exemplo de como usar a classe centralizada ---
 if __name__ == '__main__':
     ia_helper = AI()
-    
-class AI_agents:   
-
-    _collection = "MANUAIS_DE_ROTINAS_CHUNKED"
 
 
-    def __init__(self):
-        self.api_key =  API_KEY if API_KEY else None
-        self.google_model = GoogleModel(model_name=MODEL,provider=GoogleProvider(api_key=API_KEY))
+# Supondo que essas classes existam em outros módulos
+# from services.jira import JiraApi
+# from services.chromadb import ChromaDBManager
+# from models.ai import GoogleModel, Agent
+
+class JiraApi:
+    def get_text_comments(self, issue_id: str) -> list[str]: return []
+    def insert_comment(self, issue_id: str, comment: str): print(f"Comentário inserido na issue {issue_id}")
+
+class ChromaDBManager:
+    def get_or_create_collection(self, name: str): return None
+    def query_collection(self, collection, query_texts: list[str], n_results: int): return type('QueryResult', (), {'documents': []})()
+
+class GoogleModel:
+    def __init__(self, model_name, provider): pass
+
+# class Agent:
+#     def __init__(self, model, tools, instructions, output_type, retries): pass
+
+class JiraIssueEmbedding(BaseModel):
+    issue_key: str
+    issue_name: str
+    issue_description: str
+    epic: Optional[str] = None
 
 
+class TestScenarioOutput(BaseModel):
+    """Modelo de saída para os cenários de teste gerados pela IA."""
+    ids: Optional[List[str]] = Field(None, description="IDs dos cenários de teste.")
+    title: Optional[List[str]] = Field(None, description="Títulos dos cenários de teste.")
+    test_type: Optional[List[str]] = Field(None, description="Tipos de teste (Caminho Feliz, Borda, Erro).")
+    pre_conditions: Optional[List[List[str]]] = Field(None, description="Pré-condições para cada teste.")
+    execution_steps: Optional[List[List[str]]] = Field(None, description="Passos para execução de cada teste.")
+    expected_results: Optional[List[str]] = Field(None, description="Resultados esperados para cada teste.")
 
+COLLECTION_NAME = "MANUAIS_DE_ROTINAS_CHUNKED"
+AI_GENERATED_COMMENT_PHRASES = [
+    "Cenários de teste gerados por IA. Revisão humana necessária",
+    "Nenhuma descrição de issue ou documentos fornecidos. impossivel gerar cenários de teste.",
+    "Cenario-",
+]
 
+QA_AGENT_PROMPT_TEMPLATE = """
+Você é um agente de QA Sênior, especialista em análise de software e criação de planos de teste.
+Sua missão é analisar descrições de tarefas e documentação técnica para criar cenários de teste abrangentes, claros e eficazes.
 
+# Formato de Saída Obrigatório
+Adicione um comentário inicial explicando que o conteúdo foi gerado por IA e precisa de revisão humana.
+Formate a saída final em Markdown. Para cada cenário de teste, use a seguinte estrutura:
 
-    def process_jira_webhook(data: dict) -> AI.JiraIssueEmbedding:
+---
+**ID:** Cenario-00X
+**Título:** [Título claro e conciso do cenário]
+**Tipo de Teste:** [Caminho Feliz / Caso de Borda / Fluxo de Erro / Regressão]
+
+**Pré-condições:**
+* [Pré-condição 1]
+* [Pré-condição 2]
+
+**Passos para Execução:**
+1. [Primeiro passo]
+2. [Segundo passo]
+
+**Resultado Esperado:**
+* [Comportamento esperado do sistema após a execução dos passos]
+---
+"""
+
+class TestScenarioService:
+    """
+    Orquestra a geração e publicação de cenários de teste baseados em issues do Jira.
+    """
+    def __init__(self, jira_client: JiraApi, db_manager: ChromaDBManager, ai_model: Any):
         """
-        Processa os dados recebidos do webhook do Jira e retorna um objeto JiraIssueEmbedding.
-
-        Args:
-            data (dict): O payload JSON recebido do webhook.
+        Inicializa o serviço injetando suas dependências.
         """
+        self.jira_client = jira_client
+        self.db_manager = db_manager
+        self.ai_model = ai_model if ai_model else GoogleModel(model_name=MODEL, provider="google")
+        self.collection = self.db_manager.get_or_create_collection(name=COLLECTION_NAME)
 
-        return AI.JiraIssueEmbedding(
-                event = data.get('webhookEvent'),
-                issue_key = data.get('issue', {}).get('key') if data.get('issue', {}).get('key', None) else '',
-                issue_description = data.get('issue', {}).get('fields', {}).get('description', '').replace('\n', ' ').replace('\r', ' ') if data.get('issue', {}).get('fields', {}).get('description', None) else '',
-                issue_name = data.get('issue', {}).get('fields', {}).get('summary', '') if data.get('issue', {}).get('fields', {}).get('summary', None) else '',
-                tester = data.get('issue', {}).get('fields', {}).get('customfield_10077', {})[0].get('value',None) if data.get('issue', {}).get('fields', {}).get('customfield_10077', None) else None,
-                epic= data.get('issue', {}).get('fields', {}).get('parent', {}).get('fields', None).get('summary', None) if data.get('issue', {}).get('fields', {}).get('parent', None) else None,
-            )
-
-
-    def clean_documents(self,embeddings: list[dict]) -> list[str]:
+    def find_relevant_documents(self, jira_details: JiraIssueEmbedding) -> list[str]:
         """
-        Remove quebras de linha e espaços em branco e caracteres indesejados.
-
-        Args:
-            embeddings (list[dict]): Lista de embeddings com suas similaridades.
-
-        Returns:
-            list[dict]: Lista dos top_n embeddings mais similares.
+        Busca na base de conhecimento documentos relevantes para a issue do Jira.
         """
-        if not embeddings:
-            return []
-        
-        return [
-            emb_arr[0].replace('\n', ' ').replace('\r', ' ').replace('\xa0', ' ') if emb_arr else ""
-            for emb_arr in embeddings.documents 
-            
-        ]
-
-
-    def find_similar_documents(self,jira_details: AI.JiraIssueEmbedding) -> str:
-        """
-        Procura conteúdo baseado no embedding da issue do Jira.
-
-        Args:
-        data (AI.JiraIssueEmbedding): Detalhes da issue do Jira.
-
-        Returns:
-            str: O conteúdo gerado.
-        """
-        CLIENT = chromadb.CloudClient(
-        api_key='ck-Eov2T8HGLCmepvmLaiAhuCiLAt4m6b229RiSLZryy1P9',
-        tenant='147a5208-c5cb-4dfd-8a84-00784b03999e',
-        database='Automacao'
-        )
-
-        if not jira_details.issue_description:
-            return logging.info(f"Nenhuma descrição encontrada na issue {jira_details.issue_key}. Nenhuma ação tomada.")
-
-        chromadb_manager = ChromaDBManager(client=CLIENT)
-
-        collection = chromadb_manager.get_or_create_collection(name=AI_agents._collection)
-        query_result = chromadb_manager.query_collection(
-            collection=collection,
+        query_result = self.db_manager.query_collection(
+            collection=self.collection,
             query_texts=[jira_details.issue_description, jira_details.issue_name],
-            n_results=10,
-            # where_filter={"titulo": {"$in": [ jira_details.issue_name,jira_details.epic]}},
-                                                    )
+            n_results=10
+        )
+        
+        if not query_result or not query_result.documents:
+            return []
+            
+        return self._clean_documents(query_result.documents)
 
-        return [] if not query_result or not query_result.documents else query_result
-
-    def verify_comment_exists(self,comments: list[str]) -> bool:
+    def _clean_documents(self, documents: list[list[str]]) -> list[str]:
         """
-        Verifica se um comentários específicos já existem na lista de comentários.
-
-        Args:
-            comments (list[str]): Lista de comentários.
-
-        Returns:
-            bool: True se o comentário existir, False caso contrário.
+        Limpa o conteúdo dos documentos removendo caracteres indesejados.
+        Método privado de suporte.
         """
+        cleaned_docs = []
+        for doc_list in documents:
+            if doc_list:
+                # Remove quebras de linha e espaços extras
+                clean_text = ' '.join(doc_list[0].split())
+                cleaned_docs.append(clean_text)
+        return cleaned_docs
+
+    def has_ai_comment(self, issue_key: str) -> bool:
+        """
+        Verifica se um comentário gerado por IA já existe na issue.
+        """
+        comments = self.jira_client.get_text_comments(issue_id=issue_key)
         for comment in comments:
-            if any(phrase in comment for phrase in ["Cenários de teste gerados por IA. Revisão humana necessária","Nenhuma descrição de issue ou documentos fornecidos. impossivel gerar cenários de teste.","Cenario-"]):
-                return True 
+            if any(phrase in comment for phrase in AI_GENERATED_COMMENT_PHRASES):
+                return True
         return False
 
-
-    def insert_comment(self,data,jira:JiraApi,issue_text):
+    def post_comment_on_issue(self, issue_key: str, comment_text: str):
         """
-        Metodo recebe o webhook do Jira transformando em um objeto JiraIssueEmbedding,
-        busca documentos similares na base de conhecimento para gerar cenários de teste,
-        filtra os documentos retornados, gera um texto com eles,
-        apos isso ele gera os cenários de teste e insere um comentário na issue do Jira.
-
-        ARGS:
-            data (dict): Dados do webhook do Jira.
-            jira (JiraApi): Instância da classe JiraApi.
-            issue_text (str): Texto do comentário a ser inserido na issue.
+        Publica um comentário na issue do Jira, a menos que já exista um da IA.
         """
+        if self.has_ai_comment(issue_key):
+            logging.info(f"Comentário de IA já existe na issue {issue_key}. Nenhuma ação tomada.")
+        else:
+            self.jira_client.insert_comment(issue_id=issue_key, comment=comment_text)
 
-        jira_details = AI_agents.process_jira_webhook(data=data)
-
-
-        comments = jira.get_text_comments(issue_id=jira_details.issue_key)    
-
-        jira.insert_comment(issue_id=jira_details.issue_key, comment=issue_text) if AI_agents.verify_comment_exists(comments=comments) == False else logging.info(f"O comentário já existe na issue {jira_details.issue_key}. Nenhuma ação tomada.")
-
-    def create_agent(self,model,tools: list,instructions: str,output_model)-> Agent:
-        """Cria um agente com o modelo fornecido.
-
-        Args:
-            model (str): O nome do modelo a ser utilizado.
-
-        Returns:
-            Agent: Uma instância do agente criado.
+    def create_qa_agent(self) -> Agent:
         """
-        return Agent(model=model if model else self.google_model,
-                     tools=tools,
-                     instructions=instructions,
-                     output_type=output_model,
-                     retries=3)
-    
-    def get_prompt(self,issue_description: str,documents:str) -> str:
+        Cria uma instância de um agente de QA pré-configurado.
         """
-        Gera o prompt para o agente de QA.
+        return Agent(
+            model=self.ai_model,
+            tools=[self.find_relevant_documents, self.post_comment_on_issue],
+            instructions=QA_AGENT_PROMPT_TEMPLATE,
+            output_type=TestScenarioOutput,
+            retries=3
+        )
 
-        Args:
-            issue_description (str): A descrição da issue.
-            documents (str): Documentos relevantes para a issue.
 
-        Returns:
-            str: O prompt gerado.
-        """
-        if not issue_description and not documents:
-            return " Nenhuma descrição de issue ou documentos fornecidos. impossivel gerar cenários de teste."
-        
-        
-        return f"""
-                 # Contexto do Sistema
 
-                [O sistema hos é divido em 3 partes distintas: Farma: Responsavel por toda parte de cadastros, relatorios, etc; Frente de caixa: Responsavel por toda parte de vendas, caixa, fluxo de caixa, etc; Gestão: Responsavel por toda parte financeira, conferencias, etc.]
 
-                # Entradas
 
-                ## 1. Descrição da Issue:
-                {issue_description}
 
-                ## 2. Documentação Relevante:
-                {documents}
 
-                :** Com base na issue e na documentação, liste todos os cenários de teste possíveis. Pense em:
-                    * **Caminho Feliz (Happy Path):** O fluxo ideal, onde tudo funciona como esperado.
-                    * **Casos de Borda (Edge Cases):** Testes com valores limites (ex: 0, -1, valor máximo, strings vazias, etc.).
-                    * **Fluxos de Erro e Exceção:** O que acontece quando o usuário faz algo errado ou quando ocorre um erro no sistema? (ex: preenchimento de formulário inválido, falha de conexão).
-                    * **Testes de Regressão:** Quais funcionalidades adjacentes podem ter sido quebradas por essa mudança? Liste cenários para verificar isso.
-                    * **Testes de Usabilidade (se aplicável):** A interface é clara? O fluxo é intuitivo?
-                4.  **Estruture a Saída:** Organize os cenários que você criou no formato especificado abaixo. Seja extremamente claro e detalhado nos passos e nos resultados esperados.
 
-                # Formato de Saída Obrigatório
-                Adicione um comentario antes de dos cenarios de teste explcando que foi gerado por uma IA e que deve ser revisado por um humano.
-                Formate a saída final em Markdown. Para cada cenário de teste, use a seguinte estrutura:
 
-                ---
-                **ID:** Cenario-00X
-                **Título:** [Título claro e conciso do cenário]
-                **Tipo de Teste:** [Caminho Feliz / Caso de Borda / Fluxo de Erro / Regressão]
 
-                **Pré-condições:**
-                * [Pré-condição 1]
-                * [Pré-condição 2]
 
-                **Passos para Execução:**
-                1.  [Primeiro passo]
-                2.  [Segundo passo]
-                3.  [Terceiro passo]
 
-                **Resultado Esperado:**
-                * [Comportamento esperado do sistema após a execução dos passos]
-                ---
 
-            """
 
-    def qa_agent(self) -> str:
-        """
-        Metodo que cria um agente especializado em QA.
-        """
-        return self.create_agent(tools=[self.clean_documents,self.find_similar_documents,self.verify_comment_exists,self.insert_comment,self.process_jira_webhook,self.get_prompt],
-                                     model=self.google_model,
-                                     instructions="Você é um agente de QA Sênior, um especialista em análise de software e criação de planos de teste. Sua principal habilidade é analisar descrições de tarefas (issues) e documentação técnica para criar cenários de teste abrangentes, claros e eficazes. Você é metódico, detalhista e pensa em todos os possíveis cenários, incluindo caminhos felizes, casos de borda e fluxos de erro.",
-                                     output_model=str)
-    
+
+
+
 
 
 
