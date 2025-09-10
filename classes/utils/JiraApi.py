@@ -192,7 +192,7 @@ class JiraApi:
             jira.add_comment(issue_id, comment)
             return True
         except JIRAError as e:
-            log_manager.add_error(
+            log_manager.add_log(
                                     level="ERROR",
                                     message=f"Erro ao inserir comentário no Jira: {e}",
                                     application_type="JIRA",

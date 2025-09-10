@@ -1,6 +1,8 @@
 import heapq
 import logging
+from shlex import join
 import google.generativeai as genai
+import jira
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
 # from sklearn.metrics.pairwise import cosine_similarity
@@ -12,6 +14,7 @@ from typing import List, Optional, Any
 from pydantic import BaseModel, Field
 from classes.utils import ChromaDBManager
 from classes.utils.JiraApi import JiraApi
+import requests as request
 
 API_KEY = os.getenv("GOOGLE_API_KEY")
 MODEL = "gemini-2.5-pro-latest"
@@ -319,25 +322,6 @@ if __name__ == '__main__':
     ia_helper = AI()
 
 
-# Supondo que essas classes existam em outros módulos
-# from services.jira import JiraApi
-# from services.chromadb import ChromaDBManager
-# from models.ai import GoogleModel, Agent
-
-class JiraApi:
-    def get_text_comments(self, issue_id: str) -> list[str]: return []
-    def insert_comment(self, issue_id: str, comment: str): print(f"Comentário inserido na issue {issue_id}")
-
-class ChromaDBManager:
-    def get_or_create_collection(self, name: str): return None
-    def query_collection(self, collection, query_texts: list[str], n_results: int): return type('QueryResult', (), {'documents': []})()
-
-class GoogleModel:
-    def __init__(self, model_name, provider): pass
-
-# class Agent:
-#     def __init__(self, model, tools, instructions, output_type, retries): pass
-
 class JiraIssueEmbedding(BaseModel):
     issue_key: str
     issue_name: str
@@ -347,12 +331,8 @@ class JiraIssueEmbedding(BaseModel):
 
 class TestScenarioOutput(BaseModel):
     """Modelo de saída para os cenários de teste gerados pela IA."""
-    ids: Optional[List[str]] = Field(None, description="IDs dos cenários de teste.")
-    title: Optional[List[str]] = Field(None, description="Títulos dos cenários de teste.")
-    test_type: Optional[List[str]] = Field(None, description="Tipos de teste (Caminho Feliz, Borda, Erro).")
-    pre_conditions: Optional[List[List[str]]] = Field(None, description="Pré-condições para cada teste.")
-    execution_steps: Optional[List[List[str]]] = Field(None, description="Passos para execução de cada teste.")
-    expected_results: Optional[List[str]] = Field(None, description="Resultados esperados para cada teste.")
+    
+    test_track: Optional[List[str]] = Field(None, description="Traz toda trilha de cenarios de teste gerados.formatado em markdown.")
 
 COLLECTION_NAME = "MANUAIS_DE_ROTINAS_CHUNKED"
 AI_GENERATED_COMMENT_PHRASES = [
@@ -387,6 +367,51 @@ Formate a saída final em Markdown. Para cada cenário de teste, use a seguinte 
 ---
 """
 
+
+FORMATTER_AGENT_PROMPT_TEMPLATE= """ 
+# Persona e Missão Principal
+
+Você é um Engenheiro de Dados especializado em Processamento de Linguagem Natural (PLN), com foco na otimização de texto para modelos de embedding. Sua missão é receber um texto bruto e transformá-lo em um formato limpo, estruturado e semanticamente denso, garantindo que a informação essencial seja facilmente vetorizável e recuperável por um sistema de busca vetorial.
+
+# Princípios Orientadores
+
+1.  **Atomicidade e Clareza:** Cada parágrafo ou item de lista deve, idealmente, conter uma única ideia, fato ou conceito. Evite sentenças longas e complexas.
+2.  **Contextualização Explícita:** Não presuma conhecimento prévio. Se o texto menciona uma entidade, um projeto ou um acrônimo, esclareça-o brevemente na primeira menção.
+3.  **Estruturação Lógica:** Utilize Markdown (títulos, listas, negrito) para criar uma hierarquia visual e lógica no texto. A estrutura ajuda o modelo a entender as relações entre as partes do conteúdo.
+4.  **Remoção de Ruído:** Elimine informações irrelevantes para o significado semântico do texto, como saudações, frases de preenchimento, metadados de e-mail (data, remetente) e qualquer conteúdo que não agregue valor informacional.
+5.  **Consistência Terminológica:** Padronize termos e acrônimos ao longo do texto para evitar ambiguidades.
+
+# Processo Passo a Passo
+
+1.  **Análise Inicial:** Leia o texto bruto para compreender seu propósito central, seus principais tópicos e seu público-alvo.
+2.  **Segmentação (Chunking):** Divida o texto em segmentos lógicos menores. Um título de seção e seus parágrafos, por exemplo, formam um bom segmento.
+3.  **Reescrita e Clarificação:** Para cada segmento, reescreva as frases para serem mais diretas e claras. Desfaça sentenças compostas em sentenças simples. Substitua pronomes ambíguos ("ele", "isso", "aquilo") por substantivos explícitos.
+4.  **Enriquecimento e Estruturação:** Adicione títulos e subtítulos descritivos (`#`, `##`). Use listas com marcadores (`*`) ou numeradas (`1.`) para sequências ou conjuntos de itens. Use negrito (`**texto**`) para destacar os termos ou conceitos mais importantes.
+5.  **Formatação Final:** Entregue o texto final formatado exclusivamente em Markdown.
+
+# Exemplo de Tarefa
+
+**Texto Bruto de Entrada:**
+"Oi pessoal, só pra avisar que o relatório do projeto Alpha foi finalizado. Nele a gente detalha os resultados dos testes de performance que rodamos semana passada e também tem umas ideias pro futuro. Ficou bem legal, o João que fez a maior parte da análise de dados. A principal conclusão é que o novo cache melhorou a latência em 30%, mas aumentou um pouco o uso de memória. A gente precisa decidir os próximos passos sobre isso. Anexo o doc."
+
+**Saída Formatada Esperada:**
+
+# Relatório de Performance do Projeto Alpha
+
+## Resumo Executivo
+O relatório de performance do Projeto Alpha está concluído. A principal conclusão é que a implementação do novo sistema de cache resultou em uma melhoria de 30% na latência, com um aumento colateral no consumo de memória.
+
+## Análise de Resultados
+* **Melhora de Latência:** Redução de 30% no tempo de resposta das requisições.
+* **Consumo de Memória:** Observado um aumento no uso de memória RAM após a implementação do cache.
+* **Responsável pela Análise:** A análise de dados foi conduzida por João.
+
+## Próximos Passos
+* É necessária uma avaliação para decidir as próximas ações em relação ao trade-off entre latência e uso de memória.
+* Discutir futuras otimizações e ideias para o projeto.
+"""
+
+
 class TestScenarioService:
     """
     Orquestra a geração e publicação de cenários de teste baseados em issues do Jira.
@@ -397,7 +422,7 @@ class TestScenarioService:
         """
         self.jira_client = jira_client
         self.db_manager = db_manager
-        self.ai_model = ai_model if ai_model else GoogleModel(model_name=MODEL, provider="google")
+        self.ai_model = ai_model 
         self.collection = self.db_manager.get_or_create_collection(name=COLLECTION_NAME)
 
     def find_relevant_documents(self, jira_details: JiraIssueEmbedding) -> list[str]:
@@ -414,6 +439,16 @@ class TestScenarioService:
             return []
             
         return self._clean_documents(query_result.documents)
+    
+
+    def find_ranked_documents(self, jira_details: JiraIssueEmbedding) -> list[str]:
+        """
+        Busca e classifica documentos relevantes para a issue do Jira usando embeddings.
+        """
+        response = request.post(url="https://integradhos.hos.com.br/ai/chat",
+                                data={"question": f"{jira_details.issue_description} {jira_details.issue_name}"},
+                                headers={'x-api-key': os.getenv("INTEGRADHOS_API_KEY")})
+        return response
 
     def _clean_documents(self, documents: list[list[str]]) -> list[str]:
         """
@@ -438,14 +473,45 @@ class TestScenarioService:
                 return True
         return False
 
-    def post_comment_on_issue(self, issue_key: str, comment_text: str):
+    def post_comment_on_issue(self, issue_key: str, output_object: TestScenarioOutput):
         """
-        Publica um comentário na issue do Jira, a menos que já exista um da IA.
+        Trata o objeto TestScenarioOutput e publica um comentário na issue do Jira, a menos que já exista um da IA.
+        
+        Args:
+            issue_key: A chave da issue do Jira.
+            output_object: Objeto tipo TestScenarioOutput com o texto do comentário a ser postado.
         """
+        def clean_comment(comment: str) -> str:
+            comment = comment.replace("\n", " ")
+            comment = comment.replace("**", " ")
+            comment = comment.replace("ID:", "")
+            return comment.strip() + "\n" 
+            
+
+        text = ""
+        if output_object and output_object.test_track:
+            text = "\n".join(clean_comment(comment) for comment in output_object.test_track)
+
         if self.has_ai_comment(issue_key):
             logging.info(f"Comentário de IA já existe na issue {issue_key}. Nenhuma ação tomada.")
         else:
-            self.jira_client.insert_comment(issue_id=issue_key, comment=comment_text)
+            self.jira_client.insert_comment(issue_id=issue_key, comment=text)
+
+
+    def create_formatter_agent(self) -> Agent:
+        """
+        Cria uma instância de um agente de formatação pré-configurado. Formata a entrada de texto para melhor compreensão por um banco de embeddings.
+        """
+        return Agent(
+            model=self.ai_model,
+            tools=[],
+            instructions=FORMATTER_AGENT_PROMPT_TEMPLATE,
+            output_type=str,
+            retries=3
+        )
+
+
+        
 
     def create_qa_agent(self) -> Agent:
         """
@@ -458,24 +524,6 @@ class TestScenarioService:
             output_type=TestScenarioOutput,
             retries=3
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         # def process_webhook_data(data):

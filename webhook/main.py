@@ -1,6 +1,5 @@
 import logging
-import os
-from tkinter import SE
+
 from typing import Dict, Any, Optional, List
 from functools import lru_cache
 
@@ -46,18 +45,15 @@ def get_db_manager() -> ChromaDBManager:
     return ChromaDBManager()
 
 
-MODEL_NAME = "gemini-1.5-flash-latest"
+MODEL_NAME = "gemini-1.5-pro-latest"
 
 @lru_cache(maxsize=1)
-def get_ai_model() -> AI:
+def get_ai_model() -> GoogleModel:
     """
-    Cria e retorna uma instância singleton do modelo GoogleGemini,
+    Cria e retorna uma instância singleton do modelo GoogleModel,
     configurada com a chave de API do ambiente.
     """
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError("A variável de ambiente GOOGLE_API_KEY não foi definida.")
-
+    
     return GoogleModel(model_name=MODEL_NAME, provider="google")
 
 def get_test_scenario_service(
@@ -73,7 +69,7 @@ def get_test_scenario_service(
 
 def generate_and_post_scenarios(
     jira_issue: JiraIssueEmbedding,
-    service: TestScenarioService # A dependência agora é passada como argumento
+    service: TestScenarioService 
 ):
     """Função alvo da tarefa em segundo plano."""
     try:
@@ -81,13 +77,12 @@ def generate_and_post_scenarios(
         qa_agent = service.create_qa_agent()
         
         prompt = f"Issue Details: {jira_issue.model_dump_json(indent=2)}\n\nGenerate test cases for the above user story in markdown format."
-        result = qa_agent.run_sync(prompt)
-        service.jira_client.insert_comment(jira_issue.issue_key, result.output)
+        qa_agent.run_sync(prompt)        
+
         logging.info(f"Processamento concluído para a issue: {jira_issue.issue_key}")
     except Exception as e:
         logging.error(f"Falha ao processar a issue {jira_issue.issue_key}: {e}", exc_info=True)
 
-# --- ENDPOINT DA API ---
 
 @app.post("/webhook/jira", status_code=202)
 def jira_webhook_handler(
@@ -102,20 +97,19 @@ def jira_webhook_handler(
     issue_fields = payload.issue.fields
     description = ' '.join(issue_fields.description.split()) if issue_fields.description else ""
     tester_value = issue_fields.tester_info[0].get('value') if issue_fields.tester_info else None
+    formatter_model = service.create_formatter_agent()
 
     jira_issue_object = JiraIssueEmbedding(
         event=payload.webhookEvent,
         issue_key=payload.issue.key,
-        issue_description=description,
+        issue_description=formatter_model.run_sync(description).output if description else "",
         issue_name=issue_fields.summary,
         tester=tester_value,
         epic=None 
     )
 
-    # 3. Agenda a tarefa em segundo plano com as dependências corretas.
     logging.info(f"Agendando processamento para a issue: {jira_issue_object.issue_key}")
     background_tasks.add_task(generate_and_post_scenarios, jira_issue_object, service)
     
-    # 4. Retorna a resposta imediatamente.
     return {"status": "Recebido e agendado para processamento."}
 
