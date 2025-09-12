@@ -1,20 +1,20 @@
 import heapq
 import logging
-from shlex import join
 import google.generativeai as genai
-import jira
 from pydantic import BaseModel, Field
+from pydantic_ai import ModelSettings
 from pypdf import PdfReader
 # from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 # import backoff
 import os
 from pydantic_ai.agent import Agent    
-from typing import List, Optional, Any
+from typing import List, Optional
 from pydantic import BaseModel, Field
 from classes.utils import ChromaDBManager
 from classes.utils.JiraApi import JiraApi
 import requests as request
+from pydantic_ai.models.google import GoogleModel
+
 
 API_KEY = os.getenv("GOOGLE_API_KEY")
 MODEL = "gemini-2.5-pro-latest"
@@ -416,7 +416,7 @@ class TestScenarioService:
     """
     Orquestra a geração e publicação de cenários de teste baseados em issues do Jira.
     """
-    def __init__(self, jira_client: JiraApi, db_manager: ChromaDBManager, ai_model: Any):
+    def __init__(self, jira_client: JiraApi, db_manager: ChromaDBManager, ai_model: GoogleModel):
         """
         Inicializa o serviço injetando suas dependências.
         """
@@ -504,10 +504,10 @@ class TestScenarioService:
         """
         return Agent(
             model=self.ai_model,
-            tools=[],
             instructions=FORMATTER_AGENT_PROMPT_TEMPLATE,
             output_type=str,
             retries=3
+            
         )
 
 
@@ -519,10 +519,11 @@ class TestScenarioService:
         """
         return Agent(
             model=self.ai_model,
-            tools=[self.find_relevant_documents, self.post_comment_on_issue],
+            tools=[self.find_ranked_documents, self.post_comment_on_issue],
             instructions=QA_AGENT_PROMPT_TEMPLATE,
             output_type=TestScenarioOutput,
-            retries=3
+            retries=3,
+            model_settings=ModelSettings(temperature=0.3, max_tokens=2000000) 
         )
 
 

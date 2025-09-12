@@ -1,4 +1,3 @@
-from os import error
 import time
 import pytest
 from classes.rotinas.CadastroPessoas import Pessoas
@@ -8,7 +7,6 @@ from faker import Faker
 
 fake = Faker(locale='pt_BR')
 
-# Mantenha sua fixture para gerar dados de pessoa válidos
 dados_pessoa_validos = Pessoas.Pessoa(
     P6_CPF=fake.cpf(),
     P6_RG=fake.rg(),
@@ -21,11 +19,9 @@ dados_pessoa_validos = Pessoas.Pessoa(
     P6_STATUS='1'
 )
 
-# Payloads de segurança para reutilização
 XSS_PAYLOAD = "<script>alert('XSS')</script>"
 SQL_INJECTION_PAYLOAD = "' OR '1'='1"
 
-# O parâmetro 'objDecisaoCredito' foi removido
 @pytest.mark.parametrize("pessoaValida, objAnalisePropria, devePassar, salvar, cenario", [
 
     # ==== CENÁRIO DE SUCESSO (HAPPY PATH) ====

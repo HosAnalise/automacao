@@ -1,5 +1,6 @@
 import logging
-
+from pydantic_ai.providers.google import GoogleProvider
+import os
 from typing import Dict, Any, Optional, List
 from functools import lru_cache
 
@@ -18,6 +19,12 @@ app = FastAPI(
     description="Um serviço que recebe webhooks do Jira para gerar cenários de teste com IA.",
     version="1.0.0"
 )
+
+API_KEY = os.getenv("GOOGLE_API_KEY")
+PROVIDER = GoogleProvider(api_key=API_KEY)
+MODEL_NAME = "gemini-1.5-pro-latest"
+
+
 
 
 class JiraIssueFields(BaseModel):
@@ -45,7 +52,6 @@ def get_db_manager() -> ChromaDBManager:
     return ChromaDBManager()
 
 
-MODEL_NAME = "gemini-1.5-pro-latest"
 
 @lru_cache(maxsize=1)
 def get_ai_model() -> GoogleModel:
@@ -53,13 +59,12 @@ def get_ai_model() -> GoogleModel:
     Cria e retorna uma instância singleton do modelo GoogleModel,
     configurada com a chave de API do ambiente.
     """
-    
-    return GoogleModel(model_name=MODEL_NAME, provider="google")
+    return GoogleModel(model_name=MODEL_NAME, provider=PROVIDER)
 
 def get_test_scenario_service(
     jira_client: JiraApi = Depends(get_jira_client),
     db_manager: ChromaDBManager = Depends(get_db_manager),
-    ai_model: AI = Depends(get_ai_model),
+    ai_model: GoogleModel = Depends(get_ai_model),
 ) -> TestScenarioService:
     """Cria e retorna o serviço principal, injetando suas dependências."""
     return TestScenarioService(
